@@ -1,0 +1,12 @@
+
+from PreProcess import PreProcess
+import matplotlib.pyplot as plt
+if __name__ == '__main__':   
+
+    csv_file = 'H:/My Drive/dark 2022/csv_dark/2023_08_06_40ms/2023_08_06_40ms_mov_4_angles.csv'
+    exp_dir = 'H:/My Drive/dark 2022/csv_dark'
+    exp_name = '2023_08_06_40ms'
+    mov = 4
+    pre_proc = PreProcess(exp_dir,exp_name,mov)
+    pre_proc.manual_clip_frames()
+    
