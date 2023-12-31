@@ -1,6 +1,8 @@
 
 from PreProcess import PreProcess
 import matplotlib.pyplot as plt
+import h5py
+import pandas as pd
 if __name__ == '__main__':   
 
     csv_file = 'H:/My Drive/dark 2022/csv_dark/2023_08_06_40ms/2023_08_06_40ms_mov_4_angles.csv'
@@ -9,4 +11,25 @@ if __name__ == '__main__':
     mov = 4
     pre_proc = PreProcess(exp_dir,exp_name,mov)
     pre_proc.manual_clip_frames()
+
+
+
+    
+# Create a HDF5 file
+
+exp_h5_name  = f'{exp_name}.hdf5'
+exp_file      = h5py.File(exp_h5_name, "w")
+mov_group = exp_file.create_group(f'/mov{mov}/')
+exp_file.attrs['dark_pert'] = '40 ms'
+mov_group['angles'] = pre_proc.angles
+mov_group['vectors'] = pre_proc.vectors
+mov_group.attrs['ew_to_lab_rotmat'] = pre_proc.ew_to_lab_rotmat
+mov_group['angles'].attrs['column_names'] = list(pre_proc.angles.columns)
+mov_group['vectors'].attrs['column_names'] = list(pre_proc.vectors.columns)
+
+
+pd.DataFrame(mov_group['angles'][:],columns = mov_group['angles'].attrs['column_names'])
+
+
+ 
     

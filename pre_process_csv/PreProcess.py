@@ -12,7 +12,7 @@ class PreProcess:
     def load_csv(self):
         self.angles = pd.read_csv(f'{self.mov_path}_angles.csv')
         self.vectors = pd.read_csv(f'{self.mov_path}_vectors.csv')
-        self.ew_to_lab_rotmat = pd.read_csv(f'{self.mov_path}_ew_to_lab_rotmat.csv')
+        self.ew_to_lab_rotmat = pd.read_csv(f'{self.mov_path}_ew_to_lab_rotmat.csv', header = None)
 
     def manual_clip_frames(self):
         fig, ax = plt.subplots()
