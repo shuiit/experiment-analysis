@@ -10,6 +10,7 @@ classdef HullToCsv<handle
         name_of_video_features
         name_of_features_wings_angle
         name_of_features_body_angle
+        name_of_features_body_coords
         hull
         frame_table
         time_table
@@ -26,6 +27,7 @@ classdef HullToCsv<handle
             obj.name_of_video_features = {'timeframe'};
             obj.name_of_features_wings_angle = {'phi','theta','psi'};
             obj.name_of_features_body_angle = {'pitch','yaw','roll'};
+            obj.name_of_features_body_coords = {'CM','CM_real'}
             obj.hull = hull;
             obj.frame_table = obj.get_features_from_structure(obj.hull,obj.name_of_general_features,'frame');
             obj.time_table = obj.get_features_from_structure(obj.hull.video,obj.name_of_video_features,'time');
@@ -71,7 +73,9 @@ classdef HullToCsv<handle
             [table_rw] = obj.get_features_from_structure(obj.hull.rightwing.vectors,obj.name_of_features_wings,'rw');
             [table_lw] = obj.get_features_from_structure(obj.hull.leftwing.vectors,obj.name_of_features_wings,'lw');
             [table_body] = obj.get_features_from_structure(obj.hull.body.vectors,obj.name_of_features_body,'body');
-            vectors_table_for_csv = [obj.frame_table,obj.time_table,table_rw,table_lw,table_body];
+            [table_body_coords] = obj.get_features_from_structure(obj.hull.body.coords,obj.name_of_features_body_coords,'body');
+
+            vectors_table_for_csv = [obj.frame_table,obj.time_table,table_rw,table_lw,table_body,table_body_coords];
             writetable(vectors_table_for_csv,[obj.path_to_save,'_vectors.csv'])
             
         end

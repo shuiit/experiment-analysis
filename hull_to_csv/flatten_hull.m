@@ -1,13 +1,6 @@
 
-
+addpath('G:\Documents\micro-flight-lab\hull_reconstruction_git')
 % saves fields in structure to csv
-name_of_features_wings = {'span','chord','nrml'}
-name_of_features_body = {'strkPlan','X','Y','Z'}
-name_of_general_features = {'frames'}
-name_of_video_features = {'timeframe'}
-name_of_features_wings_angle = {'phi','theta','psi'}
-name_of_features_body_angle = {'pitch','yaw','roll'}
-
 dir_of_exps = 'H:\\My Drive\\dark 2022\\'
 path_to_save = [dir_of_exps,'csv_dark\\']
 
