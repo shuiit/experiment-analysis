@@ -29,8 +29,8 @@ classdef HullToCsv<handle
             obj.name_of_features_body_angle = {'pitch','yaw','roll'};
             obj.name_of_features_body_coords = {'CM','CM_real'}
             obj.hull = hull;
-            obj.frame_table = obj.get_features_from_structure(obj.hull,obj.name_of_general_features,'frame');
-            obj.time_table = obj.get_features_from_structure(obj.hull.video,obj.name_of_video_features,'time');
+            obj.frame_table = array2table(obj.hull.video.timeframe',"VariableNames",{'time'});
+            obj.time_table = array2table(obj.hull.frames',"VariableNames",{'frames'});
             obj.path_to_save = path_to_save;
             writematrix(obj.hull.rotmat_EWtoL,[obj.path_to_save,'_ew_to_lab_rotmat.csv']) 
 
@@ -63,8 +63,10 @@ classdef HullToCsv<handle
             [table_rw_angle] = obj.get_features_from_structure(obj.hull.rightwing.angles,obj.name_of_features_wings_angle,'rw');
             [table_lw_angle] = obj.get_features_from_structure(obj.hull.leftwing.angles,obj.name_of_features_wings_angle,'lw');
             [table_body_angle] = obj.get_features_from_structure(obj.hull.body.angles,obj.name_of_features_body_angle,'body');
-            vectors_table_for_csv = [obj.frame_table,obj.time_table,table_rw_angle,table_lw_angle,table_body_angle];
-            writetable(vectors_table_for_csv,[obj.path_to_save,'_angles.csv'])
+            [table_body_coords] = obj.get_features_from_structure(obj.hull.body.coords,obj.name_of_features_body_coords,'body');
+
+            vectors_table_for_csv = [obj.frame_table,obj.time_table,table_rw_angle,table_lw_angle,table_body_angle,table_body_coords];
+            writetable(vectors_table_for_csv,[obj.path_to_save,'_angles_cm.csv'])
         end
         
         function vectors_to_csv(obj)
@@ -73,9 +75,8 @@ classdef HullToCsv<handle
             [table_rw] = obj.get_features_from_structure(obj.hull.rightwing.vectors,obj.name_of_features_wings,'rw');
             [table_lw] = obj.get_features_from_structure(obj.hull.leftwing.vectors,obj.name_of_features_wings,'lw');
             [table_body] = obj.get_features_from_structure(obj.hull.body.vectors,obj.name_of_features_body,'body');
-            [table_body_coords] = obj.get_features_from_structure(obj.hull.body.coords,obj.name_of_features_body_coords,'body');
 
-            vectors_table_for_csv = [obj.frame_table,obj.time_table,table_rw,table_lw,table_body,table_body_coords];
+            vectors_table_for_csv = [obj.frame_table,obj.time_table,table_rw,table_lw,table_body];
             writetable(vectors_table_for_csv,[obj.path_to_save,'_vectors.csv'])
             
         end

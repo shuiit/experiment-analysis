@@ -17,20 +17,16 @@ if __name__ == '__main__':
     movs = list(set([int(re.findall(r'\d+',file.split('_mov_')[1])[0]) for file in files_in_exp if 'mov' in file]))
 
     pre_proc = PreProcess(exp_dir,exp_name,'5 ms')
-    # pre_proc.load_csv(12)
-    # pre_proc.filter_body_wing_and_derive()
 
-
-    
 
     fig, ax = plt.subplots()
     ax_twin = ax.twinx()
-    for mov in movs[7:10]:
+    for mov in movs:
         ax.clear()
         ax_twin.clear()
         pre_proc.load_csv(mov)
         pre_proc.filter_body_wing_and_derive()
-        if f'mov{mov}' not in pre_proc.exp_file.keys(): pre_proc.save_mov_to_hdf(mov,ax,ax_twin)   
+        if f'mov{mov}' not in pre_proc.exp_file.keys(): pre_proc.manual_clip_frames(mov,ax,ax_twin)   
     pre_proc.exp_file.close()
 
 
