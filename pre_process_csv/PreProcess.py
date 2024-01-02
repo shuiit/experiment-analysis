@@ -8,8 +8,8 @@ import numpy as np
 
 class PreProcess:
 
-    def __init__(self,exp_dir,exp_name,pert_for_attr, smooth_window_body = 211,smooth_poly_body = 4,smooth_window_wing = 7 ,
-                 smooth_poly_wing = 2,zscore_window = 7,zscore_threashold = 3):
+    def __init__(self,exp_dir,exp_name,pert_for_attr, smooth_window_body = 211,smooth_poly_body = 4,smooth_window_wing = 15 ,
+                 smooth_poly_wing = 2,zscore_window = 200,zscore_threashold = 3,interp_method = 'cubic'):
         self.exp_dir = exp_dir
         self.exp_name = exp_name
         self.exp_path = f'{exp_dir}/{exp_name}'
@@ -24,6 +24,7 @@ class PreProcess:
         self.smooth_poly_wing = smooth_poly_wing
         self.zscore_window =  zscore_window
         self.zscore_threashold = zscore_threashold
+        self.interp_method = interp_method
 
     def load_csv(self,mov):
         mov_path = f'{self.exp_path}/{self.exp_name}_mov_{mov}'
@@ -41,6 +42,7 @@ class PreProcess:
     def threashold_zscore(self):
         zscore = self.angles.apply( lambda x: abs(self.zscore(x,self.zscore_window)))
         self.angles[zscore > self.zscore_threashold] = None
+        self.angles.interpolate(method=self.interp_method)
         return self.angles.dropna().reset_index(drop=True)
     
     def filter_body_wing_and_derive(self):
@@ -53,7 +55,7 @@ class PreProcess:
 
     def manual_clip_frames(self,mov,ax,ax_twin):
        
-        ax.plot(self.wing['frames'],self.wing['phi_rw'])
+        ax.plot(self.wing['frames'],self.wing['phi_rw'],'-*')
         ax_twin.plot(self.body['frames'],self.body['pitch_body'],color = 'red')
         zero_frame = self.wing['frames'][self.wing['time']==0]
 
@@ -77,7 +79,7 @@ class PreProcess:
         mov_group['wing_angles'] =  self.wing[frames_to_keep]
         mov_group['body_angles'] = self.body[frames_to_keep]
         mov_group['raw_vectors'] = self.vectors[self.vectors['frames'].isin(self.body['frames'])]
-        mov_group['raw_angles'] = self.vectors[self.vectors['frames'].isin(self.body['frames'])]
+        mov_group['raw_angles'] = self.angles[self.vectors['frames'].isin(self.body['frames'])]
 
 
 

@@ -9,9 +9,8 @@ from scipy.signal import savgol_filter
 
 if __name__ == '__main__':   
 
-    csv_file = 'H:/My Drive/dark 2022/csv_dark/2023_08_06_40ms/2023_08_06_40ms_mov_10_angles.csv'
     exp_dir = 'H:/My Drive/dark 2022/csv_dark'
-    exp_name = '2023_08_07_5ms'
+    exp_name = '2022_05_19'
 
     files_in_exp = os.listdir(f'{exp_dir}/{exp_name}')
     movs = list(set([int(re.findall(r'\d+',file.split('_mov_')[1])[0]) for file in files_in_exp if 'mov' in file]))

@@ -10,12 +10,12 @@ for idx = 1:length(files_in_dir)
         file_to_save = sprintf('%s_mov_%d',exp_name,mov)
         
         % check if files exist, load hull and make new dir
-        if sum(cellfun(@isfile,strcat([path_to_save,exp_name,'\\',file_to_save],{'_vectors.csv','_angles_cm.csv','_ew_to_lab_rotmat.csv'}))) == 3
-            continue
-        end
+%         if sum(cellfun(@isfile,strcat([path_to_save,exp_name,'\\',file_to_save],{'_vectors.csv','_angles_cm.csv','_ew_to_lab_rotmat.csv'}))) == 3
+%             continue
+%         end
         loaders = loaders_class(exp_path,mov,'','hullfile','//hull_op//');
         [hull] = loaders.load_shull(1);
-        if  isstruct(hull) == 0 || isfield(hull.rightwing.vectors,'nrml') == 0
+        if  isstruct(hull) == 0 || isfield(hull.rightwing.vectors,'nrml') == 0 || nnz(~isnan(hull.body.angles.pitch)) < 1000
             continue
         end
         if isfolder([path_to_save,exp_name,'\\']) == 0
