@@ -27,7 +27,7 @@ classdef HullToCsv<handle
             obj.name_of_video_features = {'timeframe'};
             obj.name_of_features_wings_angle = {'phi','theta','psi'};
             obj.name_of_features_body_angle = {'pitch','yaw','roll'};
-            obj.name_of_features_body_coords = {'CM','CM_real'}
+            obj.name_of_features_body_coords = {'CM_real'}
             obj.hull = hull;
             obj.frame_table = array2table(obj.hull.video.timeframe',"VariableNames",{'time'});
             obj.time_table = array2table(obj.hull.frames',"VariableNames",{'frames'});

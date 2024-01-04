@@ -7,25 +7,36 @@ import os
 import re
 from scipy.signal import savgol_filter
 
-if __name__ == '__main__':   
-
-    exp_dir = 'H:/My Drive/dark 2022/csv_dark'
-    exp_name = '2022_05_19'
-
-    files_in_exp = os.listdir(f'{exp_dir}/{exp_name}')
-    movs = list(set([int(re.findall(r'\d+',file.split('_mov_')[1])[0]) for file in files_in_exp if 'mov' in file]))
-
-    pre_proc = PreProcess(exp_dir,exp_name,'5 ms')
-
-
-    fig, ax = plt.subplots()
-    ax_twin = ax.twinx()
-    for mov in movs:
+def smooth_and_clip_mov(ax,ax_twin,pre_proc,mov):
         ax.clear()
         ax_twin.clear()
         pre_proc.load_csv(mov)
         pre_proc.filter_body_wing_and_derive()
-        if f'mov{mov}' not in pre_proc.exp_file.keys(): pre_proc.manual_clip_frames(mov,ax,ax_twin)   
+        pre_proc.manual_clip_frames(mov,ax,ax_twin)   
+
+        # if f'mov{mov}' not in pre_proc.exp_file.keys(): pre_proc.manual_clip_frames(mov,ax,ax_twin)   
+
+if __name__ == '__main__':   
+
+    exp_dir = 'H:/My Drive/dark 2022/csv_dark'
+    exp_name = '2022_05_19'
+    hdf5_file_name = '2022_05_19_40ms'
+    pertubation_name = hdf5_file_name.split('_')[-1]
+    smoothing_config = {'smooth_window_body': 211, 'smooth_poly_body':4, 'smooth_window_wing': 15,
+                        'smooth_poly_wing': 2, 'zscore_window':200,'zscore_threashold': 3,
+                        'interp_method' : 'cubic'}
+  
+
+
+    
+    files_in_exp = os.listdir(f'{exp_dir}/{exp_name}')
+    movs = list(set([int(re.findall(r'\d+',file.split('_mov_')[1])[0]) for file in files_in_exp if 'mov' in file]))
+    pre_proc = PreProcess(exp_dir,exp_name,pertubation_name,smoothing_config,hdf5_file_name)
+
+
+    fig, ax = plt.subplots()
+    ax_twin = ax.twinx()
+    [smooth_and_clip_mov(ax,ax_twin,pre_proc,mov) for mov in movs]
     pre_proc.exp_file.close()
 
 
