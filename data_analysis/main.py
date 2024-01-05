@@ -24,11 +24,27 @@ def fly_axes(movie101):
 
 def plot_axes(ax,axes_mat,color = ['r','b','g']):
     
-    ax.plot3D([0,axes_mat[0][0] + 0.1],[0,axes_mat[0][1] + 0.1],[0,axes_mat[0][2] + 0.1],color = color[0])
-    ax.plot3D([0,axes_mat[1][0] + 0.1],[0,axes_mat[1][1] + 0.1],[0,axes_mat[1][2] + 0.1],color = color[1])
-    ax.plot3D([0,axes_mat[2][0] + 0.1],[0,axes_mat[2][1] + 0.1],[0,axes_mat[2][2] + 0.1],color = color[2])
+    ax.plot3D([0,axes_mat[0][0]],[0,axes_mat[0][1] ],[0,axes_mat[0][2] ],color = color[0])
+    ax.plot3D([0,axes_mat[1][0]],[0,axes_mat[1][1] ],[0,axes_mat[1][2] ],color = color[1])
+    ax.plot3D([0,axes_mat[2][0] ],[0,axes_mat[2][1] ],[0,axes_mat[2][2] ],color = color[2])
     return ax
 
+def angles_body(dcm):
+    """calculate the yaw, pitch and roll angles that correspond to each rotation matrix in BODY AXES
+    ! if you define new rotation order/ axes, the calculation will be different
+
+    Args:
+        dcm (np.array): rotation matrix in camera axes
+
+    Returns:
+        yaw_z,pitch_x,roll_y (float): angles of rotation
+    """
+
+    yaw_z = np.arctan2(-dcm[1,0],dcm[0,0])
+    pitch_x = -np.arcsin(dcm[2,0])
+    roll_y = np.arctan2(-dcm[2,1],dcm[2,2])
+    return yaw_z,pitch_x,roll_y
+    
 
 if __name__ == '__main__':  
 
@@ -58,7 +74,7 @@ if __name__ == '__main__':
     ax.set_ylim(-1,1), ax.set_ylabel('y')
     ax.set_zlim(-1,1), ax.set_zlabel('z')
 
-
+    yaw_z,pitch_x,roll_y = angles_body(axes_rotated)
 
     group_name = 'body_angles'
     color_map = colormap.datad["tab10"]['listed']
