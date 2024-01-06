@@ -65,7 +65,7 @@ class PreProcess:
         
         body_cm = self.filter_and_derive(angles.loc[:, (body_columns) & (cm_columns)],
                                            angles['frames'],angles['time'],'smooth_window_body',
-                                           'smooth_poly_body',derivetive_name = [''])
+                                           'smooth_poly_body',derivetive_name = [''],assign_time_frame = False)
         self.body = pd.concat([body_angles,body_cm],axis = 1)
         self.wing = self.filter_and_derive(angles.loc[:, ~self.angles.columns.str.contains('body')],
                                            angles['frames'],angles['time'],'smooth_window_wing',
@@ -106,11 +106,11 @@ class PreProcess:
         data_list = [self.wing[frames_to_keep],self.body[frames_to_keep],
                      self.vectors[self.vectors['frames'].isin(self.wing[frames_to_keep]['frames'])],
                      self.angles[self.angles['frames'].isin(self.wing[frames_to_keep]['frames'])]]
-        datasets_name = ['wing_angles','body_angles','raw_vectors','raw_angles']
+        datasets_name = ['wing_angles','body_angles','vectors_raw','angles_raw']
         [self.create_datasets(mov_group,sub_group_name,data) for sub_group_name,data in zip(datasets_name,data_list)]
 
 
-    def filter_and_derive(self,pandas_columns,frames,time,smooth_window,smooth_poly,derivetive_name = ['','_dot','_dot_dot']):
+    def filter_and_derive(self,pandas_columns,frames,time,smooth_window,smooth_poly,derivetive_name = ['','_dot','_dot_dot'],assign_time_frame = True):
         """ run savitky golay filter and save the dataframe with time and frame columns
 
         Args:
@@ -127,7 +127,7 @@ class PreProcess:
         """
         data_frame =  pd.concat([pandas_columns.apply( lambda x: savgol_filter(x/self.dt**deriv,self.smoothing_config[smooth_window],
                                                                               self.smoothing_config[smooth_poly],deriv = deriv)).add_suffix(name) for deriv,name in enumerate(derivetive_name)],axis = 1)
-        data_frame = data_frame.assign(frames=frames, time=time)
+        if assign_time_frame == True: data_frame = data_frame.assign(frames=frames, time=time)
         return data_frame
 
 
