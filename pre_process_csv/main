@@ -1,43 +1,56 @@
 
 from PreProcess import PreProcess
+
 import matplotlib.pyplot as plt
 import h5py
 import pandas as pd
 import os
 import re
 from scipy.signal import savgol_filter
+from Movie import Movie
 
 def smooth_and_clip_mov(ax,ax_twin,pre_proc,mov):
         ax.clear()
         ax_twin.clear()
         pre_proc.load_csv(mov)
         pre_proc.filter_body_wing_and_derive()
-        pre_proc.manual_clip_frames(mov,ax,ax_twin)   
+        if f'mov{mov}' not in pre_proc.exp_file_cliped.keys(): pre_proc.manual_clip_frames(mov,ax,ax_twin)   
 
-        # if f'mov{mov}' not in pre_proc.exp_file.keys(): pre_proc.manual_clip_frames(mov,ax,ax_twin)   
+def manipulte_and_save_to_h5(pre_proc,mov_name):
+    
+    movie = Movie(pre_proc.exp_file_cliped[mov_name],mov_name,pre_proc.exp_file_manipulated)
+    movie.get_strokes()
+    movie.project_body_props_on_xy(['CM_real_x_body','CM_real_y_body','CM_real_z_body'],'CM_xy')
+    movie.calculate_angles_frame_ref_axes()
+    [pre_proc.create_datasets(pre_proc.exp_file_manipulated[mov_name],sub_group_name,movie.data[sub_group_name].astype(float),movie.header[sub_group_name]) for sub_group_name in list(movie.data.keys())]
+
 
 if __name__ == '__main__':   
 
     exp_dir = 'H:/My Drive/dark 2022/csv_dark'
-    exp_name = '2022_05_19'
-    hdf5_file_name = '2022_05_19_40ms'
-    pertubation_name = hdf5_file_name.split('_')[-1]
+    exp_name = '2022_01_31'
+    hdf5_file = f'{exp_name}_dark'
+
+
+    files_in_exp = os.listdir(f'{exp_dir}/{exp_name}')
+    movs = list(set([int(re.findall(r'\d+',file.split('_mov_')[1])[0]) for file in files_in_exp if 'mov' in file]))
     smoothing_config = {'smooth_window_body': 211, 'smooth_poly_body':4, 'smooth_window_wing': 15,
                         'smooth_poly_wing': 2, 'zscore_window':200,'zscore_threashold': 3,
                         'interp_method' : 'cubic'}
-  
-
-
     
-    files_in_exp = os.listdir(f'{exp_dir}/{exp_name}')
-    movs = list(set([int(re.findall(r'\d+',file.split('_mov_')[1])[0]) for file in files_in_exp if 'mov' in file]))
-    pre_proc = PreProcess(exp_dir,exp_name,pertubation_name,smoothing_config,hdf5_file_name)
+    pertubation_name = hdf5_file.split('_')[-1]
+    clip_flag = True
+    clip_flag = True if os.path.isfile(f'{exp_dir}/cliped_{hdf5_file}.hdf5') == False else False
+    pre_proc = PreProcess(exp_dir,exp_name,pertubation_name, smoothing_config, hdf5_file)
 
+    if clip_flag == True: 
+            fig, ax = plt.subplots()
+            ax_twin = ax.twinx()
+            [smooth_and_clip_mov(ax,ax_twin,pre_proc,mov) for mov in movs]
+    [manipulte_and_save_to_h5(pre_proc,mov) for mov in pre_proc.exp_file_cliped.keys()]
 
-    fig, ax = plt.subplots()
-    ax_twin = ax.twinx()
-    [smooth_and_clip_mov(ax,ax_twin,pre_proc,mov) for mov in movs]
-    pre_proc.exp_file.close()
+    pre_proc.exp_file_cliped.close()
+    pre_proc.exp_file_manipulated.close()
 
 
 

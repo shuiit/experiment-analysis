@@ -8,15 +8,18 @@ import numpy as np
 
 class PreProcess:
 
-    def __init__(self,exp_dir,exp_name,pert_for_attr, smoothing_config,hdf5_file_name):
+    def __init__(self,exp_dir,exp_name,pert_for_attr, smoothing_config,hdf5_file):
         self.exp_dir = exp_dir
         self.exp_name = exp_name
         self.exp_path = f'{exp_dir}/{exp_name}'
         self.pert_for_attr = pert_for_attr
-        self.exp_file  = h5py.File(f'{exp_dir}/{hdf5_file_name}.hdf5', "a")
-        self.exp_file.attrs['dark_pert'] = self.pert_for_attr
-        self.smoothing_config = smoothing_config
+        self.exp_file_cliped  = h5py.File(f'{exp_dir}/cliped_{hdf5_file}.hdf5', "a")
+
         
+        self.exp_file_cliped.attrs['dark_pert'] = self.pert_for_attr
+        self.smoothing_config = smoothing_config
+        self.exp_file_manipulated  = h5py.File(f'{exp_dir}/manipulated_{hdf5_file}.hdf5', "a")
+        self.exp_file_manipulated.attrs['dark_pert'] = self.pert_for_attr
 
 
 
@@ -33,7 +36,9 @@ class PreProcess:
         self.fix_phi()
 
         self.ew_to_lab_rotmat = pd.read_csv(f'{mov_path}_ew_to_lab_rotmat.csv', header = None)
-        self.exp_file.attrs['ew_to_lab_rotmat'] = self.ew_to_lab_rotmat
+        self.exp_file_cliped.attrs['ew_to_lab_rotmat'] = self.ew_to_lab_rotmat
+        self.exp_file_manipulated.attrs['ew_to_lab_rotmat'] = self.ew_to_lab_rotmat
+
         self.dt = np.diff(self.angles['time'])[0]/1000
     def fix_phi(self):
         """ makes sure that the phi is not the 360 - phi degree. 
@@ -65,7 +70,7 @@ class PreProcess:
         
         body_cm = self.filter_and_derive(angles.loc[:, (body_columns) & (cm_columns)],
                                            angles['frames'],angles['time'],'smooth_window_body',
-                                           'smooth_poly_body',derivetive_name = [''],assign_time_frame = False)
+                                           'smooth_poly_body',derivetive_name = [''],asign_frames_time = False)
         self.body = pd.concat([body_angles,body_cm],axis = 1)
         self.wing = self.filter_and_derive(angles.loc[:, ~self.angles.columns.str.contains('body')],
                                            angles['frames'],angles['time'],'smooth_window_wing',
@@ -100,17 +105,17 @@ class PreProcess:
             mov (int):  number of movie
             x (list of int): initial and ending frames
         """
-        mov_group = self.exp_file.create_group(f'/mov{mov}/')
+        mov_group = self.exp_file_cliped.create_group(f'/mov{mov}/')
         frames_to_keep = (self.wing['frames']>=int(x[0][0])) & (self.wing['frames']<=int(x[1][0]))
         
         data_list = [self.wing[frames_to_keep],self.body[frames_to_keep],
                      self.vectors[self.vectors['frames'].isin(self.wing[frames_to_keep]['frames'])],
                      self.angles[self.angles['frames'].isin(self.wing[frames_to_keep]['frames'])]]
         datasets_name = ['wing_angles','body_angles','vectors_raw','angles_raw']
-        [self.create_datasets(mov_group,sub_group_name,data) for sub_group_name,data in zip(datasets_name,data_list)]
+        [self.create_datasets(mov_group,sub_group_name,data,data.columns) for sub_group_name,data in zip(datasets_name,data_list,)]
 
 
-    def filter_and_derive(self,pandas_columns,frames,time,smooth_window,smooth_poly,derivetive_name = ['','_dot','_dot_dot'],assign_time_frame = True):
+    def filter_and_derive(self,pandas_columns,frames,time,smooth_window,smooth_poly,derivetive_name = ['','_dot','_dot_dot'],asign_frames_time = True):
         """ run savitky golay filter and save the dataframe with time and frame columns
 
         Args:
@@ -127,7 +132,7 @@ class PreProcess:
         """
         data_frame =  pd.concat([pandas_columns.apply( lambda x: savgol_filter(x/self.dt**deriv,self.smoothing_config[smooth_window],
                                                                               self.smoothing_config[smooth_poly],deriv = deriv)).add_suffix(name) for deriv,name in enumerate(derivetive_name)],axis = 1)
-        if assign_time_frame == True: data_frame = data_frame.assign(frames=frames, time=time)
+        if asign_frames_time == True: data_frame = data_frame.assign(frames=frames, time=time)
         return data_frame
 
 
@@ -150,7 +155,7 @@ class PreProcess:
         return z
 
     @staticmethod
-    def create_datasets(group,sub_group_name,data):
+    def create_datasets(group,sub_group_name,data,header):
         """create fields of datasets and save it in the HDF5 file, save the heading of the data as attribution
 
         Args:
@@ -159,7 +164,7 @@ class PreProcess:
             data (dataframe): dataframe that contains all data
         """
         group[sub_group_name] =  data
-        group[sub_group_name].attrs['header'] = list(data.columns)
+        group[sub_group_name].attrs['header'] = list(header)
 
 
     

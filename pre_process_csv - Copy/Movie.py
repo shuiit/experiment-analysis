@@ -17,10 +17,10 @@ from scipy.spatial.transform import Rotation as R
 pio.renderers.default='browser'
 
 class Movie():
-    def __init__(self,experiment,mov_name):    
+    def __init__(self,data_list,mov_name):    
         self.mov = {}
-        self.data = {dict_name.split('_')[0]:np.array(experiment[mov_name][dict_name]) for dict_name in ['wing_angles','body_angles','raw_vectors']}
-        self.header = {dict_name.split('_')[0]:self.get_header(experiment[mov_name][dict_name]) for dict_name in ['wing_angles','body_angles','raw_vectors']}
+        self.data = {dict_name.split('_')[0]:data.to_numpy() for data,dict_name in zip(data_list,['wing_angles','body_angles','raw_vectors'])}
+        self.header = {dict_name.split('_')[0]:self.get_header(data.columns) for data,dict_name in zip(data_list,['wing_angles','body_angles','raw_vectors'])}
 
         self.data['vectors'] = self.data.pop('raw')
         self.header['vectors'] = self.header.pop('raw')
@@ -33,7 +33,7 @@ class Movie():
         self.ref_frame =  np.where(self.data['body'][:,self.header['body']['time']] == 0)[0][0] if len( np.where(self.data['body'][:,self.header['body']['time']] == 0)[0]) > 0 else 0
     
     def get_header(self,dataset):
-        return { header: idx for idx,header in enumerate(dataset.attrs['header'])}
+        return { header: idx for idx,header in enumerate(dataset)}
     
     
     def add_to_header(self, string_to_add,dict_name):
