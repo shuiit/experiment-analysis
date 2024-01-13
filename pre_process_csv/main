@@ -22,14 +22,15 @@ def manipulte_and_save_to_h5(pre_proc,mov_name):
     movie.get_strokes()
     movie.project_body_props_on_xy(['CM_real_x_body','CM_real_y_body','CM_real_z_body'],'CM_xy')
     movie.calculate_angles_frame_ref_axes()
+    movie.calcate_mean_stroke('phi_rw_min_idx')
     [pre_proc.create_datasets(pre_proc.exp_file_manipulated[mov_name],sub_group_name,movie.data[sub_group_name].astype(float),movie.header[sub_group_name]) for sub_group_name in list(movie.data.keys())]
 
 
 if __name__ == '__main__':   
 
     exp_dir = 'H:/My Drive/dark 2022/csv_dark'
-    exp_name = '2022_01_31'
-    hdf5_file = f'{exp_name}_dark'
+    exp_name = '2023_08_10_100ms'
+    hdf5_file = f'{exp_name}'
 
 
     files_in_exp = os.listdir(f'{exp_dir}/{exp_name}')

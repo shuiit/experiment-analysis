@@ -22,8 +22,8 @@ class Plotters():
 
 
     
-    def plot_prop_movie(self,x_name,y_name,
-                        color,name, size = 5,fig = False,showlegend = True):
+    def plot_prop_movie(self,x_name,y_name,color,name,
+                        marker_size = 7,fig = False,showlegend = True,line_width = 5,mode = 'lines'):
         fig = go.Figure() if fig == False else fig
         x_name_idx = self.header[x_name]
         y_name_idx = self.header[y_name]
@@ -34,7 +34,9 @@ class Plotters():
             legendgroup = name,
             name = name,
             showlegend = showlegend,
-            marker=dict(color = f'rgba{str(tuple(np.append(color,0.5)))}',size = size))
+            mode=mode,
+            line_width= line_width,
+            marker=dict(color = f'rgba{str(tuple(np.append(color,0.5)))}',size = marker_size, symbol = 'circle'))
         fig.add_traces(traces)
         fig.update_layout( xaxis_title = x_name, yaxis_title = y_name)
         return fig

@@ -138,3 +138,6 @@ if __name__ == '__main__':
         
     for fig in figures:
         fig.show()
+
+
+    wakk = 2

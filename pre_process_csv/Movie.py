@@ -52,7 +52,7 @@ class Movie():
         rotated_rotation_mat = [np.matmul(ref_axes,rotmat) for rotmat in rotation_matrices]
         angles = np.array([self.angles_body(rotmat) for rotmat in list(rotated_rotation_mat)])
         savgol_derives,header = self.savgol_and_header(angles.T,['','_dot','_dot_dot'],['yaw_z_frame','pitch_y_frame','roll_x_frame'])
-        self.data['body'] = np.hstack([self.data['body'],np.array(angles),savgol_derives])
+        self.data['body'] = np.hstack([self.data['body'],savgol_derives])
         self.add_to_header(header,'body')
 
 
@@ -77,9 +77,29 @@ class Movie():
         return np.sum(x_axis_on_xy * prop_to_project,axis = 1)[np.newaxis,:].T # dot product of the props and the new projected body vector
      
     def savgol_and_header(self,data,derives,prop_name):
-        savgol_derives = np.hstack([savgol_filter(data/self.dt**deriv, self.body_savgol_win, self.body_savgol_poly,deriv = deriv)[np.newaxis,:].T for deriv,name_deriv in enumerate(derives)])
+        savgol_derives = np.hstack([savgol_filter(data/(self.dt**deriv), self.body_savgol_win, self.body_savgol_poly,deriv = deriv)[np.newaxis,:].T for deriv,name_deriv in enumerate(derives)])
         header = self.add_suffix_to_str(prop_name,derives)
         return np.squeeze(savgol_derives),header
+
+    def calcate_mean_stroke(self,stroke_idx_name,name_to_mean = ['body','wing']):
+
+        stroke_idx = self.data['body'][:,self.header['body'][stroke_idx_name]]
+        min_idx = np.unique(stroke_idx[stroke_idx != None]).astype(int)[1:-1]
+        {self.data.update({f'mean_{property_name}':self.mean_stroke(min_idx,self.data[property_name])}) for property_name in name_to_mean}
+        [self.header.update({f'mean_{property_name}':self.header[property_name]}) for property_name in name_to_mean]
+        [self.add_to_header(['mean_idx'],f'mean_{property_name}') for property_name in name_to_mean]
+
+
+
+
+    @ staticmethod
+    def mean_stroke(min_idx,data):
+        data[data == None] = np.nan
+        mean_stroke = [np.nanmean(data[idx0:idx1,:],axis = 0) for idx0,idx1 in zip(min_idx[:-1],min_idx[1:])]
+        mean_idx = (min_idx[:-1]+min_idx[1:])/2
+        return np.hstack((mean_stroke,np.array(mean_idx)[np.newaxis,:].T))
+
+
 
     @ staticmethod
     def get_header(dataset):

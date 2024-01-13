@@ -19,10 +19,11 @@ pio.renderers.default='browser'
 class ManipulatedMovie():
     def __init__(self,experiment,mov_name):    
         self.mov = {}
-        self.data = {dict_name.split('_')[0]:np.array(experiment[mov_name][dict_name]) for dict_name in ['wing','body','vectors']}
-        self.header = {dict_name.split('_')[0]:self.get_header(experiment[mov_name][dict_name]) for dict_name in ['wing','body','vectors']}
+        self.data = {dict_name:np.array(experiment[mov_name][dict_name]) for dict_name in experiment[mov_name].keys()}
+        self.header = {dict_name:self.get_header(experiment[mov_name][dict_name]) for dict_name in experiment[mov_name].keys()}
         self.name = mov_name
     
+
     def get_header(self,dataset):
         return { header: idx for idx,header in enumerate(dataset.attrs['header'])}
     
