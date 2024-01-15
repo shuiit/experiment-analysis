@@ -26,14 +26,15 @@ class Movie():
         self.ref_frame =  np.where(self.data['body'][:,self.header['body']['time']] == 0)[0][0] if len( np.where(self.data['body'][:,self.header['body']['time']] == 0)[0]) > 0 else 0
 
         h5_file.attrs['dt'] = self.dt
-        h5_file.attrs['ref_frame'] = self.ref_frame
+        h5_file[f'/{mov_name}/'].attrs['ref_frame'] = self.ref_frame
 
     def get_strokes(self):
-        max_stroke_idx = np.array([self.wing_stroke(self.data['wing'][:,self.header['wing'][wing_name]]) for wing_name in ['phi_rw','phi_lw']]).T
-        min_stroke_idx = np.array([self.wing_stroke(-self.data['wing'][:,self.header['wing'][wing_name]]) for wing_name in ['phi_rw','phi_lw']]).T
+        max_stroke_idx = np.hstack([self.wing_stroke(self.data['wing'][:,self.header['wing'][wing_name]]) for wing_name in ['phi_rw','phi_lw']])
+        min_stroke_idx = np.hstack([self.wing_stroke(-self.data['wing'][:,self.header['wing'][wing_name]]) for wing_name in ['phi_rw','phi_lw']])
         self.data['wing'] = np.hstack([self.data['wing'],max_stroke_idx,min_stroke_idx])
         self.data['body'] = np.hstack([self.data['body'],max_stroke_idx,min_stroke_idx])
-        [self.add_to_header( ['phi_rw_max_idx','phi_lw_max_idx','phi_rw_min_idx','phi_lw_min_idx'],dict_name) for dict_name in ['wing','body']]
+        [self.add_to_header( ['phi_rw_max_idx','phi_rw_max_val','phi_lw_max_idx','phi_lw_max_val',
+                              'phi_rw_min_idx','phi_rw_min_val','phi_lw_min_idx','phi_lw_min_val'],dict_name) for dict_name in ['wing','body']]
 
 
     def project_body_props_on_xy(self,prop_to_project,projection_name):
@@ -61,7 +62,9 @@ class Movie():
 
     def wing_stroke(self, data):
         peaks, _ = find_peaks(data, prominence=20)
-        return self.create_stroke_column(peaks,data,peaks[0:-1])
+        idx_column = self.create_stroke_column(peaks,data,peaks[0:-1])
+        value_column = self.create_stroke_column(peaks,data,-data[peaks[0:-1]])
+        return np.vstack((idx_column,value_column)).T
     
     def property_projection(self,prop_to_project):
         frame = self.data['vectors'][self.ref_frame,:]
