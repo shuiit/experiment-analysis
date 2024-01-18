@@ -11,6 +11,7 @@ from plotly.subplots import make_subplots
 import h5py
 from scipy.signal import argrelextrema, savgol_filter,find_peaks
 from scipy.spatial.transform import Rotation as R
+from Plotters import Plotters
 
 
 
@@ -24,6 +25,8 @@ class ManipulatedMovie():
         self.name = mov_name
         self.ref_frame =experiment[mov_name].attrs['ref_frame']
         self.pertubation = pertubation
+        self.pertubation_name = experiment.attrs['dark_pert']
+        
     
 
     def get_header(self,dataset):
@@ -81,6 +84,10 @@ class ManipulatedMovie():
         return data,plot_cofnig
 
 
+    def plot_3d_traj_movie(self,color_prop):
+        data,plot_cofnig = self.calculation_for_3d_traj(color_prop = color_prop)
+        ploter = Plotters(data,False,self.pertubation)
+        return ploter.plot_3d_traj(data,plot_cofnig,self.name,self.pertubation_name,color_prop = color_prop )
         
 
     def get_prop(self,prop,wing_body):

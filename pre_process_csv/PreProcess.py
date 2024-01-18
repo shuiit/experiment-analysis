@@ -54,8 +54,11 @@ class PreProcess:
             dataFrame: the dataframe after interpulating, zscore threasholding, and droping Nan values
         """
         zscore = self.angles.apply( lambda x: abs(self.zscore(x,self.smoothing_config['zscore_window'])))
-        self.angles[zscore > self.smoothing_config['zscore_threashold']] = None
+        self.angles = self.angles.mask(np.abs(zscore) > self.smoothing_config['zscore_threashold'], np.nan)
         self.angles.interpolate(method=self.smoothing_config['interp_method'])
+
+        if self.angles.isna().eq(True).any().any():
+            self.angles = self.angles.interpolate(method='nearest', axis=0).ffill().bfill()  
         return self.angles.dropna().reset_index(drop=True)
     
     def filter_body_wing_and_derive(self):

@@ -6,7 +6,7 @@ from plotly.subplots import make_subplots
 import h5py
 from scipy.signal import argrelextrema, savgol_filter,find_peaks
 from scipy.spatial.transform import Rotation as R
-
+import matplotlib.pyplot as plt
 
 
 pio.renderers.default='browser'
@@ -24,6 +24,13 @@ class Movie():
         self.body_savgol_win = 211
         self.body_savgol_poly = 4
         self.ref_frame =  np.where(self.data['body'][:,self.header['body']['time']] == 0)[0][0] if len( np.where(self.data['body'][:,self.header['body']['time']] == 0)[0]) > 0 else 0
+        
+        x_idx = self.header['vectors']['X_x_body']
+        if np.isnan(self.data['vectors'][self.ref_frame,:] ).any() == True:
+            vectors_exist = np.where(np.isnan(np.sum(self.data['vectors'][: self.ref_frame+50,x_idx:x_idx + 3],axis = 1)) == False)
+            self.ref_frame = ref_frame = np.argmin(np.abs(vectors_exist-self.ref_frame))
+            frame = self.data['vectors'][self.ref_frame,:] 
+
 
         h5_file.attrs['dt'] = self.dt
         h5_file[f'/{mov_name}/'].attrs['ref_frame'] = self.ref_frame
@@ -67,7 +74,7 @@ class Movie():
         return np.vstack((idx_column,value_column)).T
     
     def property_projection(self,prop_to_project):
-        frame = self.data['vectors'][self.ref_frame,:]
+        frame = self.data['vectors'][self.ref_frame,:] 
         x_idx = self.header['vectors']['X_x_body']
         ref_axes = np.array(frame[x_idx:x_idx + 3])
         return self.body_axes_in_t0(prop_to_project,ref_axes,self.ref_frame)
@@ -76,7 +83,6 @@ class Movie():
         x_project_on_z = ref_axes * [0,0,1]
         x_axis_on_xy = (ref_axes - x_project_on_z)/linalg.norm(ref_axes-x_project_on_z )[np.newaxis].T # project the new axis to XY plane
         x_axis_on_xy = np.tile(x_axis_on_xy,(len(prop_to_project),1))
-        prop_to_project = prop_to_project -  np.array(prop_to_project[ref_frame_index,:])
         return np.sum(x_axis_on_xy * prop_to_project,axis = 1)[np.newaxis,:].T # dot product of the props and the new projected body vector
      
     def savgol_and_header(self,data,derives,prop_name):

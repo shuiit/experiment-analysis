@@ -15,9 +15,10 @@ Created on Mon Jun  5 08:25:02 2023
 """
 
 class Plotters():
-    def __init__(self,data,header):
+    def __init__(self,data,header,pertubation):
         self.data = data
         self.header = header
+        self.pertubation = pertubation
 
 
 
@@ -39,8 +40,6 @@ class Plotters():
             line_width= line_width,
             marker=dict(color = f'rgba{str(tuple(np.append(color,0.5)))}',size = marker_size, symbol = 'circle'))
         fig.add_traces(traces)
-        if add_horizontal_line != None: fig.add_hline(y=add_horizontal_line, line_width=3, line_dash="dash", line_color="black")
-        fig.update_layout( xaxis_title = x_name, yaxis_title = y_name)
         return fig
     
 
@@ -69,10 +68,9 @@ class Plotters():
 
         fig.update_scenes(scene)
 
-        fig.update_layout( title = f'{mov_name} {exp_name}',coloraxis_colorbar_y=0.5,coloraxis_colorscale='jet' )
 
         vector_kwargs = {'marker':dict(size=5,opacity=0.8,color = 'red'),'line':dict(color='black' ,width=8)}
-        cm_kwargs = {'marker':dict(size=8,opacity=0.8,color =data[color_prop][::plot_cofnig['traj_samples']],colorbar=dict(thickness=10),colorscale='jet',colorbar_x = -0.1),'mode' : 'markers'}
+        cm_kwargs = {'marker':dict(size=8,opacity=0.8,color =data[color_prop][::plot_cofnig['traj_samples']],colorbar=dict(thickness=10,title = color_prop),colorscale='jet',colorbar_x = -0.1),'mode' : 'markers'}
         pertubations = {'marker':dict(size=13,opacity=0,color = ['pink','green','red']),'mode' : 'markers'}
 
         start_pert_endpert = data['start_pert_endpert'] 
@@ -83,10 +81,9 @@ class Plotters():
         fig = self.scatter_3d(fig,data['x_vector'],data['time'][::plot_cofnig['fly_samples']],name = 'X vector',**vector_kwargs)
         fig = self.scatter_3d(fig,data['y_vector'],data['time'][::plot_cofnig['fly_samples']],name = 'Y vector',**vector_kwargs)
         fig = self.scatter_3d(fig,data['cm'][start_pert_endpert,:],data['time'][start_pert_endpert],name =  'pertubations',**pertubations)
-                          
-                        #   legend=dict(orientation="h",
-                                                                        # yanchor="bottom",y=1.02,xanchor="right",x=0.9))
-        fig.show()
+        fig.update_layout( title = f'{mov_name} {exp_name}',coloraxis_colorbar_y=0.5,coloraxis_colorscale='jet' )
+        return fig
+   
 
 
 

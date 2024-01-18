@@ -43,6 +43,8 @@ def clip_and_manipulate(smoothing_config,exp_dir,exp_name,pert,clip_flag = True)
         pre_proc = PreProcess(exp_dir,exp_name,pertubation_name, smoothing_config, hdf5_file)
 
         if clip_flag == True: clip_movie(pre_proc,movs) 
+        # pre_proc.exp_file_cliped.close()
+
         [manipulte_and_save_to_h5(pre_proc,mov) for mov in pre_proc.exp_file_cliped.keys()]
 
         pre_proc.exp_file_cliped.close()
@@ -52,9 +54,9 @@ def clip_and_manipulate(smoothing_config,exp_dir,exp_name,pert,clip_flag = True)
 if __name__ == '__main__':   
 
         exp_dir = 'H:/My Drive/dark 2022/csv_dark'
-        exp_name = ['2023_08_09_60ms','2023_08_10_100ms']
+        exp_name = ['2023_08_09_80ms']
         
-        pert_list = ['','']
+        pert_list = ['']
 
         smoothing_config = {'smooth_window_body': 211, 'smooth_poly_body':4, 'smooth_window_wing': 15,
                         'smooth_poly_wing': 2, 'zscore_window':200,'zscore_threashold': 3,

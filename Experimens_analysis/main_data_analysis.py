@@ -60,7 +60,7 @@ if __name__ == '__main__':
     #%%
     
     
-    prop = 'pitch smth'
+    prop = 'projected_x_dot'
     led_up = collection.get_experiment('Led up')
     led_up.mean_data['mean_front_phi'] = (led_up.mean_data['min_phi_lw'] + led_up.mean_data['min_phi_rw'])/2
     led_up.mean_data['mean_phi'] = (led_up.mean_data['phi_lw'] + led_up.mean_data['phi_rw'])/2
@@ -69,7 +69,7 @@ if __name__ == '__main__':
 
 
     plot_led_up = Plotter(led_up)
-    plot_led_up.plot_props_per_movie(prop, propx='projected_x_dot', alpha=0.5, mean_data=True, scatter_kwargs={'mode': 'markers'}, layout_kwargs={'title': '<b>' + plot_flies_list[0].exp_name + '<b>'})
+    plot_led_up.plot_props_per_movie(prop, propx='time [ms]', alpha=0.5, mean_data=True, scatter_kwargs={'mode': 'markers+lines'}, layout_kwargs={'title': '<b>' + plot_flies_list[0].exp_name + '<b>'})
     plot_led_up.plot_props_per_movie('mean_front_phi', propx='time [ms]', alpha=0.5, mean_data=True, scatter_kwargs={'mode': 'markers'}, layout_kwargs={'title': '<b>' + plot_flies_list[0].exp_name + '<b>'})
     plot_led_up.plot_props_per_movie('mean_phi', propx='time [ms]', alpha=0.5, mean_data=True, scatter_kwargs={'mode': 'markers+lines'}, layout_kwargs={'title': '<b>' + plot_flies_list[0].exp_name + '<b>'})
 
