@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import matplotlib.cm as colormap
 import plotly.graph_objects as go
 from Experiment import Experiment
-from ManipulatedMovie import ManipulatedMovie
+from data_analysis.Movie import ManipulatedMovie
 from scipy.spatial.transform import Rotation as R
 from Plotters import Plotters
 

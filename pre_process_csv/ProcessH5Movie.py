@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 
 pio.renderers.default='browser'
 
-class Movie():
+class ProcessH5Movie():
     def __init__(self,movie,mov_name,h5_file):    
         self.mov = {}
         self.data = {dict_name.split('_')[0]:np.array(movie[dict_name]) for dict_name in ['wing_angles','body_angles','vectors_raw']}
@@ -21,14 +21,14 @@ class Movie():
         self.name = mov_name
        
         self.dt = np.diff(self.data['body'][:,self.header['body']['time']])[0]/1000
-        self.body_savgol_win = 211
-        self.body_savgol_poly = 4
+        self.body_savgol_win = [211,511,1011]
+        self.body_savgol_poly = [4,2,2]
         self.ref_frame =  np.where(self.data['body'][:,self.header['body']['time']] == 0)[0][0] if len( np.where(self.data['body'][:,self.header['body']['time']] == 0)[0]) > 0 else 0
         
         x_idx = self.header['vectors']['X_x_body']
         if np.isnan(self.data['vectors'][self.ref_frame,:] ).any() == True:
             vectors_exist = np.where(np.isnan(np.sum(self.data['vectors'][: self.ref_frame+50,x_idx:x_idx + 3],axis = 1)) == False)
-            self.ref_frame = ref_frame = np.argmin(np.abs(vectors_exist-self.ref_frame))
+            self.ref_frame = np.argmin(np.abs(vectors_exist-self.ref_frame))
             frame = self.data['vectors'][self.ref_frame,:] 
 
 
@@ -64,9 +64,6 @@ class Movie():
         self.add_to_header(header,'body')
 
 
-    def add_to_header(self, string_to_add,dict_name):
-        [self.header[dict_name].update({name:len(self.header[dict_name])}) for name in string_to_add]
-
     def wing_stroke(self, data):
         peaks, _ = find_peaks(data, prominence=20)
         idx_column = self.create_stroke_column(peaks,data,peaks[0:-1])
@@ -86,7 +83,7 @@ class Movie():
         return np.sum(x_axis_on_xy * prop_to_project,axis = 1)[np.newaxis,:].T # dot product of the props and the new projected body vector
      
     def savgol_and_header(self,data,derives,prop_name):
-        savgol_derives = np.hstack([savgol_filter(data/(self.dt**deriv), self.body_savgol_win, self.body_savgol_poly,deriv = deriv)[np.newaxis,:].T for deriv,name_deriv in enumerate(derives)])
+        savgol_derives = np.hstack([savgol_filter(data/(self.dt**deriv), self.body_savgol_win[deriv], self.body_savgol_poly[deriv],deriv = deriv)[np.newaxis,:].T for deriv,name_deriv in enumerate(derives)])
         header = self.add_suffix_to_str(prop_name,derives)
         return np.squeeze(savgol_derives),header
 
@@ -98,6 +95,9 @@ class Movie():
         [self.header.update({f'mean_{property_name}':self.header[property_name]}) for property_name in name_to_mean]
         [self.add_to_header(['mean_idx'],f'mean_{property_name}') for property_name in name_to_mean]
 
+
+    def add_to_header(self, string_to_add,dict_name):
+        [self.header[dict_name].update({name:len(self.header[dict_name])}) for name in string_to_add]
 
 
 
