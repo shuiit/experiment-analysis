@@ -34,29 +34,6 @@ class Experiment():
         if not os.path.exists(self.figures_path): os.makedirs(self.figures_path)
         self.experiment.close()
 
-    def cases_plot_exp_mov(self,case,mov_name,x_name,y_name,fig,i,color,prop = 'body',showlegend = True, **kwargs):
-        if 'plot_exp' == case: color,name = color,self.pertubation_name
-        if ('plot_exp' == case) | ('plot_mean' == case):showlegend = True if i == 2 else False
-        if 'plot_mov' == case: color,name = i%len(self.color_map),mov_name
-        if 'plot_mean' == case: color, name = i%len(self.color_map),f'stroke_mean'
-        
-        body_plot = Plotters(self.exp_dict[mov_name].data[prop],self.exp_dict[mov_name].header[prop],self.pertubation)
-        fig = body_plot.plot_prop_movie(x_name,y_name,self.color_map[color],name,fig = fig,showlegend  = showlegend ,**kwargs)
-
-
-    def plot_movie_prop(self,x_name,y_name, case = 'plot_mov',
-                    fig = False, mov = False, color = 0,prop = 'body',add_horizontal_line = 0,**kwargs):
-        
-        mov_names = self.mov_names if mov == False else mov
-        fig = go.Figure() if fig == False else fig
-        [self.cases_plot_exp_mov(case,mov_name,x_name,y_name,fig,i + 2,color,prop = prop,**kwargs) for i,mov_name in enumerate(list(mov_names))] 
-        
-        if add_horizontal_line != None: fig.add_hline(y=add_horizontal_line, line_width=3, line_color="black")
-        fig.add_vline(x=0, line_width=3, line_color="lime")
-        if self.pertubation != False: fig.add_vline(x=self.pertubation, line_width=3, line_color="red")
-        fig.update_layout( xaxis_title = x_name, yaxis_title = y_name)       
-        return fig
-
     def pqr_movies(self, mov = False):
         mov_names = self.mov_names if mov == False else mov
         [self.get_mov(mov_name).calculate_pqr_update_data_header() for mov_name in mov_names]
@@ -89,7 +66,7 @@ class Experiment():
                          add_horizontal_line = 0,**kwargs):
         mov_names = self.mov_names if mov == False else mov
         if 'plot_exp' == case: [self.get_mov(mov_name).plot_prop(prop,wing_body,color,self.pertubation_name,fig,showlegend = idx == 0,prop_x = prop_x,**kwargs) for idx,mov_name in enumerate(mov_names)]
-        if 'plot_mov' == case: [self.get_mov(mov_name).plot_prop(prop,wing_body,self.color_map[idx%len(self.color_map)],mov_name,fig,prop_x = prop_x**kwargs) for idx,mov_name in enumerate(mov_names)]
+        if 'plot_mov' == case: [self.get_mov(mov_name).plot_prop(prop,wing_body,self.color_map[idx%len(self.color_map)],mov_name,fig,prop_x = prop_x,**kwargs) for idx,mov_name in enumerate(mov_names)]
 
         if add_horizontal_line != None: fig.add_hline(y=add_horizontal_line, line_width=3, line_color="black")
         fig.add_vline(x=0, line_width=3, line_color="lime")

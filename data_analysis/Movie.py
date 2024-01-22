@@ -120,7 +120,7 @@ class Movie():
 
     def plot_3d_traj_movie(self,color_prop):
         data,plot_cofnig = self.calculation_for_3d_traj(color_prop = color_prop)
-        ploter = Plotters(data,False,self.pertubation)
+        ploter = Plotters(self.pertubation)
         return ploter.plot_3d_traj(data,plot_cofnig,self.name,self.pertubation_name,color_prop = color_prop )
         
 
@@ -151,8 +151,8 @@ class Movie():
 
         data_y = self.get_prop(prop,wing_body)
         data_x = self.get_prop(prop_x,wing_body)
-        ploter = Plotters(data_y,False,self.pertubation)
-        return ploter.plot_prop_movie_v2(data_x[t0_idx[0]:t1_idx[0]],data_y[t0_idx[0]:t1_idx[0]],color,name,fig = fig,**kwargs)
+        ploter = Plotters(self.pertubation)
+        return ploter.plot_prop_movie(data_x[t0_idx[0]:t1_idx[0]],data_y[t0_idx[0]:t1_idx[0]],color,name,fig = fig,**kwargs)
 
     
     @staticmethod

@@ -15,36 +15,11 @@ Created on Mon Jun  5 08:25:02 2023
 """
 
 class Plotters():
-    def __init__(self,data,header,pertubation):
-        self.data = data
-        self.header = header
+    def __init__(self,pertubation):
         self.pertubation = pertubation
 
-
-
     
-    def plot_prop_movie(self,x_name,y_name,color,name,
-                        marker_size = 7,fig = False,showlegend = True,
-                        line_width = 5,mode = 'lines',t0 = 0,t1 = -1):
-        fig = go.Figure() if fig == False else fig
-        x_name_idx = self.header[x_name]
-        y_name_idx = self.header[y_name]
-
-        traces = go.Scattergl(
-            x=self.data[t0:t1,x_name_idx],
-            y=self.data[t0:t1,y_name_idx],
-            legendgroup = name,
-            name = name,
-            showlegend = showlegend,
-            mode=mode,
-            line_width= line_width,
-            marker=dict(color = f'rgba{str(tuple(np.append(color,0.5)))}',size = marker_size, symbol = 'circle'))
-        fig.add_traces(traces)
-        return fig
-    
-
-    
-    def plot_prop_movie_v2(self,xdata,ydata,color,name,
+    def plot_prop_movie(self,xdata,ydata,color,name,
                         marker_size = 7,fig = False,showlegend = True,
                         line_width = 5,mode = 'lines'):
         fig = go.Figure() if fig == False else fig
