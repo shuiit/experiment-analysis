@@ -8,7 +8,7 @@ import os
 import re
 from scipy.signal import savgol_filter
 from ProcessH5Movie import ProcessH5Movie
-
+import time 
 def smooth_and_clip_mov(ax,ax_twin,pre_proc,mov):
         ax.clear()
         ax_twin.clear()
@@ -20,7 +20,11 @@ def manipulte_and_save_to_h5(pre_proc,mov_name):
     
     movie = ProcessH5Movie(pre_proc.exp_file_cliped[mov_name],mov_name,pre_proc.exp_file_manipulated)
     movie.get_strokes()
+    t0 = time.time()
     movie.project_body_props_on_xy(['CM_real_x_body_dot','CM_real_y_body_dot','CM_real_z_body_dot'],'v_xy')
+    t1 = time.time()
+    print(t1-t0)
+
     movie.calculate_angles_frame_ref_axes()
     movie.calcate_mean_stroke('phi_rw_min_idx')
     [pre_proc.create_datasets(pre_proc.exp_file_manipulated[mov_name],sub_group_name,movie.data[sub_group_name].astype(float),movie.header[sub_group_name]) for sub_group_name in list(movie.data.keys())]
@@ -54,7 +58,7 @@ def clip_and_manipulate(smoothing_config,exp_dir,exp_name,pert,clip_flag = True)
 if __name__ == '__main__':   
 
         exp_dir = 'H:/My Drive/dark 2022/csv_dark'
-        exp_name = ['2023_08_09_80ms','2023_08_10_100ms','2022_02_03']
+        exp_name = ['2023_08_09_80ms']#,'2023_08_10_100ms','2022_02_03']
         
         pert_list = ['','','_dark']
 
