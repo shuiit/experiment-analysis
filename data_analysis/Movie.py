@@ -26,6 +26,9 @@ class Movie():
         self.ref_frame =experiment[mov_name].attrs['ref_frame']
         self.pertubation = pertubation
         self.pertubation_name = experiment.attrs['dark_pert']
+        self.dt = experiment.attrs['dt']
+        
+        self.smoothing_config = {'smooth_window_body_angles': 73*7,'smooth_window_body_cm': 73*7, 'smooth_poly_body':3, 'smooth_window_wing': 15}
         
     
 
@@ -53,11 +56,35 @@ class Movie():
         zero_v = np.where(np.diff(np.sign(self.data[wing_body][:,idx_prop]))<0)[0]
         if len(zero_v) > 0:
             return self.data[wing_body][zero_v,idx_time]
+
+    def smooth_and_derive(self,prop,derivs,wing_body,three_col = 3):
+        idx = self.header[wing_body][prop]
+        header = [list(self.header['body'].keys())[list(self.header['body'].values()).index(idx)] for idx in range(idx,idx + three_col)]
+        data = self.get_prop(prop,wing_body,three_col=3)
         
+        header = [f'{prop}{derive}_smth' for derive in derivs for prop in header]
+        smoothed = np.vstack([savgol_filter(data.T/self.dt**deriv,self.smoothing_config['smooth_window_body_cm'],self.smoothing_config['smooth_poly_body'],deriv = deriv) for deriv,der in enumerate(derivs)]).T
+        self.data[wing_body] = np.hstack((self.data[wing_body], smoothed))
+        self.add_to_header(header,wing_body)
+
+
+        
+    def project_prop(self,prop,wing_body,header_name = 'CM_dot'):
+        data = self.get_prop(prop,wing_body, three_col= 3) 
+        vector_to_project = self.get_prop('X_x_body','vectors',three_col = 3)
+        ref_axes = vector_to_project[self.ref_frame,:]
+        x_axis_on_xy = (ref_axes - ref_axes * [0,0,1])/linalg.norm(ref_axes-ref_axes * [0,0,1] )[np.newaxis].T # project the new axis to XY plane
+        projected = np.sum(np.tile(x_axis_on_xy,(len(data),1)) * data,axis = 1)[np.newaxis,:].T
+        self.data[wing_body] = np.hstack((self.data[wing_body], projected))
+        self.add_to_header([f'{header_name}_projected'],wing_body)
+
+
+
+
     
     def mean_props(self,prop1,prop2,wing_body,header_name):
         mean_prop = (self.get_prop(prop1,wing_body)  + self.get_prop(prop2,wing_body) )/2
-        self.data[wing_body] = np.hstack((self.data[wing_body], mean_prop[np.newaxis,:].T))
+        self.data[wing_body] = np.hstack((self.data[wing_body], mean_prop))
         self.add_to_header([header_name],wing_body)
 
     def calculation_for_3d_traj(self, color_prop = 'pitch'):
@@ -124,8 +151,8 @@ class Movie():
         return ploter.plot_3d_traj(data,plot_cofnig,self.name,self.pertubation_name,color_prop = color_prop )
         
 
-    def get_prop(self,prop,wing_body):
-        return self.data[wing_body][:,self.header[wing_body][prop]]
+    def get_prop(self,prop,wing_body,three_col = 1):
+        return self.data[wing_body][:,self.header[wing_body][prop]:self.header[wing_body][prop] + three_col]
     
     def get_idx_of_time(self,t):
         time = self.get_prop('time','body')
@@ -152,7 +179,7 @@ class Movie():
         data_y = self.get_prop(prop,wing_body)
         data_x = self.get_prop(prop_x,wing_body)
         ploter = Plotters(self.pertubation)
-        return ploter.plot_prop_movie(data_x[t0_idx[0]:t1_idx[0]],data_y[t0_idx[0]:t1_idx[0]],color,name,fig = fig,**kwargs)
+        return ploter.plot_prop_movie(data_x[t0_idx[0]:t1_idx[0],0],data_y[t0_idx[0]:t1_idx[0],0],color,name,fig = fig,**kwargs)
 
     
     @staticmethod

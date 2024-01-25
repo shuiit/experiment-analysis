@@ -44,15 +44,6 @@ class ProcessH5Movie():
                               'phi_rw_min_idx','phi_rw_min_val','phi_lw_min_idx','phi_lw_min_val'],dict_name) for dict_name in ['wing','body']]
 
 
-    def project_body_props_on_xy(self,prop_to_project,projection_name):
-        x_idx = self.header['body'][prop_to_project[0]]
-        vector_to_project = self.data['body'][:,x_idx:x_idx + 3]
-        projected_prop = self.property_projection(vector_to_project)
-        savgol_derives,header = self.savgol_and_header(projected_prop.T,['','_dot','_dot_dot'],[projection_name])
-        self.data['body'] = np.hstack([self.data['body'],savgol_derives])
-        self.add_to_header(header,'body')
-
-
     def calculate_angles_frame_ref_axes(self):
         angles = np.array([self.data['body'][:,self.header['body'][angle_name]] for angle_name in ['yaw_body','pitch_body','roll_body']]).T
         rotation_matrices = [self.rotation_matrix(angle[0]*np.pi/180,-angle[1]*np.pi/180,angle[2]*np.pi/180) for angle in angles]
@@ -70,18 +61,6 @@ class ProcessH5Movie():
         value_column = self.create_stroke_column(peaks,data,-data[peaks[0:-1]])
         return np.vstack((idx_column,value_column)).T
     
-    def property_projection(self,prop_to_project):
-        frame = self.data['vectors'][self.ref_frame,:] 
-        x_idx = self.header['vectors']['X_x_body']
-        ref_axes = np.array(frame[x_idx:x_idx + 3])
-        return self.body_axes_in_t0(prop_to_project,ref_axes,self.ref_frame)
-     
-    def body_axes_in_t0(self,prop_to_project,ref_axes,ref_frame_index):
-        x_project_on_z = ref_axes * [0,0,1]
-        x_axis_on_xy = (ref_axes - x_project_on_z)/linalg.norm(ref_axes-x_project_on_z )[np.newaxis].T # project the new axis to XY plane
-        x_axis_on_xy = np.tile(x_axis_on_xy,(len(prop_to_project),1))
-        return np.sum(x_axis_on_xy * prop_to_project,axis = 1)[np.newaxis,:].T # dot product of the props and the new projected body vector
-     
     def savgol_and_header(self,data,derives,prop_name):
         savgol_derives = np.hstack([savgol_filter(data/(self.dt**deriv), self.body_savgol_win[deriv], self.body_savgol_poly[deriv],deriv = deriv)[np.newaxis,:].T for deriv,name_deriv in enumerate(derives)])
         header = self.add_suffix_to_str(prop_name,derives)
@@ -92,7 +71,7 @@ class ProcessH5Movie():
         stroke_idx = self.data['body'][:,self.header['body'][stroke_idx_name]]
         min_idx = np.unique(stroke_idx[stroke_idx != None]).astype(int)[1:-1]
         {self.data.update({f'mean_{property_name}':self.mean_stroke(min_idx,self.data[property_name])}) for property_name in name_to_mean}
-        [self.header.update({f'mean_{property_name}':self.header[property_name]}) for property_name in name_to_mean]
+        [self.header.update({f'mean_{property_name}':self.header[property_name].copy()}) for property_name in name_to_mean]
         [self.add_to_header(['mean_idx'],f'mean_{property_name}') for property_name in name_to_mean]
 
 

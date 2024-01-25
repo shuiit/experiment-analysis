@@ -70,11 +70,7 @@ class PreProcess:
         body_angles = self.filter_and_derive(angles.loc[:, (body_columns) & (~cm_columns)],
                                            angles['frames'],angles['time'],'smooth_window_body_angles',
                                            'smooth_poly_body',derivetive_name = ['','_dot','_dot_dot'])
-        
-        body_cm = self.filter_and_derive(angles.loc[:, (body_columns) & (cm_columns)],
-                                           angles['frames'],angles['time'],'smooth_window_body_cm',
-                                           'smooth_poly_body',derivetive_name = ['','_dot','_dot_dot'],asign_frames_time = False)
-        self.body = pd.concat([body_angles,body_cm],axis = 1)
+        self.body = pd.concat([body_angles,angles.loc[:, (body_columns) & (cm_columns)]],axis = 1)
         self.wing = self.filter_and_derive(angles.loc[:, ~self.angles.columns.str.contains('body')],
                                            angles['frames'],angles['time'],'smooth_window_wing',
                                            'smooth_poly_wing',derivetive_name = [''])

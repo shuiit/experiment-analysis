@@ -74,6 +74,12 @@ class Experiment():
         fig.update_layout( xaxis_title = prop_x, yaxis_title = prop)     
         fig.show()
 
+    def smooth_prop_movies(self,prop,derives,wing_body):
+        [self.get_mov(mov_name).smooth_and_derive(prop,derives,wing_body) for  mov_name in self.mov_names]
+
+
+    def project_prop_movies(self,prop_to_project):
+        [self.get_mov(mov_name).project_prop(prop_to_project,'body') for  mov_name in self.mov_names]
 
     def get_mov(self,mov_name):
         return self.exp_dict[mov_name]
