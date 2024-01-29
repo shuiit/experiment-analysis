@@ -50,13 +50,13 @@ class Experiment():
         [self.get_mov(mov_name).mean_props(prop1,prop2,wing_body,header_name) for mov_name in mov_names]
 
     
-    def min_max_point_movies(self,prop):
-        return np.hstack([self.exp_dict[mov_name].min_max_point(prop) for mov_name in self.mov_names])
+    def min_max_point_movies(self,prop,**kwargs):
+        return np.hstack([self.exp_dict[mov_name].min_max_point(prop,**kwargs) for mov_name in self.mov_names])
     
 
     def zero_velocity_movies(self,prop):
         zero_v_list = [self.exp_dict[mov_name].zero_velocity(prop) for mov_name in self.mov_names]
-        return [np.min(velocity) for velocity in zero_v_list if np.min(velocity) != None]
+        return [velocity for velocity in zero_v_list if np.min(velocity) != None]
     
     def add_mean_prop_movies(self,prop_name,wing_body_prop,wing_body_mean_save,mov = False,phi_idx_to_mean = 'phi_rw_min_idx'):
         mov_names = self.mov_names if mov == False else mov
@@ -72,17 +72,31 @@ class Experiment():
         fig.add_vline(x=0, line_width=3, line_color="lime")
         if self.pertubation != False: fig.add_vline(x=self.pertubation, line_width=3, line_color="red")
         fig.update_layout( xaxis_title = prop_x, yaxis_title = prop)     
-        fig.show()
 
     def smooth_prop_movies(self,prop,derives,wing_body):
         [self.get_mov(mov_name).smooth_and_derive(prop,derives,wing_body) for  mov_name in self.mov_names]
 
 
-    def project_prop_movies(self,prop_to_project):
-        [self.get_mov(mov_name).project_prop(prop_to_project,'body') for  mov_name in self.mov_names]
+    def project_prop_movies(self,prop_to_project,**kwargs):
+        [self.get_mov(mov_name).project_prop(prop_to_project,'body',**kwargs) for  mov_name in self.mov_names]
 
     def get_mov(self,mov_name):
         return self.exp_dict[mov_name]
+    
+    def mean_time_series_prop(self,prop,wing_body,window = (73*7)//2,dt = 1/16000):
+        
+        t_list = np.arange(-40,400,dt*1000)
+        cmlist = np.full((len(self.mov_names),len(t_list)),np.nan)
+        for idx_mov,mov_name in enumerate(self.mov_names):
+            mov = self.get_mov(mov_name)
+            time = mov.get_prop('time',wing_body)[window:,0]
+
+            cm_dot = mov.get_prop(prop,wing_body)[window:,0]
+            # cm_dot = cm_dot - np.mean(cm_dot[window:mov.ref_frame + 1])
+            time_inter,tlist_idx,time_idx = np.intersect1d(t_list,time,return_indices = True )
+            cmlist[idx_mov,tlist_idx] = cm_dot[time_idx]
+            mean_prop = np.nanmean(cmlist,axis = 0)
+        return mean_prop,t_list
     
 
     

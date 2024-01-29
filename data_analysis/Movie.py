@@ -40,12 +40,17 @@ class Movie():
         [self.header[dict_name].update({name:len(self.header[dict_name])}) for name in string_to_add]
 
 
-    def min_max_point(self,prop,wing_body = 'body'):
-        idx_time = self.header[wing_body]['time']
+    def min_max_point(self,prop,wing_body = 'body',t0 = False,t1 = False):
         idx_prop = self.header[wing_body][prop]
 
-        time_min_v = self.data[wing_body][np.argmin(self.data[wing_body][:,idx_prop]),idx_time]
-        time_max_pitch = self.data[wing_body][np.argmax(self.data[wing_body][:,idx_prop]),idx_time]
+
+        time = self.get_prop('time','body')[:,0]
+        idx = (time >t0 ) & (time < t1) if (t0 != False) & (t1 != False) else (time >-np.inf ) & (time < np.inf)
+        time = self.get_prop('time','body')[idx,0]
+    
+
+        time_min_v = time[np.argmin(self.data[wing_body][idx,idx_prop])]
+        time_max_pitch = time[np.argmax(self.data[wing_body][idx,idx_prop])]
         return np.vstack((time_min_v,time_max_pitch))
     
     def zero_velocity(self,prop,wing_body = 'body'):
@@ -53,7 +58,8 @@ class Movie():
         idx_time = self.header[wing_body]['time']
         idx_prop = self.header[wing_body][prop]
 
-        zero_v = np.where(np.diff(np.sign(self.data[wing_body][:,idx_prop]))<0)[0]
+        zero_v = np.where((np.diff(np.sign(self.data[wing_body][:,idx_prop]))<0) | (np.diff(np.sign(-self.data[wing_body][:,idx_prop]))<0))[0]
+
         if len(zero_v) > 0:
             return self.data[wing_body][zero_v,idx_time]
 
