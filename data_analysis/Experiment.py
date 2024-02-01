@@ -16,13 +16,13 @@ from Plotters import Plotters
 pio.renderers.default='browser'
 
 class Experiment():
-    def __init__(self,loadir,exp_name, movie_name_list = False, movie_length = 2000):    
+    def __init__(self,loadir,exp_name, movie_name_list = False, movie_length = 3000):    
         self.experiment = h5py.File(f'{loadir}/{exp_name}.hdf5', "r")
         self.experiment_name = exp_name
         self.pertubation_name = self.experiment_name.split('_')[-1]
         self.color_map = colormap.datad["tab10"]['listed']
         self.mov_names = list(self.experiment.keys()) if movie_name_list == False else movie_name_list
-        self.pertubation = int(self.pertubation_name.split('ms')[0]) if self.pertubation_name.isalpha() == False else False
+        self.pertubation = int(self.pertubation_name.split('ms')[0]) if self.pertubation_name.isnumeric() == True else False
         self.loadir =loadir
         time_idx = np.where(self.experiment[self.mov_names[0]]['body'].attrs['header'] == 'time')[0][0]
         self.exp_dict = {mov : Movie(self.experiment,mov,pertubation = self.pertubation) for mov in self.mov_names if self.del_initial_tim_and_length(self.experiment[mov],movie_length,time_idx) !=True}
@@ -62,11 +62,14 @@ class Experiment():
         mov_names = self.mov_names if mov == False else mov
         [self.get_mov(mov_name).mean_prop_stroke(prop_name,wing_body_prop,wing_body_mean_save,phi_idx_to_mean = phi_idx_to_mean) for mov_name in mov_names]
 
-    def plot_prop_movies(self,prop,wing_body,color,fig,mov = False,case = 'plot_mov',prop_x = 'time',
-                         add_horizontal_line = 0,**kwargs):
+    def plot_prop_movies(self,prop,wing_body,fig,mov = False,case = 'plot_mov',prop_x = 'time',
+                         add_horizontal_line = 0,color = False,legend = False,**kwargs):
         mov_names = self.mov_names if mov == False else mov
-        if 'plot_exp' == case: [self.get_mov(mov_name).plot_prop(prop,wing_body,color,self.pertubation_name,fig,showlegend = idx == 0,prop_x = prop_x,**kwargs) for idx,mov_name in enumerate(mov_names)]
-        if 'plot_mov' == case: [self.get_mov(mov_name).plot_prop(prop,wing_body,self.color_map[idx%len(self.color_map)],mov_name,fig,prop_x = prop_x,**kwargs) for idx,mov_name in enumerate(mov_names)]
+        legend = mov_names if legend == False else legend
+
+        color = [self.color_map[idx%len(self.color_map)] for idx,mov_name in enumerate(mov_names)] if color == False else color 
+        if 'plot_exp' == case: [self.get_mov(mov_name).plot_prop(prop,wing_body,color,legend,fig,showlegend = idx == 0,prop_x = prop_x,**kwargs) for idx,mov_name in enumerate(mov_names)]
+        if 'plot_mov' == case: [self.get_mov(mov_name).plot_prop(prop,wing_body,color[idx],legend[idx],fig,prop_x = prop_x,**kwargs) for idx,mov_name in enumerate(mov_names)]
 
         if add_horizontal_line != None: fig.add_hline(y=add_horizontal_line, line_width=3, line_color="black")
         fig.add_vline(x=0, line_width=3, line_color="lime")

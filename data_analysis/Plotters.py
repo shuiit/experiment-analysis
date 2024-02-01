@@ -21,7 +21,7 @@ class Plotters():
     
     def plot_prop_movie(self,xdata,ydata,color,name,
                         marker_size = 7,fig = False,showlegend = True,
-                        line_width = 5,mode = 'lines'):
+                        line_width = 5,mode = 'lines',plot_points = False):
         fig = go.Figure() if fig == False else fig
 
         traces = go.Scattergl(
@@ -33,11 +33,32 @@ class Plotters():
             mode=mode,
             line_width= line_width,
             marker=dict(color = f'rgba{str(tuple(np.append(color,0.5)))}',size = marker_size, symbol = 'circle'))
+        
         fig.add_traces(traces)
+        
+        if plot_points != False:
+            fig.add_scatter(x=[plot_points[0]],
+                y=[plot_points[1]],
+                marker=dict(
+                    color= f'rgba{str(tuple(np.append(color,0.5)))}',
+                    size=10
+                ))
+
         return fig
     
 
     def scatter_3d(self,fig,data,hover_data, name,**kwargs):
+        """3d plotly scatter
+
+        Args:
+            fig (plotly): plotly figure
+            data (np array): contins x,y,z (axis per column)
+            hover_data (_type_): data to show when hoverinb, such as time
+            name (string): name of poins
+
+        Returns:
+            fig (plotly): plotly figure
+        """
 
         fig.add_trace(go.Scatter3d(
         x=data[:,0],
@@ -49,15 +70,33 @@ class Plotters():
         fig.update_traces( hovertemplate='<b>time</b>: %{customdata:,.f}<br>') 
         return fig
     
-    def plot_3d_traj(self,data,plot_cofnig,mov_name,exp_name,color_prop):
 
+
+    def plot_3d_traj(self,data,plot_cofnig,mov_name,exp_name,color_prop):
+        """plot 3d trajectory
+
+        Args:
+            data (dict): dictionary contining cm, time, x_vector, y_vector, start_pert_endpert, color_prop
+            plot_cofnig (dict):fly_samples - delta sample of the fly axes .
+                                        traj_samples - delta samle of cm 
+                                        size_x - scale of body axis
+                                        size_y - scale of y axis
+                                        delta_y_on_x - location of y axis on x axis (make it look like a cross)
+
+            mov_name (str): name of movie
+            exp_name (str): name of experiment
+            color_prop (str): name of property to color cm 
+
+        Returns:
+            fig
+        """
         fig = go.Figure()
 
-        scene=dict(camera=dict(eye=dict(x=1., y=1, z=1.25)), #the default values are 1.25, 1.25, 1.25
+        scene=dict(camera=dict(eye=dict(x=1., y=1, z=1.25)),
         xaxis=dict(nticks=10),
         yaxis=dict(nticks=10),
         zaxis=dict(nticks=10),
-        aspectmode='data' #this string can be 'data', 'cube', 'auto', 'manual'
+        aspectmode='data' 
         )
 
         fig.update_scenes(scene)
