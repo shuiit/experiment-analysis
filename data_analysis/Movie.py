@@ -11,7 +11,7 @@ from plotly.subplots import make_subplots
 import h5py
 from scipy.signal import argrelextrema, savgol_filter,find_peaks
 from scipy.spatial.transform import Rotation as R
-from Plotters import Plotters
+import Plotters 
 
 
 
@@ -85,8 +85,52 @@ class Movie():
         self.data[wing_body] = np.hstack((self.data[wing_body], projected))
         self.add_to_header([f'{header_name}_projected'],wing_body)
 
+    def sub_ref_frame(self,prop,wing_body):
+        prop_to_sub = self.get_prop(prop,wing_body)
+        sub_prop = prop_to_sub - prop_to_sub[self.ref_frame,:] 
+        self.data[wing_body] = np.hstack((self.data[wing_body], sub_prop))
+        self.add_to_header([f'{prop}_min_ref_frame'],wing_body)
 
 
+
+    def t0_t1_idx(self,t0,t1):
+        time = self.get_prop('time','body')[:,0]
+        idx_t1 = np.where(t1 == time)[0][0]
+        idx_t0 = np.where(t0 == time)[0][0]
+        return idx_t0,idx_t1
+    
+
+    def get_min(self,prop,t1 = False,t0 = False):
+        
+        prop_to_min = self.get_prop(prop,'body')[:,0]
+        idx_time = (0,-1 )if (t1 == False) | (t0 == False) else self.t0_t1_idx(t0,t1)
+        min_idx = np.argmin(prop_to_min[idx_time[0]:idx_time[1]], prominence=0.1 )
+        if len(max) > 0:
+            time = self.get_prop('time','body')
+            return time[min_idx + idx_time[0]]
+
+
+    def get_peaks_min_max(self,prop,case,t1 = False,t0 = False):
+
+        idx_time = (0,-1 )if (t1 == False) | (t0 == False) else self.t0_t1_idx(t0,t1)
+        acc = self.get_prop(prop,'body')[idx_time[0]:idx_time[1],0]
+
+        if case == 'peaks':
+            idx = find_peaks(acc, prominence=0.1 )[0]
+        if case == 'min':
+            idx = [np.argmin(acc)]
+        if case == 'max':
+            idx = [np.argmax(acc)]
+        if len(idx) > 0:
+            time = self.get_prop('time','body')[:,0]
+            return self.data['body'][idx[0]+ idx_time[0],:]
+        else:
+            return self.data['body'][0,:]*np.nan
+
+    def add_point_to_plot(self,interest_points,ydata,fig,color,wing_body = 'body',xdata = 'time',**kwargs):   
+        idx_y = self.header[wing_body][ydata] 
+        idx_x = self.header[wing_body][xdata] 
+        Plotters.add_point_to_plot(interest_points[idx_x],interest_points[idx_y],self.name,color,fig,**kwargs) 
 
     
     def mean_props(self,prop1,prop2,wing_body,header_name):
@@ -168,8 +212,7 @@ class Movie():
 
     def plot_3d_traj_movie(self,color_prop):
         data,plot_cofnig = self.calculation_for_3d_traj(color_prop = color_prop)
-        ploter = Plotters(self.pertubation)
-        return ploter.plot_3d_traj(data,plot_cofnig,self.name,self.pertubation_name,color_prop = color_prop )
+        return Plotters.plot_3d_traj(data,plot_cofnig,self.name,self.pertubation_name,color_prop = color_prop )
         
 
     def get_prop(self,prop,wing_body,three_col = 1):
@@ -200,8 +243,7 @@ class Movie():
         data_y = self.get_prop(prop,wing_body)
         data_x = self.get_prop(prop_x,wing_body)
         
-        ploter = Plotters(self.pertubation)
-        return ploter.plot_prop_movie(data_x[t0_idx[0]:t1_idx[0],0],data_y[t0_idx[0]:t1_idx[0],0],color,name,fig = fig,**kwargs)
+        return Plotters.plot_prop_movie(data_x[t0_idx[0]:t1_idx[0],0],data_y[t0_idx[0]:t1_idx[0],0],color,name,fig = fig,**kwargs)
 
     
     @staticmethod

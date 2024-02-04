@@ -11,7 +11,7 @@ from plotly.subplots import make_subplots
 import h5py
 from Movie import Movie
 import matplotlib.cm as colormap
-from Plotters import Plotters
+import Plotters 
 
 pio.renderers.default='browser'
 
@@ -22,13 +22,14 @@ class Experiment():
         self.pertubation_name = self.experiment_name.split('_')[-1]
         self.color_map = colormap.datad["tab10"]['listed']
         self.mov_names = list(self.experiment.keys()) if movie_name_list == False else movie_name_list
-        self.pertubation = int(self.pertubation_name.split('ms')[0]) if self.pertubation_name.isnumeric() == True else False
+        self.pertubation = int(self.pertubation_name.split('ms')[0]) if self.pertubation_name.isalpha() == False else False
         self.loadir =loadir
         time_idx = np.where(self.experiment[self.mov_names[0]]['body'].attrs['header'] == 'time')[0][0]
         self.exp_dict = {mov : Movie(self.experiment,mov,pertubation = self.pertubation) for mov in self.mov_names if self.del_initial_tim_and_length(self.experiment[mov],movie_length,time_idx) !=True}
         self.mov_names = list(self.exp_dict.keys())
         self.body_header = self.exp_dict[self.mov_names[0]].header['body']
         self.wing_header = self.exp_dict[self.mov_names[0]].header['wing']
+        self.interest_points = {}
 
         self.figures_path = f'{self.loadir}/figures/{self.experiment_name.split("manipulated_")[1]}'
         if not os.path.exists(self.figures_path): os.makedirs(self.figures_path)
@@ -79,9 +80,22 @@ class Experiment():
     def smooth_prop_movies(self,prop,derives,wing_body):
         [self.get_mov(mov_name).smooth_and_derive(prop,derives,wing_body) for  mov_name in self.mov_names]
 
+    def get_peaks_movies(self,prop,case,**kwargs):
+        self.interest_points[f'{prop}_{case}'] =  np.vstack([self.get_mov(mov_name).get_peaks_min_max(prop,case = case,**kwargs) for  mov_name in self.mov_names])
+        
+    
+    def add_point_to_plot_movies(self,name_point,ydata,fig,**kwargs):
+        [self.get_mov(mov_name).add_point_to_plot(self.interest_points[name_point][idx,:],ydata,fig,self.color_map[idx%len(self.color_map)],wing_body = 'body',**kwargs) for idx,mov_name in enumerate(self.mov_names)]
+          
+    def interest_point_hist(self,point_name,prop = 'time',**kwargs):
+        return Plotters.histogram(self.interest_points[point_name][:,self.body_header[prop]],self.experiment_name,prop, point_name,**kwargs)
+          
 
     def project_prop_movies(self,prop_to_project,**kwargs):
         [self.get_mov(mov_name).project_prop(prop_to_project,'body',**kwargs) for  mov_name in self.mov_names]
+
+    def substruct_first_frame(self,prop,wing_body):
+        [self.get_mov(mov_name).sub_ref_frame(prop,wing_body) for  mov_name in self.mov_names]
 
     def get_mov(self,mov_name):
         return self.exp_dict[mov_name]
