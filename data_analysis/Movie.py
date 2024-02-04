@@ -54,20 +54,32 @@ class Movie():
 
 
         
-    def project_prop(self,prop,wing_body = 'body',header_name = 'CM_dot'):
+    def project_prop(self,prop,wing_body = 'body',header_name = 'CM_dot',ax_to_proj = 'X_x_body'):
         data = self.get_prop(prop,wing_body, three_col= 3) 
-        vector_to_project = self.get_prop('X_x_body','vectors',three_col = 3)
+        vector_to_project = self.get_prop(ax_to_proj,'vectors',three_col = 3)
         ref_axes = vector_to_project[self.ref_frame,:]
         x_axis_on_xy = (ref_axes - ref_axes * [0,0,1])/linalg.norm(ref_axes-ref_axes * [0,0,1] )[np.newaxis].T # project the new axis to XY plane
         projected = np.sum(np.tile(x_axis_on_xy,(len(data),1)) * data,axis = 1)[np.newaxis,:].T
         self.data[wing_body] = np.hstack((self.data[wing_body], projected))
         self.add_to_header([f'{header_name}_projected'],wing_body)
 
+
     def sub_ref_frame(self,prop,wing_body):
         prop_to_sub = self.get_prop(prop,wing_body)
         sub_prop = prop_to_sub - prop_to_sub[self.ref_frame,:] 
         self.data[wing_body] = np.hstack((self.data[wing_body], sub_prop))
         self.add_to_header([f'{prop}_min_ref_frame'],wing_body)
+
+
+
+
+    def v_size(self,prop_x,prop_y,wing_body):
+        xv = self.get_prop(prop_x,wing_body)
+        yv = self.get_prop(prop_y,wing_body)
+
+        sub_prop = np.sqrt(xv**2 + yv**2)
+        self.data[wing_body] = np.hstack((self.data[wing_body], sub_prop))
+        self.add_to_header([f'amp_v'],wing_body)
 
 
 
@@ -78,6 +90,15 @@ class Movie():
         
         return idx_t0,idx_t1
     
+    def delta_ang_axes(self,axis = 'X_x_body'):
+        
+            data = self.get_prop(axis,'vectors', three_col= 3)
+            vector_to_project = self.get_prop(axis,'vectors',three_col = 3)[self.ref_frame,0:2]
+            x_axis_on_xy = (vector_to_project)/np.linalg.norm(vector_to_project) # project the new axis to XY plane
+            data_axis_on_xy = (data[:,0:2])/np.linalg.norm(data[:,0:2],axis = 1)[np.newaxis].T # project the new axis to XY plane
+            delta_ang = np.arccos(np.sum(data_axis_on_xy * np.repeat([x_axis_on_xy],len(data_axis_on_xy),axis = 0),axis = 1))*180/np.pi
+            self.data['vectors'] = np.vstack((self.data['vectors'].T, delta_ang)).T
+            self.add_to_header([f'delta_ang'],'vectors')
 
     def get_min(self,prop,t1 = False,t0 = False):
         
@@ -94,8 +115,10 @@ class Movie():
         idx_time = (0,-1 )if (t1 == False) | (t0 == False) else self.t0_t1_idx(t0,t1)
         acc = self.get_prop(prop,'body')[idx_time[0]:idx_time[1],0]
 
-        if case == 'peaks':
+        if case == 'peaks_max':
             idx = find_peaks(acc, prominence=0.1 )[0]
+        if case == 'peaks_min':
+            idx = find_peaks(-acc, prominence=0.05 )[0]
         if case == 'min':
             idx = [np.argmin(acc)]
         if case == 'max':

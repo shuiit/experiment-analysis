@@ -97,6 +97,12 @@ class Experiment():
     def substruct_first_frame(self,prop,wing_body):
         [self.get_mov(mov_name).sub_ref_frame(prop,wing_body) for  mov_name in self.mov_names]
 
+    def velocity_amplitude(self,prop_x,prop_y,wing_body):
+        [self.get_mov(mov_name).v_size(prop_x,prop_y,wing_body) for  mov_name in self.mov_names]
+
+    def delta_ang_movies(self):
+        [self.get_mov(mov_name).delta_ang_axes() for  mov_name in self.mov_names]
+
     def get_mov(self,mov_name):
         return self.exp_dict[mov_name]
     
