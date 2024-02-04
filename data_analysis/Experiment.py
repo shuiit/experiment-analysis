@@ -92,7 +92,7 @@ class Experiment():
           
 
     def project_prop_movies(self,prop_to_project,**kwargs):
-        [self.get_mov(mov_name).project_prop(prop_to_project,'body',**kwargs) for  mov_name in self.mov_names]
+        [self.get_mov(mov_name).project_prop(prop_to_project,**kwargs) for  mov_name in self.mov_names]
 
     def substruct_first_frame(self,prop,wing_body):
         [self.get_mov(mov_name).sub_ref_frame(prop,wing_body) for  mov_name in self.mov_names]

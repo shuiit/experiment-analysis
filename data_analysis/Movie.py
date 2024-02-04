@@ -40,29 +40,7 @@ class Movie():
         [self.header[dict_name].update({name:len(self.header[dict_name])}) for name in string_to_add]
 
 
-    def min_max_point(self,prop,wing_body = 'body',t0 = False,t1 = False):
-        idx_prop = self.header[wing_body][prop]
 
-
-        time = self.get_prop('time','body')[:,0]
-        idx = (time >t0 ) & (time < t1) if (t0 != False) & (t1 != False) else (time >-np.inf ) & (time < np.inf)
-        time = self.get_prop('time','body')[idx,0]
-        prop_to_max = self.get_prop(prop,'body')[idx,0]
-
-
-        time_min_v = time[np.argmin(prop_to_max)]
-        time_max_pitch = time[np.argmax(prop_to_max)]
-        return np.vstack((time_min_v,time_max_pitch))
-    
-    def zero_velocity(self,prop,wing_body = 'body'):
-        
-        idx_time = self.header[wing_body]['time']
-        idx_prop = self.header[wing_body][prop]
-
-        zero_v = np.where((np.diff(np.sign(self.data[wing_body][:,idx_prop]))<0) | (np.diff(np.sign(-self.data[wing_body][:,idx_prop]))<0))[0]
-
-        if len(zero_v) > 0:
-            return self.data[wing_body][zero_v,idx_time]
 
     def smooth_and_derive(self,prop,derivs,wing_body,three_col = 3):
         idx = self.header[wing_body][prop]
@@ -76,7 +54,7 @@ class Movie():
 
 
         
-    def project_prop(self,prop,wing_body,header_name = 'CM_dot'):
+    def project_prop(self,prop,wing_body = 'body',header_name = 'CM_dot'):
         data = self.get_prop(prop,wing_body, three_col= 3) 
         vector_to_project = self.get_prop('X_x_body','vectors',three_col = 3)
         ref_axes = vector_to_project[self.ref_frame,:]
@@ -95,8 +73,9 @@ class Movie():
 
     def t0_t1_idx(self,t0,t1):
         time = self.get_prop('time','body')[:,0]
-        idx_t1 = np.where(t1 == time)[0][0]
+        idx_t1 = np.where(t1 == time)[0][0] if t1 != -1 else -1
         idx_t0 = np.where(t0 == time)[0][0]
+        
         return idx_t0,idx_t1
     
 
@@ -121,6 +100,9 @@ class Movie():
             idx = [np.argmin(acc)]
         if case == 'max':
             idx = [np.argmax(acc)]
+        if case == 'zero_v':
+            idx =  np.where((np.diff(np.sign(acc))<0) | (np.diff(np.sign(-acc))<0))[0]
+
         if len(idx) > 0:
             time = self.get_prop('time','body')[:,0]
             return self.data['body'][idx[0]+ idx_time[0],:]
