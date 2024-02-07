@@ -53,16 +53,6 @@ class Movie():
         self.add_to_header(header,wing_body)
 
 
-        
-    def project_prop(self,prop,wing_body = 'body',header_name = 'CM_dot',ax_to_proj = 'X_x_body'):
-        data = self.get_prop(prop,wing_body, three_col= 3) 
-        vector_to_project = self.get_prop(ax_to_proj,'vectors',three_col = 3)
-        ref_axes = vector_to_project[self.ref_frame,:]
-        x_axis_on_xy = (ref_axes - ref_axes * [0,0,1])/linalg.norm(ref_axes-ref_axes * [0,0,1] )[np.newaxis].T # project the new axis to XY plane
-        projected = np.sum(np.tile(x_axis_on_xy,(len(data),1)) * data,axis = 1)[np.newaxis,:].T
-        self.data[wing_body] = np.hstack((self.data[wing_body], projected))
-        self.add_to_header([f'{header_name}_projected'],wing_body)
-
 
     def sub_ref_frame(self,prop,wing_body):
         prop_to_sub = self.get_prop(prop,wing_body)
@@ -90,15 +80,52 @@ class Movie():
         
         return idx_t0,idx_t1
     
-    def delta_ang_axes(self,axis = 'X_x_body'):
+    def project_axes_xy(self,axis = 'X_x_body'):
         
-            data = self.get_prop(axis,'vectors', three_col= 3)
-            vector_to_project = self.get_prop(axis,'vectors',three_col = 3)[self.ref_frame,0:2]
-            x_axis_on_xy = (vector_to_project)/np.linalg.norm(vector_to_project) # project the new axis to XY plane
-            data_axis_on_xy = (data[:,0:2])/np.linalg.norm(data[:,0:2],axis = 1)[np.newaxis].T # project the new axis to XY plane
-            delta_ang = np.arccos(np.sum(data_axis_on_xy * np.repeat([x_axis_on_xy],len(data_axis_on_xy),axis = 0),axis = 1))*180/np.pi
+        data = self.get_prop(axis,'vectors', three_col= 3)
+        data_axis_on_xy = (data[:,0:2])/np.linalg.norm(data[:,0:2],axis = 1)[np.newaxis].T # project the new axis to XY plane
+        self.data['vectors'] = np.hstack((self.data['vectors'], data_axis_on_xy))
+        self.add_to_header([f'{axis}_projected',f'{axis}_projected'],'vectors')
+
+        
+    def project_prop(self,prop,wing_body = 'body',header_name = 'CM_dot',ax_to_proj = 'X_x_body',add_to_vectors= False):
+        data = self.get_prop(prop,wing_body, three_col= 3) 
+        projected_axes = self.get_prop(ax_to_proj,'vectors',three_col = 3)[self.ref_frame,:]
+        projected = np.sum(np.tile(projected_axes,(len(data),1)) * data,axis = 1)[np.newaxis,:].T
+
+        self.data[wing_body] = np.hstack((self.data[wing_body], projected))
+        self.add_to_header([f'{header_name}_projected'],wing_body)
+        if add_to_vectors == True:
+            self.from_wing_body_to_vectors(f'{header_name}_projected','body')
+        
+    def delta_ang_all_time(self,prop1_name,prop2_name,header,three_col = 2):
+
+        prop1 = self.get_prop(prop1_name,'vectors',three_col=three_col)
+        prop2 = self.get_prop(prop2_name,'vectors',three_col=three_col)
+        ang_mov  = np.abs(np.arccos(np.sum(prop1[:,0:2] * prop2[:,0:2],axis = 1))*180/np.pi)
+        self.data['vectors'] = np.vstack((self.data['vectors'].T, ang_mov)).T
+        self.add_to_header( [header],'vectors')
+
+
+    def from_wing_body_to_vectors(self,prop,wing_body):
+        
+        prop_to_add = self.get_prop(prop,wing_body)
+        frame_wing_body = self.get_prop('frames',wing_body)
+        frames_vector = self.get_prop('frames','vectors')
+
+        rows_frames,frames_vector_ind, frame_body_ind = np.intersect1d(frames_vector,frame_wing_body, return_indices=True )
+        self.data['vectors'] = np.hstack((self.data['vectors'],prop_to_add[frame_body_ind,:]))
+        self.add_to_header( [prop],'vectors')
+
+    
+
+    def delta_ang_ref_frame(self,ref_frame_axis,header,axis = 'X_x_body_projected'):
+        
+            data_axis = self.get_prop(axis,'vectors', three_col= 3)
+            ref_axis = self.get_prop(ref_frame_axis,'vectors', three_col= 3)[self.ref_frame,:]
+            delta_ang = np.arccos(np.sum(data_axis * np.repeat([ref_axis],len(data_axis),axis = 0),axis = 1))*180/np.pi
             self.data['vectors'] = np.vstack((self.data['vectors'].T, delta_ang)).T
-            self.add_to_header([f'delta_ang'],'vectors')
+            self.add_to_header([header],'vectors')
 
     def get_min(self,prop,t1 = False,t0 = False):
         

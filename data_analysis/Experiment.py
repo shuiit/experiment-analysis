@@ -89,7 +89,14 @@ class Experiment():
           
     def interest_point_hist(self,point_name,prop = 'time',**kwargs):
         return Plotters.histogram(self.interest_points[point_name][:,self.body_header[prop]],self.experiment_name,prop, point_name,**kwargs)
-          
+    
+
+    def delta_ang_all_time_movies(self,prop1_name,prop2_name,header,**kwargs):
+        [self.get_mov(mov_name).delta_ang_all_time(prop1_name,prop2_name,header,**kwargs) for  mov_name in self.mov_names]
+
+    
+    def project_axes_movies(self,**kwargs):
+        [self.get_mov(mov_name).project_axes_xy(**kwargs) for  mov_name in self.mov_names]
 
     def project_prop_movies(self,prop_to_project,**kwargs):
         [self.get_mov(mov_name).project_prop(prop_to_project,**kwargs) for  mov_name in self.mov_names]
@@ -100,8 +107,8 @@ class Experiment():
     def velocity_amplitude(self,prop_x,prop_y,wing_body):
         [self.get_mov(mov_name).v_size(prop_x,prop_y,wing_body) for  mov_name in self.mov_names]
 
-    def delta_ang_movies(self):
-        [self.get_mov(mov_name).delta_ang_axes() for  mov_name in self.mov_names]
+    def delta_ref_ang_movies(self,ref_frame_axis,header,**kwargs):
+        [self.get_mov(mov_name).delta_ang_ref_frame(ref_frame_axis,header,**kwargs) for  mov_name in self.mov_names]
 
     def get_mov(self,mov_name):
         return self.exp_dict[mov_name]
