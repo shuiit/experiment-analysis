@@ -123,10 +123,10 @@ class Movie():
 
     
 
-    def delta_ang_ref_frame(self,ref_frame_axis,header,axis = 'X_x_body_projected'):
+    def delta_ang_ref_frame(self,ref_frame_axis,header,axis = 'X_x_body_projected',three_col = 2):
         
-            data_axis = self.get_prop(axis,'vectors', three_col= 3)
-            ref_axis = self.get_prop(ref_frame_axis,'vectors', three_col= 3)[self.ref_frame,:]
+            data_axis = self.get_prop(axis,'vectors', three_col= three_col)
+            ref_axis = self.get_prop(ref_frame_axis,'vectors', three_col= three_col)[self.ref_frame,:]
             delta_ang = np.sum(data_axis * np.repeat([ref_axis],len(data_axis),axis = 0),axis = 1)
             self.data['vectors'] = np.vstack((self.data['vectors'].T, delta_ang)).T
             self.add_to_header([header],'vectors')
