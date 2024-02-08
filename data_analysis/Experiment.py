@@ -95,8 +95,8 @@ class Experiment():
         [self.get_mov(mov_name).delta_ang_all_time(prop1_name,prop2_name,header,**kwargs) for  mov_name in self.mov_names]
 
     
-    def project_axes_movies(self,**kwargs):
-        [self.get_mov(mov_name).project_axes_xy(**kwargs) for  mov_name in self.mov_names]
+    def project_axes_movies(self,header,**kwargs):
+        [self.get_mov(mov_name).project_axes_xy(header,**kwargs) for  mov_name in self.mov_names]
 
     def project_prop_movies(self,prop_to_project,**kwargs):
         [self.get_mov(mov_name).project_prop(prop_to_project,**kwargs) for  mov_name in self.mov_names]

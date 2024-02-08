@@ -80,12 +80,15 @@ class Movie():
         
         return idx_t0,idx_t1
     
-    def project_axes_xy(self,axis = 'X_x_body'):
+    def project_axes_xy(self,header,axis = 'X_x_body',wing_body = 'vectors',add_to_vectors= False):
         
-        data = self.get_prop(axis,'vectors', three_col= 3)
+        data = self.get_prop(axis,wing_body, three_col= 3)
         data_axis_on_xy = (data[:,0:2])/np.linalg.norm(data[:,0:2],axis = 1)[np.newaxis].T # project the new axis to XY plane
-        self.data['vectors'] = np.hstack((self.data['vectors'], data_axis_on_xy))
-        self.add_to_header([f'{axis}_projected',f'{axis}_projected'],'vectors')
+        self.data[wing_body] = np.hstack((self.data[wing_body], data_axis_on_xy))
+        self.add_to_header(header,wing_body)
+        
+        if add_to_vectors == True:
+            [self.from_wing_body_to_vectors(head,'body') for head in header ]
 
         
     def project_prop(self,prop,wing_body = 'body',header_name = 'CM_dot',ax_to_proj = 'X_x_body',add_to_vectors= False):
@@ -102,7 +105,8 @@ class Movie():
 
         prop1 = self.get_prop(prop1_name,'vectors',three_col=three_col)
         prop2 = self.get_prop(prop2_name,'vectors',three_col=three_col)
-        ang_mov  = np.abs(np.arccos(np.sum(prop1[:,0:2] * prop2[:,0:2],axis = 1))*180/np.pi)
+        ang_mov  =np.arccos(np.sum(prop1 * prop2,axis = 1))*180/np.pi
+        # ang_mov = ang_mov - ang_mov[self.ref_frame]
         self.data['vectors'] = np.vstack((self.data['vectors'].T, ang_mov)).T
         self.add_to_header( [header],'vectors')
 
@@ -123,7 +127,7 @@ class Movie():
         
             data_axis = self.get_prop(axis,'vectors', three_col= 3)
             ref_axis = self.get_prop(ref_frame_axis,'vectors', three_col= 3)[self.ref_frame,:]
-            delta_ang = np.arccos(np.sum(data_axis * np.repeat([ref_axis],len(data_axis),axis = 0),axis = 1))*180/np.pi
+            delta_ang = np.sum(data_axis * np.repeat([ref_axis],len(data_axis),axis = 0),axis = 1)
             self.data['vectors'] = np.vstack((self.data['vectors'].T, delta_ang)).T
             self.add_to_header([header],'vectors')
 
