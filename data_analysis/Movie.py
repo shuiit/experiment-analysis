@@ -106,6 +106,8 @@ class Movie():
         prop1 = self.get_prop(prop1_name,'vectors',three_col=three_col)
         prop2 = self.get_prop(prop2_name,'vectors',three_col=three_col)
         ang_mov  =np.arccos(np.sum(prop1 * prop2,axis = 1))*180/np.pi
+        ang_mov  = (np.sum(prop1 * prop2,axis = 1))
+
         # ang_mov = ang_mov - ang_mov[self.ref_frame]
         self.data['vectors'] = np.vstack((self.data['vectors'].T, ang_mov)).T
         self.add_to_header( [header],'vectors')
