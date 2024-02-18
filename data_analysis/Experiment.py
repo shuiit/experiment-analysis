@@ -75,7 +75,10 @@ class Experiment():
         if add_horizontal_line != None: fig.add_hline(y=add_horizontal_line, line_width=3, line_color="black")
         fig.add_vline(x=0, line_width=3, line_color="lime")
         if self.pertubation != False: fig.add_vline(x=self.pertubation, line_width=3, line_color="red")
-        fig.update_layout( xaxis_title = prop_x, yaxis_title = prop)     
+        fig.update_layout( xaxis_title = prop_x, yaxis_title = prop)    
+        # fig.layout.yaxis.scaleanchor="x"
+        # fig.update_layout(autosize=False )
+ 
 
     def smooth_prop_movies(self,prop,derives,wing_body):
         [self.get_mov(mov_name).smooth_and_derive(prop,derives,wing_body) for  mov_name in self.mov_names]

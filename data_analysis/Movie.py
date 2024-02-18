@@ -105,11 +105,22 @@ class Movie():
 
         prop1 = self.get_prop(prop1_name,'vectors',three_col=three_col)
         prop2 = self.get_prop(prop2_name,'vectors',three_col=three_col)
-        ang_mov  =np.arccos(np.sum(prop1 * prop2,axis = 1))*180/np.pi
-        ang_mov  = (np.sum(prop1 * prop2,axis = 1))
+
+        prop1_v = np.vstack((prop1.T,prop1[:,0]*0)).T
+        prop2_v = np.vstack((prop2.T,prop2[:,0]*0)).T
+        sgn = np.sign(np.cross(prop1_v,prop2_v))[:,-1]
+
+        ang_mov  = sgn*np.arccos(np.sum(prop1 * prop2,axis = 1))*180/np.pi
+        idx = np.where(np.isnan(ang_mov))[0]
+        ang_mov[idx] = 0
+        unwarped = np.unwrap(ang_mov + 180,period = 360) - 180 
+        unwarped[idx] = np.nan
+
+
+        # ang_mov  = (np.sum(prop1 * prop2,axis = 1))
 
         # ang_mov = ang_mov - ang_mov[self.ref_frame]
-        self.data['vectors'] = np.vstack((self.data['vectors'].T, ang_mov)).T
+        self.data['vectors'] = np.vstack((self.data['vectors'].T, unwarped)).T
         self.add_to_header( [header],'vectors')
 
 
@@ -129,8 +140,18 @@ class Movie():
         
             data_axis = self.get_prop(axis,'vectors', three_col= three_col)
             ref_axis = self.get_prop(ref_frame_axis,'vectors', three_col= three_col)[self.ref_frame,:]
-            delta_ang = np.sum(data_axis * np.repeat([ref_axis],len(data_axis),axis = 0),axis = 1)
-            self.data['vectors'] = np.vstack((self.data['vectors'].T, delta_ang)).T
+            
+            vec_ref = np.repeat([[ref_axis[0],ref_axis[1],0]],len(data_axis),axis = 0)
+            prop1_v = np.vstack((data_axis.T,data_axis[:,0]*0)).T
+            sgn = np.sign(np.cross(prop1_v,vec_ref))[:,-1]
+
+            
+            delta_ang = sgn*np.arccos(np.sum(data_axis * np.repeat([ref_axis],len(data_axis),axis = 0),axis = 1))*180/np.pi
+            idx = np.where(np.isnan(delta_ang))[0]
+            delta_ang[idx] = 0
+            unwarped = np.unwrap(delta_ang,period = 360)
+            unwarped[idx] = np.nan 
+            self.data['vectors'] = np.vstack((self.data['vectors'].T, unwarped)).T
             self.add_to_header([header],'vectors')
 
     def get_min(self,prop,t1 = False,t0 = False):
@@ -272,7 +293,7 @@ class Movie():
         mean_stroke = [np.nanmean(data[idx0:idx1],axis = 0) for idx0,idx1 in zip(min_idx[:-1],min_idx[1:])]
         self.data[f'{wing_body_mean_save}'] = np.hstack((self.data[f'{wing_body_mean_save}'],np.array(mean_stroke)[val[1]][np.newaxis,:].T))
         self.add_to_header([f'{prop_name}'],f'{wing_body_mean_save}')
-
+ 
     def plot_prop(self,prop,wing_body,color,name,fig,prop_x = 'time',t0 = False,t1 = False,**kwargs):
 
         t0_idx =  self.get_idx_of_time(t0) if (t0 != False & len(self.get_idx_of_time(t0))>0) else [0]
