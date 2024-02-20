@@ -88,71 +88,82 @@ class Movie():
         self.add_to_header(header,wing_body)
         
         if add_to_vectors == True:
-            [self.from_wing_body_to_vectors(head,'body') for head in header ]
+            [self.from_wing_body_to_vectors(head,'body','vectors') for head in header ]
 
         
-    def project_prop(self,prop,wing_body = 'body',header_name = 'CM_dot',ax_to_proj = 'X_x_body',add_to_vectors= False):
-        data = self.get_prop(prop,wing_body, three_col= 3) 
-        projected_axes = self.get_prop(ax_to_proj,'vectors',three_col = 3)[self.ref_frame,:]
+    def project_prop(self,prop,wing_body = 'body',header_name = 'CM_dot',ax_to_proj = 'X_x_body',add_to_vectors= False,three_col = 3):
+        data = self.get_prop(prop,wing_body, three_col= three_col) 
+        projected_axes = self.get_prop(ax_to_proj,'vectors',three_col = three_col)[self.ref_frame,:]
         projected = np.sum(np.tile(projected_axes,(len(data),1)) * data,axis = 1)[np.newaxis,:].T
 
         self.data[wing_body] = np.hstack((self.data[wing_body], projected))
         self.add_to_header([f'{header_name}_projected'],wing_body)
         if add_to_vectors == True:
-            self.from_wing_body_to_vectors(f'{header_name}_projected','body')
+            self.from_wing_body_to_vectors(f'{header_name}_projected','body','vectors')
+    
+    def calc_angle_unwarp(self, prop,delta_ang = 180):
         
-    def delta_ang_all_time(self,prop1_name,prop2_name,header,three_col = 2):
-
-        prop1 = self.get_prop(prop1_name,'vectors',three_col=three_col)
-        prop2 = self.get_prop(prop2_name,'vectors',three_col=three_col)
-
-        prop1_v = np.vstack((prop1.T,prop1[:,0]*0)).T
-        prop2_v = np.vstack((prop2.T,prop2[:,0]*0)).T
-        sgn = np.sign(np.cross(prop1_v,prop2_v))[:,-1]
-
-        ang_mov  = sgn*np.arccos(np.sum(prop1 * prop2,axis = 1))*180/np.pi
+        sgn = np.sign(np.cross(prop[0],prop[1]))[:,-1]
+        ang_mov  = sgn*np.arccos(np.sum(prop[0] * prop[1],axis = 1))*180/np.pi
         idx = np.where(np.isnan(ang_mov))[0]
         ang_mov[idx] = 0
-        unwarped = np.unwrap(ang_mov + 180,period = 360) - 180 
+        unwarped = np.unwrap(ang_mov + delta_ang,period = 360) - 180 
         unwarped[idx] = np.nan
+        return unwarped
 
+    def delta_ang_all_time(self,prop1_name,prop2_name,header,three_col = 2,**kwargs):
+        
+        
+        prop = [np.insert(self.get_prop(prop_name,'vectors',three_col=three_col),2,0,axis = 1) for prop_name in [prop1_name,prop2_name]]
+        unwarped = self.calc_angle_unwarp(prop,**kwargs)
 
-        # ang_mov  = (np.sum(prop1 * prop2,axis = 1))
-
-        # ang_mov = ang_mov - ang_mov[self.ref_frame]
         self.data['vectors'] = np.vstack((self.data['vectors'].T, unwarped)).T
         self.add_to_header( [header],'vectors')
+        self.from_wing_body_to_vectors(header,'vectors', 'body')
 
 
-    def from_wing_body_to_vectors(self,prop,wing_body):
-        
-        prop_to_add = self.get_prop(prop,wing_body)
-        frame_wing_body = self.get_prop('frames',wing_body)
-        frames_vector = self.get_prop('frames','vectors')
+    def from_wing_body_to_vectors(self,prop,from_wbv, to_wbv):
+        try:
 
-        rows_frames,frames_vector_ind, frame_body_ind = np.intersect1d(frames_vector,frame_wing_body, return_indices=True )
-        self.data['vectors'] = np.hstack((self.data['vectors'],prop_to_add[frame_body_ind,:]))
-        self.add_to_header( [prop],'vectors')
+            prop_to_add = self.get_prop(prop,from_wbv)
+            frame_wing_body = self.get_prop('frames',from_wbv)
+            frames_vector = self.get_prop('frames',to_wbv)
+            rows_frames,frames_vector_ind, frame_body_ind = np.intersect1d(frames_vector,frame_wing_body, return_indices=True )
+            nan_row = np.full([len(frames_vector)], np.nan)
+            nan_row[frames_vector_ind] = prop_to_add[frame_body_ind,:].T
 
-    
+        # prop_to_add = self.get_prop(prop,wing_body)
+        # frame_wing_body = self.get_prop('frames',wing_body)
+        # frames_vector = self.get_prop('frames','vectors')
+        # rows_frames,frames_vector_ind, frame_body_ind = np.intersect1d(frames_vector,frame_wing_body, return_indices=True )
 
-    def delta_ang_ref_frame(self,ref_frame_axis,header,axis = 'X_x_body_projected',three_col = 2):
-        
-            data_axis = self.get_prop(axis,'vectors', three_col= three_col)
-            ref_axis = self.get_prop(ref_frame_axis,'vectors', three_col= three_col)[self.ref_frame,:]
+        # if wing_body_to_vectors == True:
+        #     self.data['vectors'] = np.hstack((self.data['vectors'],prop_to_add[frame_body_ind,:]))
+        #     self.add_to_header( [prop],'vectors')
+        # else:
             
-            vec_ref = np.repeat([[ref_axis[0],ref_axis[1],0]],len(data_axis),axis = 0)
-            prop1_v = np.vstack((data_axis.T,data_axis[:,0]*0)).T
-            sgn = np.sign(np.cross(prop1_v,vec_ref))[:,-1]
+        #     self.data[wing_body] = np.hstack((self.data[wing_body],prop_to_add[frame_body_ind,:]))
+        #     self.add_to_header( [prop],wing_body)
 
-            
-            delta_ang = sgn*np.arccos(np.sum(data_axis * np.repeat([ref_axis],len(data_axis),axis = 0),axis = 1))*180/np.pi
-            idx = np.where(np.isnan(delta_ang))[0]
-            delta_ang[idx] = 0
-            unwarped = np.unwrap(delta_ang,period = 360)
-            unwarped[idx] = np.nan 
-            self.data['vectors'] = np.vstack((self.data['vectors'].T, unwarped)).T
-            self.add_to_header([header],'vectors')
+        except:
+            wakk = 2
+        
+        self.data[to_wbv] = np.vstack((self.data[to_wbv].T,nan_row)).T
+        self.add_to_header( [prop],to_wbv)
+       
+    def delta_ang_ref_frame(self,ref_frame_axis,header,axis = 'X_x_body_projected',three_col = 2,**kwargs):
+        
+        data_axis = self.get_prop(axis,'vectors', three_col= three_col)
+        prop_norm = data_axis/np.linalg.norm(data_axis,axis = 1, keepdims=True)
+        ref_axis = self.get_prop(ref_frame_axis,'vectors', three_col= three_col)[self.ref_frame,:]
+        ref_axis = ref_axis/np.linalg.norm(ref_axis)
+        prop = [np.insert(prop_norm,2,0,axis = 1),
+                np.repeat([np.insert(ref_axis,2,0)],len(data_axis),axis = 0)]
+
+        unwarped = self.calc_angle_unwarp(prop,**kwargs)
+        self.data['vectors'] = np.vstack((self.data['vectors'].T, unwarped)).T
+        self.add_to_header([header],'vectors')
+        self.from_wing_body_to_vectors(header,'vectors','body')
 
     def get_min(self,prop,t1 = False,t0 = False):
         
@@ -168,6 +179,7 @@ class Movie():
 
         idx_time = (0,-1 )if (t1 == False) | (t0 == False) else self.t0_t1_idx(t0,t1)
         acc = self.get_prop(prop,'body')[idx_time[0]:idx_time[1],0]
+        v0 = acc[self.ref_frame]/2
 
         if case == 'peaks_max':
             idx = find_peaks(acc, prominence=0.1 )[0]
@@ -179,6 +191,9 @@ class Movie():
             idx = [np.argmax(acc)]
         if case == 'zero_v':
             idx =  np.where((np.diff(np.sign(acc))<0) | (np.diff(np.sign(-acc))<0))[0]
+
+        if case == 'half_v':
+            idx =  np.where((np.diff(np.sign(acc - v0))<0) | (np.diff(np.sign(-acc - v0))<0))[0]
 
         if len(idx) > 0:
             time = self.get_prop('time','body')[:,0]
