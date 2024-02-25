@@ -253,9 +253,9 @@ class Movie():
         # calculate the body angular acceleratrion and velocity: pqr and pqr_dot
 
         # calculate the body angular acceleratrion and velocity: pqr and pqr_dot
-        pitch=angles_data[:,0];yaw=angles_data[:,1];roll = angles_data[:,2]
-        pitch_dot=angles_data[:,3];yaw_dot = angles_data[:,4];roll_dot = angles_data[:,5]
-        pitch_dot_dot=angles_data[:,6];yaw_dot_dot = angles_data[:,5];roll_dot_dot = angles_data[:,6]
+        pitch=-angles_data[:,0];yaw=angles_data[:,1];roll = angles_data[:,2]
+        pitch_dot=-angles_data[:,3];yaw_dot = angles_data[:,4];roll_dot = angles_data[:,5]
+        pitch_dot_dot=-angles_data[:,6];yaw_dot_dot = angles_data[:,5];roll_dot_dot = angles_data[:,6]
         
         p = roll_dot-yaw_dot*np.sin(np.radians(pitch))
         q = pitch_dot*np.cos(np.radians(roll))+yaw_dot*np.sin(np.radians(roll))*np.cos(np.radians(pitch));

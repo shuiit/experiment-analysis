@@ -72,7 +72,7 @@ class Experiment():
         if 'plot_exp' == case: [self.get_mov(mov_name).plot_prop(prop,wing_body,color,legend,fig,showlegend = idx == 0,prop_x = prop_x,**kwargs) for idx,mov_name in enumerate(mov_names)]
         if 'plot_mov' == case: [self.get_mov(mov_name).plot_prop(prop,wing_body,color[idx],legend[idx],fig,prop_x = prop_x,**kwargs) for idx,mov_name in enumerate(mov_names)]
 
-        if add_horizontal_line != None: fig.add_hline(y=add_horizontal_line, line_width=3, line_color="black")
+        if add_horizontal_line != None: fig.add_hline(y=add_horizontal_line, line_width=3, line_color="lime")
         fig.add_vline(x=0, line_width=3, line_color="lime")
         if self.pertubation != False: fig.add_vline(x=self.pertubation, line_width=3, line_color="red")
         fig.update_layout( xaxis_title = prop_x, yaxis_title = prop)    
