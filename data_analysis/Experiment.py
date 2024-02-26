@@ -85,14 +85,19 @@ class Experiment():
 
     def get_peaks_movies(self,prop,case,**kwargs):
         self.interest_points[f'{prop}_{case}'] =  np.vstack([self.get_mov(mov_name).get_peaks_min_max(prop,case = case,**kwargs) for  mov_name in self.mov_names])
-        
+    
+    def subtract_interest_time_from_time(self,prop,header):
+        time_idx = self.body_header['time']
+        [self.get_mov(mov_name).add_time_m_t0( self.interest_points[prop][idx][time_idx],header,wing_body = 'body') for  idx,mov_name in enumerate(self.mov_names)]
     
     def add_point_to_plot_movies(self,name_point,ydata,fig,**kwargs):
         [self.get_mov(mov_name).add_point_to_plot(self.interest_points[name_point][idx,:],ydata,fig,self.color_map[idx%len(self.color_map)],wing_body = 'body',**kwargs) for idx,mov_name in enumerate(self.mov_names)]
           
     def interest_point_hist(self,point_name,prop = 'time',**kwargs):
         return Plotters.histogram(self.interest_points[point_name][:,self.body_header[prop]],self.experiment_name,prop, point_name,**kwargs)
-    
+
+    def get_delta_angle_movies(self,prop,**kwargs):
+        return [self.get_mov(mov_name).get_delta_angle(prop,**kwargs) for  mov_name in self.mov_names if self.get_mov(mov_name).get_delta_angle(prop,**kwargs) != None]   
 
     def delta_ang_all_time_movies(self,prop1_name,prop2_name,header,**kwargs):
         [self.get_mov(mov_name).delta_ang_all_time(prop1_name,prop2_name,header,**kwargs) for  mov_name in self.mov_names]

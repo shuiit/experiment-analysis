@@ -107,7 +107,7 @@ class Movie():
         ang_mov  = sgn*np.arccos(np.sum(prop[0] * prop[1],axis = 1))*180/np.pi
         idx = np.where(np.isnan(ang_mov))[0]
         ang_mov[idx] = 0
-        unwarped = np.unwrap(ang_mov + delta_ang,period = 360) - 180 
+        unwarped = np.unwrap(ang_mov + delta_ang,period = 360) - delta_ang 
         unwarped[idx] = np.nan
         return unwarped
 
@@ -123,31 +123,13 @@ class Movie():
 
 
     def from_wing_body_to_vectors(self,prop,from_wbv, to_wbv):
-        try:
 
-            prop_to_add = self.get_prop(prop,from_wbv)
-            frame_wing_body = self.get_prop('frames',from_wbv)
-            frames_vector = self.get_prop('frames',to_wbv)
-            rows_frames,frames_vector_ind, frame_body_ind = np.intersect1d(frames_vector,frame_wing_body, return_indices=True )
-            nan_row = np.full([len(frames_vector)], np.nan)
-            nan_row[frames_vector_ind] = prop_to_add[frame_body_ind,:].T
-
-        # prop_to_add = self.get_prop(prop,wing_body)
-        # frame_wing_body = self.get_prop('frames',wing_body)
-        # frames_vector = self.get_prop('frames','vectors')
-        # rows_frames,frames_vector_ind, frame_body_ind = np.intersect1d(frames_vector,frame_wing_body, return_indices=True )
-
-        # if wing_body_to_vectors == True:
-        #     self.data['vectors'] = np.hstack((self.data['vectors'],prop_to_add[frame_body_ind,:]))
-        #     self.add_to_header( [prop],'vectors')
-        # else:
-            
-        #     self.data[wing_body] = np.hstack((self.data[wing_body],prop_to_add[frame_body_ind,:]))
-        #     self.add_to_header( [prop],wing_body)
-
-        except:
-            wakk = 2
-        
+        prop_to_add = self.get_prop(prop,from_wbv)
+        frame_wing_body = self.get_prop('frames',from_wbv)
+        frames_vector = self.get_prop('frames',to_wbv)
+        rows_frames,frames_vector_ind, frame_body_ind = np.intersect1d(frames_vector,frame_wing_body, return_indices=True )
+        nan_row = np.full([len(frames_vector)], np.nan)
+        nan_row[frames_vector_ind] = prop_to_add[frame_body_ind,:].T
         self.data[to_wbv] = np.vstack((self.data[to_wbv].T,nan_row)).T
         self.add_to_header( [prop],to_wbv)
        
@@ -173,7 +155,22 @@ class Movie():
         if len(max) > 0:
             time = self.get_prop('time','body')
             return time[min_idx + idx_time[0]]
+        
+    def add_time_m_t0(self, t0,header,wing_body = 'body'):
+        time = self.get_prop('time','body')
+        self.data[wing_body] = np.hstack((self.data[wing_body], time - t0))
+        self.add_to_header([header],wing_body)
+         
+    def get_delta_angle(self,prop, t_fin = 230, delta_frames = 300, time_prop = 'time'):
+        
+        prop = self.get_prop(prop,'body')
+        time = self.get_prop(time_prop,'body')
+        tend = np.where(time > t_fin)
 
+        if (time > t_fin).any() == True:
+            delta_v_ini = np.nanmean(prop[:delta_frames])
+            delta_v_fin = np.nanmean(prop[tend[0][0]:tend[0][0] + delta_frames])
+            return np.abs(delta_v_ini - delta_v_fin)
 
     def get_peaks_min_max(self,prop,case,t1 = False,t0 = False):
 
