@@ -50,9 +50,9 @@ class ProcessH5Movie():
         ref_axes = rotation_matrices[self.ref_frame].T
         rotated_rotation_mat = [np.matmul(ref_axes,rotmat) for rotmat in rotation_matrices]
         angles = np.array([self.angles_body(rotmat) for rotmat in list(rotated_rotation_mat)])
-        savgol_derives,header = self.savgol_and_header(angles.T,['','_dot','_dot_dot'],['yaw_z_frame','pitch_y_frame','roll_x_frame'])
-        self.data['body'] = np.hstack([self.data['body'],savgol_derives])
-        self.add_to_header(header,'body')
+        # savgol_derives,header = self.savgol_and_header(angles.T,['','_dot','_dot_dot'],['yaw_z_frame','pitch_y_frame','roll_x_frame'])
+        self.data['body'] = np.hstack([self.data['body'],angles]) # need to make sure the dimension of angles
+        self.add_to_header(['yaw_z_frame','pitch_y_frame','roll_x_frame'],'body')
 
 
     def wing_stroke(self, data):
