@@ -37,7 +37,7 @@ class ProcessH5Movie():
 
     def get_strokes(self):
         max_stroke_idx = np.hstack([self.wing_stroke(self.data['wing'][:,self.header['wing'][wing_name]]) for wing_name in ['phi_rw','phi_lw']])
-        min_stroke_idx = np.hstack([self.wing_stroke(-self.data['wing'][:,self.header['wing'][wing_name]]) for wing_name in ['phi_rw','phi_lw']])
+        min_stroke_idx = np.hstack([self.wing_stroke(-self.data['wing'][:,self.header['wing'][wing_name]],min_data = -1) for wing_name in ['phi_rw','phi_lw']])
         self.data['wing'] = np.hstack([self.data['wing'],max_stroke_idx,min_stroke_idx])
         self.data['body'] = np.hstack([self.data['body'],max_stroke_idx,min_stroke_idx])
         [self.add_to_header( ['phi_rw_max_idx','phi_rw_max_val','phi_lw_max_idx','phi_lw_max_val',
@@ -55,10 +55,10 @@ class ProcessH5Movie():
         self.add_to_header(['yaw_z_frame','pitch_y_frame','roll_x_frame'],'body')
 
 
-    def wing_stroke(self, data):
+    def wing_stroke(self, data, min_data = 1):
         peaks, _ = find_peaks(data, prominence=20)
         idx_column = self.create_stroke_column(peaks,data,peaks[0:-1])
-        value_column = self.create_stroke_column(peaks,data,-data[peaks[0:-1]])
+        value_column = self.create_stroke_column(peaks,data,min_data*data[peaks[0:-1]])
         return np.vstack((idx_column,value_column)).T
     
     def savgol_and_header(self,data,derives,prop_name):

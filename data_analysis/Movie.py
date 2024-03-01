@@ -287,7 +287,7 @@ class Movie():
         
 
     def get_prop(self,prop,wing_body,three_col = 1):
-        return self.data[wing_body][:,self.header[wing_body][prop]:self.header[wing_body][prop] + three_col]
+        return self.data[wing_body][:,self.header[wing_body][prop]:self.header[wing_body][prop] + three_col].copy()
     
     def get_idx_of_time(self,t):
         time = self.get_prop('time','body')
