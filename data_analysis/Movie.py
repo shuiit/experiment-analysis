@@ -246,6 +246,12 @@ class Movie():
 
         return data,plot_cofnig
     
+    def mean_stroke(min_idx,data):
+        data[data == None] = np.nan
+        mean_stroke = [np.nanmean(data[idx0:idx1,:],axis = 0) for idx0,idx1 in zip(min_idx[:-1],min_idx[1:])]
+        mean_idx = (min_idx[:-1]+min_idx[1:])/2
+        return np.hstack((mean_stroke,np.array(mean_idx)[np.newaxis,:].T))
+
     def pqr_pqr_dot(self,angles_data):
         # calculate the body angular acceleratrion and velocity: pqr and pqr_dot
 
@@ -289,9 +295,9 @@ class Movie():
     def get_prop(self,prop,wing_body,three_col = 1):
         return self.data[wing_body][:,self.header[wing_body][prop]:self.header[wing_body][prop] + three_col].copy()
     
-    def get_idx_of_time(self,t):
-        time = self.get_prop('time','body')
-        return np.where(time == t)[0]
+    def get_idx_of_time(self,t,wing_body = 'body'):
+        time = self.get_prop('time',wing_body)
+        return np.where(time >= t)[0] 
 
     
 
@@ -308,13 +314,34 @@ class Movie():
  
     def plot_prop(self,prop,wing_body,color,name,fig,prop_x = 'time',t0 = False,t1 = False,**kwargs):
 
-        t0_idx =  self.get_idx_of_time(t0) if (t0 != False & len(self.get_idx_of_time(t0))>0) else [0]
-        t1_idx =  self.get_idx_of_time(t1) if (t1 != False & len(self.get_idx_of_time(t1))>0) else [int(-1)]
+        t0_idx =  self.get_idx_of_time(t0,wing_body) if ((t0 != False) and (len(self.get_idx_of_time(t0,wing_body))>0)) else [0]
+        t1_idx =  self.get_idx_of_time(t1,wing_body) if ((t1 != False) and (len(self.get_idx_of_time(t1,wing_body))>0)) else [int(-1)]
 
         data_y = self.get_prop(prop,wing_body)
         data_x = self.get_prop(prop_x,wing_body)
         
         return Plotters.plot_prop_movie(data_x[t0_idx[0]:t1_idx[0],0],data_y[t0_idx[0]:t1_idx[0],0],color,name,fig = fig,**kwargs)
+
+    def calculate_freq(self, idx_prop, mean_wing_body):
+        prop_idx = self.get_prop(idx_prop,mean_wing_body)
+        self.data[mean_wing_body] = np.hstack((self.data[mean_wing_body],np.vstack([1/(np.diff(prop_idx.T)*1/16000).T,[np.nan]])))
+        self.add_to_header([f'freq_{idx_prop}'],mean_wing_body)
+    
+    def calculate_phi_amp(self,wing,mean_wing_body):
+        min_idx = self.get_prop(f'phi_{wing}_min_val',mean_wing_body)
+        max_idx = self.get_prop(f'phi_{wing}_max_val',mean_wing_body)
+
+        self.data[mean_wing_body] = np.hstack((self.data[mean_wing_body],max_idx - min_idx))
+        self.add_to_header([f'amp_{wing}'],mean_wing_body)
+
+
+    def mean_by_stroke(self,prop,mean_wing_body,wing_body):
+        data = self.get_prop(prop,wing_body)
+        min_idx = self.get_prop('phi_rw_min_idx',wing_body)
+        mean_idx = self.get_prop('phi_rw_min_idx',mean_wing_body)
+        self.data[mean_wing_body] = np.vstack((self.data[mean_wing_body].T,[np.nanmean(data[min_idx == val]) for val in mean_idx if np.isnan(val) == False])).T
+        self.add_to_header([prop],mean_wing_body)
+
 
     
     @staticmethod

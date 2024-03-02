@@ -102,7 +102,15 @@ class Experiment():
     def delta_ang_all_time_movies(self,prop1_name,prop2_name,header,**kwargs):
         [self.get_mov(mov_name).delta_ang_all_time(prop1_name,prop2_name,header,**kwargs) for  mov_name in self.mov_names]
 
+    def calculate_freq_movies(self, idx_prop, mean_wing_body):
+        [self.get_mov(mov_name).calculate_freq(idx_prop, mean_wing_body) for  mov_name in self.mov_names]
     
+    def calculate_phi_amp_movies(self, wing,mean_wing_body):
+        [self.get_mov(mov_name).calculate_phi_amp(wing,mean_wing_body) for  mov_name in self.mov_names]
+
+    def mean_by_stroke_movies(self, prop,mean_wing_body,wing_body):
+        [self.get_mov(mov_name).mean_by_stroke(prop,mean_wing_body,wing_body) for  mov_name in self.mov_names]
+
     def project_axes_movies(self,header,**kwargs):
         [self.get_mov(mov_name).project_axes_xy(header,**kwargs) for  mov_name in self.mov_names]
 
