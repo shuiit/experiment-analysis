@@ -161,10 +161,10 @@ class Movie():
         self.data[wing_body] = np.hstack((self.data[wing_body], time - t0))
         self.add_to_header([header],wing_body)
          
-    def get_delta_angle(self,prop, t_fin = 230, delta_frames = 300, time_prop = 'time'):
+    def get_delta_prop(self,prop,wing_body, t_fin = 230, delta_frames = 300, time_prop = 'time'):
         
-        prop = self.get_prop(prop,'body')
-        time = self.get_prop(time_prop,'body')
+        prop = self.get_prop(prop,wing_body)
+        time = self.get_prop(time_prop,wing_body)
         tend = np.where(time > t_fin)
 
         if (time > t_fin).any() == True:
@@ -246,12 +246,6 @@ class Movie():
 
         return data,plot_cofnig
     
-    def mean_stroke(min_idx,data):
-        data[data == None] = np.nan
-        mean_stroke = [np.nanmean(data[idx0:idx1,:],axis = 0) for idx0,idx1 in zip(min_idx[:-1],min_idx[1:])]
-        mean_idx = (min_idx[:-1]+min_idx[1:])/2
-        return np.hstack((mean_stroke,np.array(mean_idx)[np.newaxis,:].T))
-
     def pqr_pqr_dot(self,angles_data):
         # calculate the body angular acceleratrion and velocity: pqr and pqr_dot
 
@@ -301,16 +295,16 @@ class Movie():
 
     
 
-    def mean_prop_stroke(self,prop_name,wing_body_prop,wing_body_mean_save,phi_idx_to_mean = 'phi_rw_min_idx'):
-        data = self.get_prop(prop_name,wing_body_prop)
-        stroke_idx = self.get_prop(phi_idx_to_mean,'wing')
-        mean_strok_idx = self.header[wing_body_mean_save]['mean_idx']
-        min_idx = np.unique(stroke_idx[stroke_idx != None]).astype(int)[1:-1]
-        val = np.intersect1d((min_idx[:-1]+min_idx[1:])/2, self.data[wing_body_mean_save][:,mean_strok_idx], assume_unique=False, return_indices=True)
-        data[data == None] = np.nan
-        mean_stroke = [np.nanmean(data[idx0:idx1],axis = 0) for idx0,idx1 in zip(min_idx[:-1],min_idx[1:])]
-        self.data[f'{wing_body_mean_save}'] = np.hstack((self.data[f'{wing_body_mean_save}'],np.array(mean_stroke)[val[1]][np.newaxis,:].T))
-        self.add_to_header([f'{prop_name}'],f'{wing_body_mean_save}')
+    # def mean_prop_stroke(self,prop_name,wing_body_prop,wing_body_mean_save,phi_idx_to_mean = 'phi_rw_min_idx'):
+    #     data = self.get_prop(prop_name,wing_body_prop)
+    #     stroke_idx = self.get_prop(phi_idx_to_mean,'wing')
+    #     mean_strok_idx = self.header[wing_body_mean_save]['mean_idx']
+    #     min_idx = np.unique(stroke_idx[stroke_idx != None]).astype(int)[1:-1]
+    #     val = np.intersect1d((min_idx[:-1]+min_idx[1:])/2, self.data[wing_body_mean_save][:,mean_strok_idx], assume_unique=False, return_indices=True)
+    #     data[data == None] = np.nan
+    #     mean_stroke = [np.nanmean(data[idx0:idx1],axis = 0) for idx0,idx1 in zip(min_idx[:-1],min_idx[1:])]
+    #     self.data[f'{wing_body_mean_save}'] = np.hstack((self.data[f'{wing_body_mean_save}'],np.array(mean_stroke)[val[1]][np.newaxis,:].T))
+    #     self.add_to_header([f'{prop_name}'],f'{wing_body_mean_save}')
  
     def plot_prop(self,prop,wing_body,color,name,fig,prop_x = 'time',t0 = False,t1 = False,**kwargs):
 

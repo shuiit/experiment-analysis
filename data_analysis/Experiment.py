@@ -96,8 +96,8 @@ class Experiment():
     def interest_point_hist(self,point_name,prop = 'time',**kwargs):
         return Plotters.histogram(self.interest_points[point_name][:,self.body_header[prop]],self.experiment_name,prop, point_name,**kwargs)
 
-    def get_delta_angle_movies(self,prop,**kwargs):
-        return [self.get_mov(mov_name).get_delta_angle(prop,**kwargs) for  mov_name in self.mov_names if self.get_mov(mov_name).get_delta_angle(prop,**kwargs) != None]   
+    def get_delta_prop_movies(self,prop,wing_body,**kwargs):
+        return [self.get_mov(mov_name).get_delta_prop(prop,wing_body,**kwargs) for  mov_name in self.mov_names if self.get_mov(mov_name).get_delta_prop(prop,wing_body,**kwargs) != None]   
 
     def delta_ang_all_time_movies(self,prop1_name,prop2_name,header,**kwargs):
         [self.get_mov(mov_name).delta_ang_all_time(prop1_name,prop2_name,header,**kwargs) for  mov_name in self.mov_names]

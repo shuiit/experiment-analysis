@@ -2,6 +2,7 @@ import plotly.graph_objects as go
 import plotly.io as pio
 import numpy as np
 import matplotlib.pyplot as plt
+from plotly.subplots import make_subplots
 
 
 
@@ -175,6 +176,30 @@ def histogram(data,name,xaxis, title,opacity = 0.5,histnorm = 'percent',xbins = 
         barmode='overlay',  # To overlay histograms
     )
     return hist_trace,layout
+
+
+def subplot_histograms_delta_prop(time_vec,experiments,prop,color_map,xbins,wing_body):
+    fig = make_subplots(rows=len(time_vec), cols=len(experiments))
+
+    for (i,tfin) in enumerate(time_vec):
+        for (j,exp) in enumerate(experiments.values()):
+            color = color_map[j]
+            delta_v = exp.get_delta_prop_movies(prop,wing_body, time_prop = 'time', t_fin = tfin, delta_frames = 300) 
+            fig.add_trace(
+                go.Histogram(x=delta_v,legendgroup=exp.experiment_name,
+                            marker_color = f'rgba{str(tuple(np.append(color,1)))}',
+                            showlegend= i==0,
+                            name = exp.experiment_name,
+                            ),
+                row=i+1,
+                col=j+1,
+                )
+            if isinstance(xbins, dict):
+                fig.update_xaxes(range=[xbins['start'],xbins['end']], row=i + 1, col=j + 1)
+        fig.update_yaxes(title_text=f'Time Fin: {tfin}', row=i + 1, col=1)
+    fig.update_layout(title = prop)
+    return fig
+            
 
 
 
