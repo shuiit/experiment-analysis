@@ -190,18 +190,27 @@ def subplot_histograms_delta_prop(time_vec,experiments,prop,color_map,xbins,wing
                             marker_color = f'rgba{str(tuple(np.append(color,1)))}',
                             showlegend= i==0,
                             name = exp.experiment_name,
-                            ),
+                            xbins = xbins),
                 row=i+1,
                 col=j+1,
                 )
-            if isinstance(xbins, dict):
-                fig.update_xaxes(range=[xbins['start'],xbins['end']], row=i + 1, col=j + 1)
+          
         fig.update_yaxes(title_text=f'Time Fin: {tfin}', row=i + 1, col=1)
     fig.update_layout(title = prop)
     return fig
             
 
 
+
+def vplot(data,fig,propx,propy,name):
+
+        # Creating violin plot using graph objects
+    fig.add_trace(go.Violin(x=data[propx], y=data[propy],
+                            box_visible=True,
+                            points='all',
+                            name = name, 
+                            ))
+    fig.update_layout(xaxis_title=propx,yaxis_title=propy)
 
         
 

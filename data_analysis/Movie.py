@@ -294,6 +294,21 @@ class Movie():
         return np.where(time >= t)[0] 
 
     
+    def get_mean_prop_time(self,t0,t1,prop,wing_body,mean_delta,freq_ol = 280):
+        
+        freq = self.get_prop(prop,wing_body)
+        time = self.get_prop('time',wing_body)
+        idx_t0 = np.argmin(np.abs(time - t0))
+        idx_t1 = np.argmin(np.abs(time - t1))
+        data_to_mean = freq[idx_t0:idx_t1]
+        data_to_mean[data_to_mean>freq_ol] = np.nan
+        return  np.nanmean(data_to_mean) - mean_delta,t0
+    
+    def mean_prop_time_vector(self,prop,delta_t,t_vec,**kwargs):
+        
+        mean_delta = self.get_mean_prop_time(0,0 + delta_t,prop,'mean_body',0,**kwargs)
+        return [self.get_mean_prop_time(t0,t0 + delta_t,prop,'mean_body',mean_delta[0],**kwargs) for t0 in t_vec[1:]]
+
 
     # def mean_prop_stroke(self,prop_name,wing_body_prop,wing_body_mean_save,phi_idx_to_mean = 'phi_rw_min_idx'):
     #     data = self.get_prop(prop_name,wing_body_prop)

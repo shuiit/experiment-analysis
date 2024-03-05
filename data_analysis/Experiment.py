@@ -43,12 +43,20 @@ class Experiment():
     def plot_3d_traj_movies(self,color_prop,save_plot = False, mov = False):
         mov_names = self.mov_names if mov == False else mov
         for mov in  list(mov_names):
-            fig = self.exp_dict[mov].plot_3d_traj_movie(color_prop)
-            plotly.offline.plot(fig, filename=f'{self.figures_path}/traj_3d_{mov}.html',auto_open=False) if save_plot == True else fig.show()
+            try:
+                fig = self.exp_dict[mov].plot_3d_traj_movie(color_prop)
+                plotly.offline.plot(fig, filename=f'{self.figures_path}/traj_3d_{mov}.html',auto_open=False) if save_plot == True else fig.show()
+            except:
+                continue
+            
 
     def mean_mean_props_movies(self,prop1,prop2,wing_body,header_name, mov = False):
         mov_names = self.mov_names if mov == False else mov
         [self.get_mov(mov_name).mean_props(prop1,prop2,wing_body,header_name) for mov_name in mov_names]
+
+    def mean_prop_time_vector_movies(self,prop,delta_t,t_vec, mov = False,**kwargs):
+        mov_names = self.mov_names if mov == False else mov
+        return pd.DataFrame(np.vstack([self.get_mov(mov_name).mean_prop_time_vector(prop,delta_t,t_vec,**kwargs) for mov_name in mov_names]), columns = [prop,'t0'])
 
     
     def min_max_point_movies(self,prop,**kwargs):
