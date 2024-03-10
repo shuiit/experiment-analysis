@@ -52,6 +52,12 @@ class Movie():
         self.data[wing_body] = np.hstack((self.data[wing_body], smoothed))
         self.add_to_header(header,wing_body)
 
+    def sub_two_props(self,prop1,prop2,wing_body,header):
+        prop1 = self.get_prop(prop1,wing_body)
+        prop2 = self.get_prop(prop2,wing_body)
+        self.data[wing_body] = np.hstack((self.data[wing_body], prop1-prop2))
+        self.add_to_header(header,wing_body)
+
 
 
     def sub_ref_frame(self,prop,wing_body):
@@ -87,9 +93,24 @@ class Movie():
         self.data[wing_body] = np.hstack((self.data[wing_body], data_axis_on_xy))
         self.add_to_header(header,wing_body)
         
-        if add_to_vectors == True:
-            [self.from_wing_body_to_vectors(head,'body','vectors') for head in header ]
+        if add_to_vectors != False:
+            [self.from_wing_body_to_vectors(head,add_to_vectors[0],add_to_vectors[1]) for head in header ]
 
+
+
+    def project_prop_all_axes(self,prop,wing_body = 'body',header_name = 'CM_dot',ax_to_proj = 'X_x_body',add_to_vectors= False,three_col = 3):
+        data = self.get_prop(prop,wing_body, three_col= three_col) 
+    
+        projected_axes = self.get_prop(ax_to_proj,wing_body,three_col = three_col)
+
+
+        projected = np.sum(projected_axes * data,axis = 1)[np.newaxis,:].T
+
+        self.data[wing_body] = np.hstack((self.data[wing_body], projected))
+        self.add_to_header([f'{header_name}_projected_all_axes'],wing_body)
+        if add_to_vectors != False:
+            self.from_wing_body_to_vectors(f'{header_name}_projected_all_axes',add_to_vectors[0],add_to_vectors[1])
+    
         
     def project_prop(self,prop,wing_body = 'body',header_name = 'CM_dot',ax_to_proj = 'X_x_body',add_to_vectors= False,three_col = 3):
         data = self.get_prop(prop,wing_body, three_col= three_col) 
@@ -203,13 +224,26 @@ class Movie():
         idx_x = self.header[wing_body][xdata] 
         Plotters.add_point_to_plot(interest_points[idx_x],interest_points[idx_y],self.name,color,fig,**kwargs) 
 
+
+    def calc_force(self):
+        
+        ay = self.get_prop('CM_dot_dot_y_projected_all_axes','body')
+        ax = self.get_prop('CM_dot_dot_x_projected_all_axes','body')
+        az = self.get_prop('CM_real_z_body_dot_dot_smth','body')
+
+        force = np.hstack((ax,ay,az))
+        force_norm = (force.T/np.linalg.norm(force,axis = 1)).T
+        force_size = np.sqrt(np.sum(force**2,axis = 1))
+
+        self.data['body'] = np.vstack((self.data['body'].T, force_size)).T
+        self.add_to_header(['force_size'],'body')
     
     def mean_props(self,prop1,prop2,wing_body,header_name):
         mean_prop = (self.get_prop(prop1,wing_body)  + self.get_prop(prop2,wing_body) )/2
         self.data[wing_body] = np.hstack((self.data[wing_body], mean_prop))
         self.add_to_header([header_name],wing_body)
 
-    def calculation_for_3d_traj(self, color_prop = 'pitch',plot_cofnig = {'fly_samples':150,'traj_samples':20,'size_x':1,'size_y':1/3,'delta_y_on_x':3/4}):
+    def calculation_for_3d_traj(self, color_prop = 'pitch',plot_cofnig = {'fly_samples':150,'traj_samples':20,'size_x':1,'size_y':1/3,'delta_y_on_x':3/4},forces = None):
         """Calulations for ploting a 3d trajectory
 
         Args:
@@ -229,8 +263,10 @@ class Movie():
         vectors = {prop_name.split('_')[0] : self.get_prop(prop_name,'vectors',three_col=3) for prop_name in ['X_x_body','Y_x_body','Z_x_body']}
         data['cm'] = self.get_prop('CM_real_x_body','body',three_col=3)*1000
         data['time'] = self.get_prop('time','body')
-        data[color_prop] =  self.get_prop(color_prop,'body')[:,0]
-
+        if isinstance(color_prop,str):
+            data[color_prop] =  self.get_prop(color_prop,'body')[:,0]  
+        else:
+            data.update(color_prop)
         # define body x and y vecotrs
         body_x_vector = vectors['X']*plot_cofnig['size_x'] + data['cm']
         body_y_vector = vectors['Y'][::plot_cofnig['fly_samples'],:]*plot_cofnig['size_y']
@@ -239,7 +275,10 @@ class Movie():
         # disconnect the coordinates to get line for the vectors
         data['x_vector'] = self.disconnect_line_add_none(data['cm'][::plot_cofnig['fly_samples'],:],body_x_vector[::plot_cofnig['fly_samples'],:])
         data['y_vector'] = self.disconnect_line_add_none(-body_y_vector + delta_y_on_x,body_y_vector+delta_y_on_x)       
-        
+        if forces.all() != None:
+            forces = forces*plot_cofnig['size_x'] + data['cm']
+            data['forces'] = self.disconnect_line_add_none(data['cm'][::plot_cofnig['fly_samples'],:],forces[::plot_cofnig['fly_samples'],:])
+
         # index for pertubationmarker
         idx_end_pertubation = np.where((data['time'] <(self.pertubation + 1)) & (data['time'] >(self.pertubation - 1)) )[0][0] if self.pertubation != False else False
         data['start_pert_endpert'] = [0,self.ref_frame,idx_end_pertubation] if self.pertubation != False else [0,self.ref_frame]
@@ -281,8 +320,9 @@ class Movie():
         self.add_to_header(pqr_header,'body')
 
 
-    def plot_3d_traj_movie(self,color_prop):
-        data,plot_cofnig = self.calculation_for_3d_traj(color_prop = color_prop)
+    def plot_3d_traj_movie(self,color_prop,**kwargs):
+        data,plot_cofnig = self.calculation_for_3d_traj(color_prop = color_prop,**kwargs)
+        color_prop = list(color_prop.keys())[0] if isinstance(color_prop,dict) else color_prop
         return Plotters.plot_3d_traj(data,plot_cofnig,self.name,self.pertubation_name,color_prop = color_prop )
         
 
@@ -297,17 +337,19 @@ class Movie():
     def get_mean_prop_time(self,t0,t1,prop,wing_body,mean_delta,freq_ol = 280):
         
         freq = self.get_prop(prop,wing_body)
-        time = self.get_prop('time',wing_body)
-        idx_t0 = np.argmin(np.abs(time - t0))
-        idx_t1 = np.argmin(np.abs(time - t1))
-        data_to_mean = freq[idx_t0:idx_t1]
+        idx_time = self.mean_time([t0,t1],wing_body, time = 'time')
+        data_to_mean = freq[idx_time[0]:idx_time[1]]
         data_to_mean[data_to_mean>freq_ol] = np.nan
         return  np.nanmean(data_to_mean) - mean_delta,t0
     
-    def mean_prop_time_vector(self,prop,delta_t,t_vec,**kwargs):
+    def mean_prop_time_vector(self,prop,delta_t,t_vec,sub_mean = True,**kwargs):
         
-        mean_delta = self.get_mean_prop_time(0,0 + delta_t,prop,'mean_body',0,**kwargs)
+        mean_delta = self.get_mean_prop_time(0,0 + delta_t,prop,'mean_body',0,**kwargs) if sub_mean == True else [0] 
         return [self.get_mean_prop_time(t0,t0 + delta_t,prop,'mean_body',mean_delta[0],**kwargs) for t0 in t_vec[1:]]
+
+    def mean_time(self,t0_vec,wing_body, time = 'time'):
+        time = self.get_prop(time,wing_body)
+        return [np.argmin(np.abs(time - t0)) for t0 in t0_vec]
 
 
     # def mean_prop_stroke(self,prop_name,wing_body_prop,wing_body_mean_save,phi_idx_to_mean = 'phi_rw_min_idx'):

@@ -40,11 +40,11 @@ class Experiment():
         [self.get_mov(mov_name).calculate_pqr_update_data_header() for mov_name in mov_names]
 
 
-    def plot_3d_traj_movies(self,color_prop,save_plot = False, mov = False):
+    def plot_3d_traj_movies(self,color_prop,save_plot = False, mov = False,**kwargs):
         mov_names = self.mov_names if mov == False else mov
         for mov in  list(mov_names):
             try:
-                fig = self.exp_dict[mov].plot_3d_traj_movie(color_prop)
+                fig = self.exp_dict[mov].plot_3d_traj_movie(color_prop,**kwargs)
                 plotly.offline.plot(fig, filename=f'{self.figures_path}/traj_3d_{mov}.html',auto_open=False) if save_plot == True else fig.show()
             except:
                 continue
@@ -61,7 +61,10 @@ class Experiment():
     
     def min_max_point_movies(self,prop,**kwargs):
         return np.hstack([self.exp_dict[mov_name].min_max_point(prop,**kwargs) for mov_name in self.mov_names])
-    
+     
+    def calc_force_movies(self,**kwargs):
+        [self.get_mov(mov_name).calc_force(**kwargs) for mov_name in self.mov_names]
+
 
     def zero_velocity_movies(self,prop):
         zero_v_list = [self.exp_dict[mov_name].zero_velocity(prop) for mov_name in self.mov_names]
@@ -124,6 +127,13 @@ class Experiment():
 
     def project_prop_movies(self,prop_to_project,**kwargs):
         [self.get_mov(mov_name).project_prop(prop_to_project,**kwargs) for  mov_name in self.mov_names]
+
+    def project_prop_all_axes_movies(self,prop_to_project,**kwargs):
+        [self.get_mov(mov_name).project_prop_all_axes(prop_to_project,**kwargs) for  mov_name in self.mov_names]
+
+    def sub_two_props_movies(self,prop1,prop2,wing_body,header):
+        [self.get_mov(mov_name).sub_two_props(prop1,prop2,wing_body,header) for  mov_name in self.mov_names]
+
 
     def substruct_first_frame(self,prop,wing_body):
         [self.get_mov(mov_name).sub_ref_frame(prop,wing_body) for  mov_name in self.mov_names]

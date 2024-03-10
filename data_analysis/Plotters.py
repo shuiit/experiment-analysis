@@ -110,6 +110,10 @@ def plot_3d_traj(data,plot_cofnig,mov_name,exp_name,color_prop):
 
     fig = scatter_3d(fig,data['x_vector'],data['time'][::plot_cofnig['fly_samples']],name = 'X vector',**vector_kwargs)
     fig = scatter_3d(fig,data['y_vector'],data['time'][::plot_cofnig['fly_samples']],name = 'Y vector',**vector_kwargs)
+    
+    if 'forces' in data:
+        forces_kwargs = {'marker':dict(size=5,opacity=0.8,color = 'blue'),'line':dict(color='blue' ,width=5)}
+        fig = scatter_3d(fig,data['forces'],data['time'][::plot_cofnig['fly_samples']],name = 'forces',**forces_kwargs)
     fig = scatter_3d(fig,data['cm'][start_pert_endpert,:],data['time'][start_pert_endpert],name =  'pertubations',**pertubations)
     fig.update_layout( title = f'{mov_name} {exp_name}',coloraxis_colorbar_y=0.5,coloraxis_colorscale='jet' )
     return fig
