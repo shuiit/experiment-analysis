@@ -1,8 +1,9 @@
 
 % addpath('G:\Documents\micro-flight-lab\hull_reconstruction_git')
 % saves fields in structure to csv
-dir_of_exps = 'H:\My Drive\dark 2022\10_8_23_dark_blink_40ms\'
-path_to_save = [dir_of_exps,'csv_dark\\']
+dir_of_exps = 'H:\My Drive\dark 2022\'%'H:\My Drive\dark 2022\10_8_23_dark_blink_40ms\'
+dir_to_save = 'H:\My Drive\dark 2022\'
+path_to_save = [dir_to_save,'csv_dark\\']
 
 exps_names = dir(dir_of_exps)
 

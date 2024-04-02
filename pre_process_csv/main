@@ -55,9 +55,10 @@ def clip_and_manipulate(smoothing_config,exp_dir,exp_name,pert,clip_flag = True)
 if __name__ == '__main__':   
 
         exp_dir = 'H:/My Drive/dark 2022/csv_dark'
-        exp_name = ['12_8_23_blink20ms']#,'2022_03_10']#,'2023_08_10_100ms','2022_02_03']
+        exp_name = [
+                    '2023_08_09_80ms','2023_08_10_100ms','2022_02_03']#,'2022_03_10']#,'2023_08_10_100ms','2022_02_03']
         
-        pert_list = ['','_pulses20ms','','','','','_dark']
+        pert_list = ['','','_dark']
 
         smoothing_config = {'smooth_window_body_angles': 73*7,'smooth_window_body_cm': 73*7, 'smooth_poly_body':3, 'smooth_window_wing': 15,
                         'smooth_poly_wing': 2, 'zscore_window':200,'zscore_threashold': 3,

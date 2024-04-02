@@ -134,6 +134,9 @@ class Experiment():
     def sub_two_props_movies(self,prop1,prop2,wing_body,header):
         [self.get_mov(mov_name).sub_two_props(prop1,prop2,wing_body,header) for  mov_name in self.mov_names]
 
+    def from_vector_to_wing_body(self,prop,add_to_vectors):
+        [self.get_mov(mov_name).from_wing_body_to_vectors(prop,add_to_vectors[0],add_to_vectors[1]) for  mov_name in self.mov_names]
+
 
     def substruct_first_frame(self,prop,wing_body):
         [self.get_mov(mov_name).sub_ref_frame(prop,wing_body) for  mov_name in self.mov_names]

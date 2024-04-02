@@ -40,6 +40,7 @@ classdef HullToCsv<handle
             % Get features from structure. concatenate them and generate a
             % table
             array_to_keep = [];
+                    
             for feat_idx =  1:1:length(name_of_features)
                 feature = struct.(name_of_features{feat_idx});
                 if size(feature,2) > size(feature,1)
@@ -48,9 +49,20 @@ classdef HullToCsv<handle
                 array_to_keep = horzcat(array_to_keep,feature);
             end
             
+            if strcmp(name_of_features{1},'tip')==1
+                    for idx = 1:1:length(array_to_keep)
+                        if sum(isnan(array_to_keep(idx,:))) == 0
+                    [hullReal,rtmat] = hullRec2lab(array_to_keep(idx,:), obj.hull.cameras.all.Rotation_Matrix,obj.hull.cameras.all.RotMat_vol,obj.hull.real_coord{idx});
+                        array_to_keep(idx,:) = hullReal;
+                       
+                        end
+                    end
+            end
+            
             feat_for_header = {strcat(name_of_features,'_',feature_name)};
             if size(feature,2) > 1
-                axes_name = {'x','y','z'};
+                
+                    axes_name = {'x','y','z'};
                 for ax_idx = 1:1:length(name_of_features)
                     feat_for_header{ax_idx} =strcat(name_of_features{ax_idx},'_',axes_name,'_',feature_name);
                 end
@@ -65,6 +77,7 @@ classdef HullToCsv<handle
             [table_body_angle] = obj.get_features_from_structure(obj.hull.body.angles,obj.name_of_features_body_angle,'body');
             [table_body_coords] = obj.get_features_from_structure(obj.hull.body.coords,obj.name_of_features_body_coords,'body');
 
+
             vectors_table_for_csv = [obj.frame_table,obj.time_table,table_rw_angle,table_lw_angle,table_body_angle,table_body_coords];
             writetable(vectors_table_for_csv,[obj.path_to_save,'_angles_cm.csv'])
         end
@@ -75,8 +88,9 @@ classdef HullToCsv<handle
             [table_rw] = obj.get_features_from_structure(obj.hull.rightwing.vectors,obj.name_of_features_wings,'rw');
             [table_lw] = obj.get_features_from_structure(obj.hull.leftwing.vectors,obj.name_of_features_wings,'lw');
             [table_body] = obj.get_features_from_structure(obj.hull.body.vectors,obj.name_of_features_body,'body');
-
-            vectors_table_for_csv = [obj.frame_table,obj.time_table,table_rw,table_lw,table_body];
+            [table_rw_coords] = obj.get_features_from_structure(obj.hull.rightwing.coords,{'tip'},'rw');
+            [table_lw_coords] = obj.get_features_from_structure(obj.hull.leftwing.coords,{'tip'},'lw');
+            vectors_table_for_csv = [obj.frame_table,obj.time_table,table_rw,table_lw,table_body,table_rw_coords,table_lw_coords];
             writetable(vectors_table_for_csv,[obj.path_to_save,'_vectors.csv'])
             
         end
