@@ -27,7 +27,8 @@ class Movie():
         self.pertubation = pertubation
         self.pertubation_name = experiment.attrs['dark_pert']
         self.dt = experiment.attrs['dt']
-        
+        self.rot_mat_sp = self.rotation_matrix(0,45*np.pi/180,0) 
+
         self.smoothing_config = {'smooth_window_body_angles': 73*7,'smooth_window_body_cm': 73*7, 'smooth_poly_body':3, 'smooth_window_wing': 15}
         
     
@@ -363,7 +364,7 @@ class Movie():
     #     self.data[f'{wing_body_mean_save}'] = np.hstack((self.data[f'{wing_body_mean_save}'],np.array(mean_stroke)[val[1]][np.newaxis,:].T))
     #     self.add_to_header([f'{prop_name}'],f'{wing_body_mean_save}')
  
-    def plot_prop(self,prop,wing_body,color,name,fig,prop_x = 'time',t0 = False,t1 = False,**kwargs):
+    def plot_prop(self,prop,wing_body,color,group_name,fig,prop_x = 'time',t0 = False,t1 = False,**kwargs):
 
         t0_idx =  self.get_idx_of_time(t0,wing_body) if ((t0 != False) and (len(self.get_idx_of_time(t0,wing_body))>0)) else [0]
         t1_idx =  self.get_idx_of_time(t1,wing_body) if ((t1 != False) and (len(self.get_idx_of_time(t1,wing_body))>0)) else [int(-1)]
@@ -371,7 +372,7 @@ class Movie():
         data_y = self.get_prop(prop,wing_body)
         data_x = self.get_prop(prop_x,wing_body)
         
-        return Plotters.plot_prop_movie(data_x[t0_idx[0]:t1_idx[0],0],data_y[t0_idx[0]:t1_idx[0],0],color,name,fig = fig,**kwargs)
+        return Plotters.plot_prop_movie(data_x[t0_idx[0]:t1_idx[0],0],data_y[t0_idx[0]:t1_idx[0],0],color,group_name,fig = fig,**kwargs)
 
     def calculate_freq(self, idx_prop, mean_wing_body):
         prop_idx = self.get_prop(idx_prop,mean_wing_body)
@@ -393,7 +394,47 @@ class Movie():
         self.data[mean_wing_body] = np.vstack((self.data[mean_wing_body].T,[np.nanmean(data[min_idx == val]) for val in mean_idx if np.isnan(val) == False])).T
         self.add_to_header([prop],mean_wing_body)
 
+    def calculate_model_nog(self,g = 9.8,wing_body = 'body'):
+        
+        time = self.get_prop('time',wing_body)
+        props_to_mean = ['x','y','z']
+     
+        x = np.hstack([self.get_prop(axes,'vectors',three_col=3) for axes in ['X_x_body','Y_x_body','Z_x_body']])
+        x = x.reshape(-1, 3, 3)
+        x = np.transpose(x, (0, 2, 1))
+        # rot_mat = [rotation_matrix(y[0],p[0],r[0]) for y,p,r in zip(yaw,pitch,roll)]
+        sp_vec = [np.dot(rm,self.rot_mat_sp) for rm in x] # rotate body to stroke plane - get a matrix of all axes of stroke plane: [[Xx Yx Zx]
+                                                                                                                                # [Xy Yy Zy]
+                                                                                                                                    # [Xz Yz Zz]]
+        self.data['body'] = np.hstack((self.data['body'],np.vstack([np.hstack((sp_rot_mat[:,2]*g,sp_rot_mat[:,2]*g - np.array([0,0,1])*g)) for sp_rot_mat in sp_vec]))) # get Z axes of stroke plane [Zx Zy Zz] * g -> every frame is has an XYZ vector of acceleration due to gravity : in lab axes
+        self.add_to_header(['model_nog_x','model_nog_y','model_nog_z','model_x','model_y','model_z'],'body')
+        [self.mean_by_stroke(f'model_nog_{x}','mean_body','body')  for x in props_to_mean]
+        [self.mean_by_stroke(f'model_{x}','mean_body','body')  for x in props_to_mean]
 
+    def calculate_model(self,g = 9.8,wing_body = 'mean_body',nws = 4):
+
+        model_nog = self.get_prop('model_nog_x','mean_body',three_col=3)
+        freq = self.get_prop('freq_phi_rw_min_idx','mean_body',three_col=2)
+        wing_amp = self.get_prop('amp_rw','mean_body',three_col=2)
+
+        order_u = np.mean(freq,axis = 1)*np.mean(wing_amp,axis = 1)[np.newaxis]
+        order_u_base = np.nanmean(order_u[:73*nws])
+        gamma = (order_u/order_u_base)**2
+        model_gamma = gamma.T*model_nog  - np.array([0,0,1])*g
+
+        model_gamma_norm =  np.linalg.norm(model_gamma,axis = 1)[np.newaxis].T
+
+                                                                                                                                   # [Xz Yz Zz]]
+        self.data['mean_body'] = np.hstack((self.data['mean_body'],model_gamma,model_gamma_norm)) # get Z axes of stroke plane [Zx Zy Zz] * g -> every frame is has an XYZ vector of acceleration due to gravity : in lab axes
+        self.add_to_header(['model_gamma_x','model_gamma_y','model_gamma_z','model_gamma_norm'],'mean_body')
+    
+    @staticmethod
+    def rotation_matrix(yaw,pitch,roll):
+        roll_mat = np.vstack([[1,0,0],[0 ,np.cos(roll),-np.sin(roll)],[0, np.sin(roll), np.cos(roll)]])
+        pitch_mat = np.vstack([[np.cos(pitch),0,np.sin(pitch)],[0, 1,0],[-np.sin(pitch), 0, np.cos(pitch)]])
+        yaw_mat = np.vstack([[np.cos(yaw),-np.sin(yaw),0],[np.sin(yaw),np.cos(yaw),0],[0, 0, 1]])
+        
+        return yaw_mat @ pitch_mat @ roll_mat
     
     @staticmethod
     def disconnect_line_add_none(array1,array2):

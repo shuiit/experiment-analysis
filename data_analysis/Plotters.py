@@ -15,21 +15,23 @@ Created on Mon Jun  5 08:25:02 2023
 @author: Roni
 """
     
-def plot_prop_movie(xdata,ydata,color,name,
+def plot_prop_movie(xdata,ydata,color,group_name,
                     marker_size = 7,fig = False,showlegend = True,
-                    line_width = 5,mode = 'lines',plot_points = False,
-                    yaxis = 'y1'):
+                    line_dict = False,mode = 'lines',plot_points = False,
+                    yaxis = 'y1',name = False,symbol = 'circle',marker_color = False):
     fig = go.Figure() if fig == False else fig
-
+    name = group_name if name == False else name + group_name
+    marker_color =  f'rgba{str(tuple(np.append(color,0.5)))}' if marker_color == False else marker_color
+    line_dict = {'width': 5,'dash':'solid','color' : f'rgba{str(tuple(np.append(color,0.5)))}'} if line_dict == False else line_dict
     traces = go.Scattergl(
         x=xdata,
         y=ydata,
-        legendgroup = name,
+        legendgroup = group_name,
         name = name,
         showlegend = showlegend,
         mode=mode,
-        line_width= line_width,
-        marker=dict(color = f'rgba{str(tuple(np.append(color,0.5)))}',size = marker_size, symbol = 'circle'),
+        line  = line_dict,
+        marker=dict(color = marker_color,size = marker_size, symbol = symbol),
         yaxis = yaxis)
     fig.add_traces(traces)
     

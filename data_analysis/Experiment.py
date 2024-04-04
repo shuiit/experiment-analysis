@@ -147,6 +147,16 @@ class Experiment():
     def delta_ref_ang_movies(self,ref_frame_axis,header,**kwargs):
         [self.get_mov(mov_name).delta_ang_ref_frame(ref_frame_axis,header,**kwargs) for  mov_name in self.mov_names]
 
+
+    def calculate_model_nog(self,**kwargs):
+        [self.get_mov(mov_name).calculate_model_nog(**kwargs) for  mov_name in self.mov_names]
+
+
+    def calculate_model(self,**kwargs):
+        [self.get_mov(mov_name).calculate_model(**kwargs) for  mov_name in self.mov_names]
+
+
+
     def get_mov(self,mov_name):
         return self.exp_dict[mov_name]
     
