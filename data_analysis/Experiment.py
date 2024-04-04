@@ -65,6 +65,14 @@ class Experiment():
     def calc_force_movies(self,**kwargs):
         [self.get_mov(mov_name).calc_force(**kwargs) for mov_name in self.mov_names]
 
+    def diff_model_exp_movies(self,model_name,exp_name,**kwargs):
+        rms_list = []
+        diff_list = []
+        for  mov_name in self.mov_names:
+            diff,diff_exp,rms = self.get_mov(mov_name).diff_model_exp(model_name,exp_name,**kwargs) 
+            rms_list.append(rms)
+            diff_list.append(np.hstack((diff,diff_exp)))
+        return np.vstack(diff_list),rms_list
 
     def zero_velocity_movies(self,prop):
         zero_v_list = [self.exp_dict[mov_name].zero_velocity(prop) for mov_name in self.mov_names]
