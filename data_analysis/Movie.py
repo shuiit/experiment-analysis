@@ -353,17 +353,6 @@ class Movie():
         time = self.get_prop(time,wing_body)
         return [np.argmin(np.abs(time - t0)) for t0 in t0_vec]
 
-
-    # def mean_prop_stroke(self,prop_name,wing_body_prop,wing_body_mean_save,phi_idx_to_mean = 'phi_rw_min_idx'):
-    #     data = self.get_prop(prop_name,wing_body_prop)
-    #     stroke_idx = self.get_prop(phi_idx_to_mean,'wing')
-    #     mean_strok_idx = self.header[wing_body_mean_save]['mean_idx']
-    #     min_idx = np.unique(stroke_idx[stroke_idx != None]).astype(int)[1:-1]
-    #     val = np.intersect1d((min_idx[:-1]+min_idx[1:])/2, self.data[wing_body_mean_save][:,mean_strok_idx], assume_unique=False, return_indices=True)
-    #     data[data == None] = np.nan
-    #     mean_stroke = [np.nanmean(data[idx0:idx1],axis = 0) for idx0,idx1 in zip(min_idx[:-1],min_idx[1:])]
-    #     self.data[f'{wing_body_mean_save}'] = np.hstack((self.data[f'{wing_body_mean_save}'],np.array(mean_stroke)[val[1]][np.newaxis,:].T))
-    #     self.add_to_header([f'{prop_name}'],f'{wing_body_mean_save}')
  
     def plot_prop(self,prop,wing_body,color,group_name,fig,prop_x = 'time',t0 = False,t1 = False,**kwargs):
 
@@ -395,11 +384,13 @@ class Movie():
         self.data[mean_wing_body] = np.vstack((self.data[mean_wing_body].T,[np.nanmean(data[min_idx == val]) for val in mean_idx if np.isnan(val) == False])).T
         self.add_to_header([prop],mean_wing_body)
 
-    def calculate_model_nog(self,g = 9.8,wing_body = 'body'):
+    def calculate_model_nog(self,g = 9.8,rotate_sp = False):
         props_to_mean = ['x','y','z']
         x = np.hstack([self.get_prop(axes,'vectors',three_col=3) for axes in ['X_x_body','Y_x_body','Z_x_body']])
         x = np.transpose(x.reshape(-1, 3, 3), (0, 2, 1))
         sp_vec = np.vstack([np.dot(rm,self.rot_mat_sp[:,2]) for rm in x]) # rotate body to stroke plane - get a matrix of all axes of stroke plane: [[Xx Yx Zx]
+        
+
                                                                                                                           # [Xz Yz Zz]]
         self.data['body'] = np.hstack((self.data['body'],np.vstack(np.hstack((sp_vec*g,sp_vec*g - np.array([0,0,1])*g)) ))) # get Z axes of stroke plane [Zx Zy Zz] * g -> every frame is has an XYZ vector of acceleration due to gravity : in lab axes
         self.add_to_header(['model_nog_x','model_nog_y','model_nog_z','model_x','model_y','model_z'],'body')
@@ -450,7 +441,24 @@ class Movie():
         combined_array = np.insert(combined_array,range(2, combined_array.shape[0], 2),np.nan,axis = 0)
         return combined_array
 
-            
+    @staticmethod   
+    def rodrigues_rot(V, K, theta):
+            """
+            Args:
+                V:  the vector to rotate
+                K: the axis of rotation
+                theta: angle in radians
 
+            Returns:
+
+            """
+            num_frames, ndims = V.shape[0], V.shape[1]
+            V_rot = np.zeros_like(V)
+            for frame in range(num_frames):
+                vi = V[frame, :]
+                ki = K[frame, :]
+                vi_rot = np.cos(theta) * vi + np.cross(ki, vi) * np.sin(theta) + ki * np.dot(ki, vi) * (1 - np.cos(theta))
+                V_rot[frame, :] = vi_rot
+            return V_rot
         
     
