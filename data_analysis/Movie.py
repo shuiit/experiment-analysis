@@ -353,17 +353,6 @@ class Movie():
         time = self.get_prop(time,wing_body)
         return [np.argmin(np.abs(time - t0)) for t0 in t0_vec]
 
-
-    # def mean_prop_stroke(self,prop_name,wing_body_prop,wing_body_mean_save,phi_idx_to_mean = 'phi_rw_min_idx'):
-    #     data = self.get_prop(prop_name,wing_body_prop)
-    #     stroke_idx = self.get_prop(phi_idx_to_mean,'wing')
-    #     mean_strok_idx = self.header[wing_body_mean_save]['mean_idx']
-    #     min_idx = np.unique(stroke_idx[stroke_idx != None]).astype(int)[1:-1]
-    #     val = np.intersect1d((min_idx[:-1]+min_idx[1:])/2, self.data[wing_body_mean_save][:,mean_strok_idx], assume_unique=False, return_indices=True)
-    #     data[data == None] = np.nan
-    #     mean_stroke = [np.nanmean(data[idx0:idx1],axis = 0) for idx0,idx1 in zip(min_idx[:-1],min_idx[1:])]
-    #     self.data[f'{wing_body_mean_save}'] = np.hstack((self.data[f'{wing_body_mean_save}'],np.array(mean_stroke)[val[1]][np.newaxis,:].T))
-    #     self.add_to_header([f'{prop_name}'],f'{wing_body_mean_save}')
  
     def plot_prop(self,prop,wing_body,color,group_name,fig,prop_x = 'time',t0 = False,t1 = False,**kwargs):
 
@@ -493,7 +482,24 @@ class Movie():
         combined_array = np.insert(combined_array,range(2, combined_array.shape[0], 2),np.nan,axis = 0)
         return combined_array
 
-            
+    @staticmethod   
+    def rodrigues_rot(V, K, theta):
+            """
+            Args:
+                V:  the vector to rotate
+                K: the axis of rotation
+                theta: angle in radians
 
+            Returns:
+
+            """
+            num_frames, ndims = V.shape[0], V.shape[1]
+            V_rot = np.zeros_like(V)
+            for frame in range(num_frames):
+                vi = V[frame, :]
+                ki = K[frame, :]
+                vi_rot = np.cos(theta) * vi + np.cross(ki, vi) * np.sin(theta) + ki * np.dot(ki, vi) * (1 - np.cos(theta))
+                V_rot[frame, :] = vi_rot
+            return V_rot
         
     
