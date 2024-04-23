@@ -18,7 +18,7 @@ Created on Mon Jun  5 08:25:02 2023
 def plot_prop_movie(xdata,ydata,color,group_name,
                     marker_size = 7,fig = False,showlegend = True,
                     line_dict = False,mode = 'lines',plot_points = False,
-                    yaxis = 'y1',name = False,symbol = 'circle',marker_color = False):
+                    yaxis = 'y1',name = False,symbol = 'circle',marker_color = False,idx = False,fig_subplots = False):
     fig = go.Figure() if fig == False else fig
     name = group_name if name == False else name + group_name
     marker_color =  f'rgba{str(tuple(np.append(color,0.5)))}' if marker_color == False else marker_color
@@ -33,7 +33,12 @@ def plot_prop_movie(xdata,ydata,color,group_name,
         line  = line_dict,
         marker=dict(color = marker_color,size = marker_size, symbol = symbol),
         yaxis = yaxis)
-    fig.add_traces(traces)
+    if idx != False: 
+        fig_subplots.add_trace(traces, row=idx + 1, col=1)
+    else:
+        fig.add_traces(traces)
+
+
     
     if plot_points != False:
         fig.add_scatter(x=[plot_points[0]],

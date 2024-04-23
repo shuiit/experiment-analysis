@@ -58,10 +58,23 @@ class Experiment():
         mov_names = self.mov_names if mov == False else mov
         return pd.DataFrame(np.vstack([self.get_mov(mov_name).mean_prop_time_vector(prop,delta_t,t_vec,**kwargs) for mov_name in mov_names]), columns = [prop,'t0'])
 
+    def calculate_model_movies(self,add_drag = True,**kwargs):
+        
+        header = 'no_drag' if add_drag == False else 'drag'
+        self.calculate_model_nog(add_drag = add_drag,**kwargs) 
+        self.calculate_model(add_drag = add_drag,**kwargs) 
+        self.project_prop_all_axes_movies(f'model_x_{header}',header_name = f'model_x_{header}',three_col = 2,ax_to_proj = 'X_x_body_projected')  
+        self.project_prop_all_axes_movies(f'model_x_{header}',header_name = f'model_y_{header}',three_col = 2,ax_to_proj = 'Y_x_body_projected')
+        self.project_prop_all_axes_movies(f'model_gamma_x_{header}',header_name = f'model_gamma_x_{header}',three_col = 2,ax_to_proj = 'X_x_body_projected',wing_body = 'mean_body') 
+        self.project_prop_all_axes_movies(f'model_gamma_x_{header}',header_name = f'model_gamma_y_{header}',three_col = 2,ax_to_proj = 'Y_x_body_projected',wing_body = 'mean_body')
+
     
     def min_max_point_movies(self,prop,**kwargs):
         return np.hstack([self.exp_dict[mov_name].min_max_point(prop,**kwargs) for mov_name in self.mov_names])
      
+    def calc_drag_movies(self,**kwargs):
+        [self.get_mov(mov_name).calculate_drag(**kwargs) for mov_name in self.mov_names]
+ 
     def calc_force_movies(self,**kwargs):
         [self.get_mov(mov_name).calc_force(**kwargs) for mov_name in self.mov_names]
 
@@ -163,6 +176,8 @@ class Experiment():
     def calculate_model(self,**kwargs):
         [self.get_mov(mov_name).calculate_model(**kwargs) for  mov_name in self.mov_names]
 
+    def xy_body_on_sp_movies(self,**kwargs):
+        [self.get_mov(mov_name).xy_body_on_sp(**kwargs) for  mov_name in self.mov_names]
 
 
     def get_mov(self,mov_name):

@@ -384,7 +384,9 @@ class Movie():
         self.data[mean_wing_body] = np.vstack((self.data[mean_wing_body].T,[np.nanmean(data[min_idx == val]) for val in mean_idx if np.isnan(val) == False])).T
         self.add_to_header([prop],mean_wing_body)
 
-    def body_drag(self,velocity,velocity_size):
+    def body_drag(self,velocity):
+        velocity_size = np.linalg.norm(velocity,axis = 1)
+
         alpha = np.arctan(velocity[:,1]/velocity[:,0])
         beta = np.arctan(velocity[:,2]/velocity[:,0])
         delta = np.arctan(np.sqrt(np.tan(alpha)**2 + np.tan(beta)**2))
@@ -399,59 +401,75 @@ class Movie():
         drag_n = 0.5*rho*s_bod/m*cn*velocity_size**2
         return drag_p,drag_n
     
-    def wing_drag(self):
-        x_v = self.get_prop('CM_dot_x_projected_all_axes','body',three_col=1)
-        y_v = self.get_prop('CM_dot_y_projected_all_axes','body',three_col=1)
-
-
+    def wing_drag(self,vx_sp,vy_sp):
         drag_front_to_velocity = 0.79
         drag_side_to_velocity = 0.52
 
-        return -x_v * drag_front_to_velocity,-y_v * drag_side_to_velocity
+        return -vx_sp * drag_front_to_velocity,-vy_sp * drag_side_to_velocity
 
 
-
-
-
-    def calculate_model_nog(self,g = 9.8,add_drag = False):
-        props_to_mean = ['x','y','z']
-        velocity = self.get_prop('CM_real_x_body_dot_smth','body',three_col=3)
-        velocity_size = np.linalg.norm(velocity,axis = 1)
-        velocity_dir = velocity/np.linalg.norm(velocity,axis = 1)[np.newaxis].T
-        drag_p,drag_n = self.body_drag(velocity,velocity_size)
-        wing_drag_x,wing_drag_y = self.wing_drag()
-
+    def xy_body_on_sp(self):
         x_2d = np.hstack([self.get_prop(axes,'vectors',three_col=3) for axes in ['X_x_body','Y_x_body','Z_x_body']])
-
         x_3d = np.transpose(x_2d.reshape(-1, 3, 3), (0, 2, 1))
-        sp_vec = np.vstack([np.dot(rm,self.rot_mat_sp[:,2]) for rm in x_3d]) # rotate body to stroke plane - get a matrix of all axes of stroke plane: [[Xx Yx Zx]
-                                                                                                                          # [Xz Yz Zz]]
+        sp_vec_x = np.vstack([np.dot(rm,self.rot_mat_sp[:,0]) for rm in x_3d]) # rotate body to stroke plane - get a matrix of all axes of stroke plane: [[Xx Yx Zx]
+        sp_vec_y = np.vstack([np.dot(rm,self.rot_mat_sp[:,1]) for rm in x_3d]) # rotate body to stroke plane - get a matrix of all axes of stroke plane: [[Xx Yx Zx]
+        sp_vec_z = np.vstack([np.dot(rm,self.rot_mat_sp[:,2]) for rm in x_3d]) # rotate body to stroke plane - get a matrix of all axes of stroke plane: [[Xx Yx Zx]
+        self.data['vectors'] = np.hstack((self.data['vectors'], np.hstack([sp_vec_x,sp_vec_y,sp_vec_z])))
+        header = np.hstack([[f'{ax}_x_sp',f'{ax}_y_sp',f'{ax}_z_sp'] for ax in ['X','Y','Z']])
+        self.add_to_header(header,'vectors')
+    
+    def calculate_drag(self):
+        props_to_mean = ['x','y','z']
+        g = 9.8
+        velocity = self.get_prop('CM_real_x_body_dot_smth','body',three_col=3)
+        velocity_dir = velocity/np.linalg.norm(velocity,axis = 1)[np.newaxis].T
+        x_sp = self.get_prop('X_x_sp','vectors',three_col=3)
+        y_sp = self.get_prop('Y_x_sp','vectors',three_col=3)
+        z_sp = self.get_prop('Z_x_sp','vectors',three_col=3)
+        
+        drag_p,drag_n = self.body_drag(velocity)
 
-        drag_xy = -velocity_dir*drag_p[np.newaxis].T + x_2d[:,0:3]*wing_drag_x*g + x_2d[:,3:6]*wing_drag_y*g
-        drag_z =sp_vec*drag_n[np.newaxis].T
-        if add_drag == False:
-            self.data['body'] = np.hstack((self.data['body'],np.vstack(np.hstack((sp_vec*g,sp_vec*g - np.array([0,0,1])*g)) ))) # get Z axes of stroke plane [Zx Zy Zz] * g -> every frame is has an XYZ vector of acceleration due to gravity : in lab axes
-        else:
-            self.data['body'] = np.hstack((self.data['body'],np.vstack(np.hstack((sp_vec*g  + drag_xy - drag_z ,sp_vec*g - np.array([0,0,1])*g + drag_xy - drag_z)) ))) # get Z axes of stroke plane [Zx Zy Zz] * g -> every frame is has an XYZ vector of acceleration due to gravity : in lab axes
+        
+        wing_drag_x,wing_drag_y = self.wing_drag(np.sum(velocity*x_sp,axis = 1)[np.newaxis].T,np.sum(velocity*y_sp,axis = 1)[np.newaxis].T)
+        drag_xy = -velocity_dir*drag_p[np.newaxis].T + x_sp*wing_drag_x*g + y_sp*wing_drag_y*g
+        drag_z = z_sp*drag_n[np.newaxis].T
+        drag = drag_xy - drag_z
+        self.data['body'] = np.hstack((self.data['body'],drag))  # get Z axes of stroke plane [Zx Zy Zz] * g -> every frame is has an XYZ vector of acceleration due to gravity : in lab axes
+
+        self.add_to_header([f'drag_x',f'drag_y',f'drag_z'],'body')
+        [self.mean_by_stroke(f'drag_{x}','mean_body','body')  for x in props_to_mean]
+
+
+    def calculate_model_nog(self,g = 9.8,add_drag = False,add_to_header = 'no_drag'):
+        props_to_mean = ['x','y','z']
+        drag = 0
+        drag = self.get_prop('drag_x','body',three_col=3) if add_drag == True else 0
+        
+        z_sp = self.get_prop('Z_x_sp','vectors',three_col=3)
+        add_to_header = 'no_drag' if add_drag == False else 'drag'
+
+        self.data['body'] = np.hstack((self.data['body'],np.vstack(np.hstack((z_sp*g ,z_sp*g - np.array([0,0,1])*g + drag)) ))) # get Z axes of stroke plane [Zx Zy Zz] * g -> every frame is has an XYZ vector of acceleration due to gravity : in lab axes
   
-        self.add_to_header(['model_nog_x','model_nog_y','model_nog_z','model_x','model_y','model_z'],'body')
-        [self.mean_by_stroke(f'model_nog_{x}','mean_body','body')  for x in props_to_mean]
-        [self.mean_by_stroke(f'model_{x}','mean_body','body')  for x in props_to_mean]
+        self.add_to_header([f'model_nog_x_{add_to_header}',f'model_nog_y_{add_to_header}',f'model_nog_z_{add_to_header}',f'model_x_{add_to_header}',f'model_y_{add_to_header}',f'model_z_{add_to_header}'],'body')
+        [self.mean_by_stroke(f'model_nog_{x}_{add_to_header}','mean_body','body')  for x in props_to_mean]
+        [self.mean_by_stroke(f'model_{x}_{add_to_header}','mean_body','body')  for x in props_to_mean]
 
-    def calculate_model(self,g = 9.8,wing_body = 'mean_body',nws = 4):
-
-        model_nog = self.get_prop('model_nog_x','mean_body',three_col=3)
+    def calculate_model(self,g = 9.8,add_drag = False,nws = 4):
+        header = 'no_drag' if add_drag == False else 'drag'
+        model_nog = self.get_prop(f'model_nog_x_{header}','mean_body',three_col=3)
         freq = self.get_prop('freq_phi_rw_min_idx','mean_body',three_col=2)
         wing_amp = self.get_prop('amp_rw','mean_body',three_col=2)
+        drag = self.get_prop('drag_x','mean_body',three_col=3) if add_drag == True else 0
 
         order_u = np.mean(freq,axis = 1)*np.mean(wing_amp,axis = 1)[np.newaxis]
+        order_u[np.isinf(order_u)] = np.nan
         order_u_base = np.nanmean(order_u[:73*nws])
         gamma = (order_u/order_u_base)**2
-        model_gamma = gamma.T*model_nog  - np.array([0,0,1])*g 
+        model_gamma = gamma.T*model_nog  - np.array([0,0,1])*g + drag
         model_gamma_norm =  np.linalg.norm(model_gamma,axis = 1)[np.newaxis].T
                                                                                                                                    # [Xz Yz Zz]]
-        self.data['mean_body'] = np.hstack((self.data['mean_body'],model_gamma,model_gamma_norm)) # get Z axes of stroke plane [Zx Zy Zz] * g -> every frame is has an XYZ vector of acceleration due to gravity : in lab axes
-        self.add_to_header(['model_gamma_x','model_gamma_y','model_gamma_z','model_gamma_norm'],'mean_body')
+        self.data['mean_body'] = np.hstack((self.data['mean_body'],model_gamma,model_gamma_norm,gamma.T)) # get Z axes of stroke plane [Zx Zy Zz] * g -> every frame is has an XYZ vector of acceleration due to gravity : in lab axes
+        self.add_to_header([f'model_gamma_x_{header}',f'model_gamma_y_{header}',f'model_gamma_z_{header}',f'model_gamma_norm_{header}','gamma'],'mean_body')
     
     @staticmethod
     def rotation_matrix(yaw,pitch,roll):
