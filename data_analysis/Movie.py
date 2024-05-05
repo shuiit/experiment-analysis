@@ -277,7 +277,7 @@ class Movie():
         # disconnect the coordinates to get line for the vectors
         data['x_vector'] = self.disconnect_line_add_none(data['cm'][::plot_cofnig['fly_samples'],:],body_x_vector[::plot_cofnig['fly_samples'],:])
         data['y_vector'] = self.disconnect_line_add_none(-body_y_vector + delta_y_on_x,body_y_vector+delta_y_on_x)       
-        if forces.all() != None:
+        if forces != None:
             forces = forces*plot_cofnig['size_x'] + data['cm']
             data['forces'] = self.disconnect_line_add_none(data['cm'][::plot_cofnig['fly_samples'],:],forces[::plot_cofnig['fly_samples'],:])
 
