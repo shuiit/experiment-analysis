@@ -33,6 +33,11 @@ class Experiment():
 
         self.figures_path = f'{self.loadir}/figures/{self.experiment_name.split("manipulated_")[1]}'
         if not os.path.exists(self.figures_path): os.makedirs(self.figures_path)
+
+    
+        self.csv_path = f'{self.loadir}/csv/{self.experiment_name.split("manipulated_")[1]}'
+        if not os.path.exists(self.csv_path): os.makedirs(self.csv_path)
+
         self.experiment.close()
 
     def pqr_movies(self, mov = False):
@@ -178,6 +183,12 @@ class Experiment():
 
     def xy_body_on_sp_movies(self,**kwargs):
         [self.get_mov(mov_name).xy_body_on_sp(**kwargs) for  mov_name in self.mov_names]
+
+
+    def save_to_csv_movies(self,mov = False,**kwargs):
+        mov_names = self.mov_names if mov == False else mov
+        [self.get_mov(mov_name).save_to_csv(self.csv_path,**kwargs) for  mov_name in mov_names]
+
 
 
     def get_mov(self,mov_name):
