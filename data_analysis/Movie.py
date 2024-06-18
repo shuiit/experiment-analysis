@@ -506,6 +506,15 @@ class Movie():
         self.data['mean_body'] = np.hstack((self.data['mean_body'],model_gamma,model_gamma_norm,gamma.T)) # get Z axes of stroke plane [Zx Zy Zz] * g -> every frame is has an XYZ vector of acceleration due to gravity : in lab axes
         self.add_to_header([f'model_gamma_x_{header}',f'model_gamma_y_{header}',f'model_gamma_z_{header}',f'model_gamma_norm_{header}','gamma'],'mean_body')
     
+    def save_to_csv(self,path):
+        
+        for body_wing_vectors in ['body','wing','vectors']:
+            data_frame = pd.DataFrame(self.data[body_wing_vectors],columns = list(self.header[body_wing_vectors].keys()))
+            data_frame.to_csv(f'{path}/{self.name}_{body_wing_vectors}.csv')
+
+
+
+
     @staticmethod
     def rotation_matrix(yaw,pitch,roll):
         roll_mat = np.vstack([[1,0,0],[0 ,np.cos(roll),-np.sin(roll)],[0, np.sin(roll), np.cos(roll)]])
