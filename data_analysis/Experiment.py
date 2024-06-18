@@ -40,6 +40,7 @@ class Experiment():
         [self.get_mov(mov_name).calculate_pqr_update_data_header() for mov_name in mov_names]
 
 
+
     def plot_3d_traj_movies(self,color_prop,save_plot = False, mov = False,**kwargs):
         mov_names = self.mov_names if mov == False else mov
         for mov in  list(mov_names):
@@ -75,6 +76,11 @@ class Experiment():
     def calc_drag_movies(self,**kwargs):
         [self.get_mov(mov_name).calculate_drag(**kwargs) for mov_name in self.mov_names]
  
+
+    def rotate_prop_movies(self,prop,header,**kwargs):
+        [self.get_mov(mov_name).rotate_prop(prop,header,**kwargs) for mov_name in self.mov_names]
+ 
+
     def calc_force_movies(self,**kwargs):
         [self.get_mov(mov_name).calc_force(**kwargs) for mov_name in self.mov_names]
 
@@ -112,6 +118,11 @@ class Experiment():
         # fig.update_layout(autosize=False )
  
 
+    def norm_prop_movies(self,prop,header):
+        [self.get_mov(mov_name).norm_prop(prop,header) for  mov_name in self.mov_names]
+
+
+
     def smooth_prop_movies(self,prop,derives,wing_body):
         [self.get_mov(mov_name).smooth_and_derive(prop,derives,wing_body) for  mov_name in self.mov_names]
 
@@ -142,6 +153,11 @@ class Experiment():
 
     def mean_by_stroke_movies(self, prop,mean_wing_body,wing_body):
         [self.get_mov(mov_name).mean_by_stroke(prop,mean_wing_body,wing_body) for  mov_name in self.mov_names]
+
+
+    def angles_between_vector_and_ref_frame_movies(self,prop,header):
+        [self.get_mov(mov_name).angles_between_vector_and_ref_frame(prop,header,wing_body = 'body') for  mov_name in self.mov_names]
+
 
     def project_axes_movies(self,header,**kwargs):
         [self.get_mov(mov_name).project_axes_xy(header,**kwargs) for  mov_name in self.mov_names]

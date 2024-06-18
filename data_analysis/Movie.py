@@ -74,7 +74,13 @@ class Movie():
         self.data[wing_body] = np.hstack((self.data[wing_body], sub_prop))
         self.add_to_header([f'amp_v'],wing_body)
 
-
+    def angles_between_vector_and_ref_frame(self,prop,header,wing_body = 'body'):
+        cm_dot = self.get_prop(prop,three_col=3,wing_body='body')
+        cm_vec = (cm_dot.T/np.linalg.norm(cm_dot,axis = 1)).T
+        cm_vec_ref = cm_vec[self.ref_frame]
+        
+        self.data[wing_body] = np.hstack((self.data[wing_body], np.arccos(np.dot(cm_vec,cm_vec_ref[:,np.newaxis]))*180/np.pi))
+        self.add_to_header(header,wing_body)
 
     def t0_t1_idx(self,t0,t1):
         time = self.get_prop('time','body')[:,0]
@@ -92,6 +98,27 @@ class Movie():
         
         if add_to_vectors != False:
             [self.from_wing_body_to_vectors(head,add_to_vectors[0],add_to_vectors[1]) for head in header ]
+
+    def rotate_prop(self,prop,header,rotate_by_yaw = True):
+        
+        prop_to_rotate = self.get_prop(prop,three_col=3,wing_body='body')
+        if rotate_by_yaw == True:
+            degree_to_rotate = self.get_prop('yaw_body',wing_body='body')[self.ref_frame][0]*np.pi/180
+        else:
+            projected_velocity_vec = self.get_prop('CM_dot_xax',three_col=2,wing_body='body')
+            projected_velocity_vec = (projected_velocity_vec.T/np.linalg.norm(projected_velocity_vec,axis = 1)).T
+            degree_to_rotate = np.arccos(np.dot(projected_velocity_vec,np.array([1,0])))[self.ref_frame]
+
+
+            rot_dir = np.sign(np.cross(projected_velocity_vec[self.ref_frame],np.array([1,0])))
+        
+              
+        prop_to_rotate_zero = prop_to_rotate - prop_to_rotate[self.ref_frame]
+        rot_mat = self.rotation_matrix(rot_dir*degree_to_rotate,0,0)
+
+        self.data['body'] = np.hstack((self.data['body'], np.dot(rot_mat,prop_to_rotate_zero.T).T))
+        self.add_to_header(header,'body')
+
 
 
 
@@ -195,16 +222,24 @@ class Movie():
         diff_model_exp = model_x-exp_x
         return diff_model_exp,diff_model_exp/exp_x,np.sqrt(np.nanmean(diff_model_exp**2))
 
-    def get_peaks_min_max(self,prop,case,t1 = False,t0 = False):
+    def norm_prop(self,prop,header,wing_body='body'):
+        prop_to_norm = self.get_prop(prop,wing_body='body',three_col=3)
+
+        self.data[wing_body] = np.hstack((self.data[wing_body], np.linalg.norm(prop_to_norm,axis = 1)[:,np.newaxis]))
+        self.add_to_header( [header],wing_body)
+
+
+
+    def get_peaks_min_max(self,prop,case,t1 = False,t0 = False,prominence = 0.05):
 
         idx_time = (0,-1 )if (t1 == False) | (t0 == False) else self.t0_t1_idx(t0,t1)
         acc = self.get_prop(prop,'body')[idx_time[0]:idx_time[1],0]
         v0 = acc[self.ref_frame]/2
 
         if case == 'peaks_max':
-            idx = find_peaks(acc, prominence=0.1 )[0]
+            idx = find_peaks(acc, prominence=prominence )[0]
         if case == 'peaks_min':
-            idx = find_peaks(-acc, prominence=0.05 )[0]
+            idx = find_peaks(-acc, prominence=prominence )[0]
         if case == 'min':
             idx = [np.argmin(acc)]
         if case == 'max':
