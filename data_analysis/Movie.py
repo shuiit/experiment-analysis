@@ -120,6 +120,16 @@ class Movie():
         self.add_to_header(header,'body')
 
 
+    # def rotate_to_body_axes(self,):
+        
+    #     degree_to_rotate = self.get_prop('yaw_body',wing_body='body',three_col=3)[self.ref_frame][0]*np.pi/180
+    #     if rotate_to_strk == True:
+    #         degree_to_rotate[:,1] = degree_to_rotate[:,1] - 45
+
+
+    #     rot_mat = self.rotation_matrix(degree_to_rotate,0,0)
+
+
 
 
     def project_prop_all_axes(self,prop,wing_body = 'body',header_name = 'CM_dot',ax_to_proj = 'X_x_body',add_to_vectors= False,three_col = 3):
