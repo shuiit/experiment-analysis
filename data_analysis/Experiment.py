@@ -22,7 +22,7 @@ class Experiment():
         self.pertubation_name = self.experiment_name.split('_')[-1]
         self.color_map = colormap.datad["tab10"]['listed']
         self.mov_names = list(self.experiment.keys()) if movie_name_list == False else movie_name_list
-        self.pertubation = int(self.pertubation_name.split('ms')[0]) if self.pertubation_name.isalpha() == False else False
+        self.pertubation = int(self.pertubation_name.split('ms')[0]) if self.pertubation_name.split('ms')[0].isdigit() == True else False
         self.loadir =loadir
         time_idx = np.where(self.experiment[self.mov_names[0]]['body'].attrs['header'] == 'time')[0][0]
         self.exp_dict = {mov : Movie(self.experiment,mov,pertubation = self.pertubation) for mov in self.mov_names if self.del_initial_tim_and_length(self.experiment[mov],movie_length,time_idx) !=True}
@@ -81,6 +81,15 @@ class Experiment():
     def calc_drag_movies(self,**kwargs):
         [self.get_mov(mov_name).calculate_drag(**kwargs) for mov_name in self.mov_names]
  
+
+    def th_for_response_time(self):
+        mean_acc = []
+        for mov_name in self.mov_names:
+            mov = self.get_mov(mov_name)
+            mean_acc.append(self.get_mov(mov_name).get_prop('acc_norm',wing_body='body')[mov.ref_frame])
+        return np.mean(mean_acc) + np.std(mean_acc)*2
+
+
 
     def rotate_prop_movies(self,prop,header,**kwargs):
         [self.get_mov(mov_name).rotate_prop(prop,header,**kwargs) for mov_name in self.mov_names]
