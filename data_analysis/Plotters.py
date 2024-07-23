@@ -50,6 +50,15 @@ def plot_prop_movie(xdata,ydata,color,group_name,
 
     return fig
 
+def only_scatter3d(fig,data, name,skip = 1,**kwargs):
+    fig.add_trace(go.Scatter3d(
+    x=data[0:-1:skip,0],
+    y=data[0:-1:skip,1],
+    z=data[0:-1:skip,2],
+    **kwargs,
+    name = name,
+    ))
+    return fig
 
 def scatter_3d(fig,data,hover_data, name,**kwargs):
     """3d plotly scatter
@@ -63,18 +72,23 @@ def scatter_3d(fig,data,hover_data, name,**kwargs):
     Returns:
         fig (plotly): plotly figure
     """
-
+    hover_data = hover_data.astype(int) if isinstance(hover_data,int) else hover_data
     fig.add_trace(go.Scatter3d(
     x=data[:,0],
     y=data[:,1],
     z=data[:,2],
-    customdata = hover_data.astype(int),**kwargs,
+    customdata = hover_data,**kwargs,
     name = name,
     ))
     fig.update_traces( hovertemplate='<b>time</b>: %{customdata:,.f}<br>') 
     return fig
 
-
+def matplotlib_hist(data,xlabel,title,bins = 20):
+    
+    plt.figure(),plt.hist(data, bins = bins)
+    plt.axvline(np.nanmean(data), color='k', linestyle='dashed', linewidth=1)
+    plt.title(title)
+    plt.xlabel(xlabel)
 
 def plot_3d_traj(data,plot_cofnig,mov_name,exp_name,color_prop):
     """plot 3d trajectory

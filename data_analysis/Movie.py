@@ -144,6 +144,17 @@ class Movie():
         if add_to_vectors != False:
             self.from_wing_body_to_vectors(f'{header_name}_projected_all_axes',add_to_vectors[0],add_to_vectors[1])
     
+    def acc_dir(self,t):
+    
+        idx_t0,idx_t1 = self.t0_t1_idx(t,120)
+        degree_to_rotate = self.get_prop('pitch_body',wing_body='body',three_col=3)*np.pi/180
+        rot_mat = self.rotation_matrix(degree_to_rotate[idx_t0,1],-degree_to_rotate[idx_t0,0],degree_to_rotate[idx_t0,2])
+        acc = self.get_prop('CM_real_x_body_dot_dot_smth',wing_body='body',three_col=3)
+        acc_rotated = np.dot(self.rot_mat_sp.T,np.dot(rot_mat.T,acc.T)).T
+        return acc_rotated[idx_t0,:]/np.linalg.norm(acc_rotated[idx_t0,:])
+    
+
+
         
     def project_prop(self,prop,wing_body = 'body',header_name = 'CM_dot',ax_to_proj = 'X_x_body',add_to_vectors= False,three_col = 3):
         data = self.get_prop(prop,wing_body, three_col= three_col) 

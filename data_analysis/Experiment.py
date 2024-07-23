@@ -130,7 +130,9 @@ class Experiment():
         fig.update_layout( xaxis_title = prop_x, yaxis_title = prop)    
         # fig.layout.yaxis.scaleanchor="x"
         # fig.update_layout(autosize=False )
- 
+    def get_allexp_props(self,prop,wing_body = 'body'):
+        return [self.get_mov(mov_name).get_prop(prop,wing_body=wing_body) for mov_name in self.mov_names]
+    
 
     def norm_prop_movies(self,prop,header):
         [self.get_mov(mov_name).norm_prop(prop,header) for  mov_name in self.mov_names]
@@ -167,6 +169,10 @@ class Experiment():
 
     def mean_by_stroke_movies(self, prop,mean_wing_body,wing_body):
         [self.get_mov(mov_name).mean_by_stroke(prop,mean_wing_body,wing_body) for  mov_name in self.mov_names]
+
+
+    def acc_dir_movies(self, t):
+        return np.vstack([self.get_mov(mov_name).acc_dir(t) for  mov_name in self.mov_names])
 
 
     def angles_between_vector_and_ref_frame_movies(self,prop,header):
