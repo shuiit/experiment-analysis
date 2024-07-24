@@ -397,18 +397,20 @@ class Movie():
         return np.where(time >= t)[0] 
 
     
-    def get_mean_prop_time(self,t0,t1,prop,wing_body,mean_delta,freq_ol = 280):
+    def get_mean_prop_time(self,t0,t1,prop,wing_body,mean_delta,freq_ol = 280, get_delta = 0):
         
         freq = self.get_prop(prop,wing_body)
         idx_time = self.mean_time([t0,t1],wing_body, time = 'time')
         data_to_mean = freq[idx_time[0]:idx_time[1]]
         data_to_mean[data_to_mean>freq_ol] = np.nan
-        return  np.nanmean(data_to_mean) - mean_delta,t0
+        return  np.nanmean(data_to_mean) - get_delta*mean_delta,t0
     
-    def mean_prop_time_vector(self,prop,delta_t,t_vec,sub_mean = True,**kwargs):
-        
-        mean_delta = self.get_mean_prop_time(0,0 + delta_t,prop,'mean_body',0,**kwargs) if sub_mean == True else [0] 
-        return [self.get_mean_prop_time(t0,t0 + delta_t,prop,'mean_body',mean_delta[0],**kwargs) for t0 in t_vec[1:]]
+
+    
+    
+    def mean_prop_time_vector(self,prop,delta_t,t_vec,sub_mean = True, get_delta = 0,**kwargs):
+        mean_delta = self.get_mean_prop_time(0,0 + delta_t,prop,'mean_body',0,get_delta = get_delta,**kwargs) if sub_mean == True else [0] 
+        return [self.get_mean_prop_time(t0,t0 + delta_t,prop,'mean_body',mean_delta[0],get_delta = get_delta,**kwargs) for t0 in t_vec[get_delta:]]
 
     def mean_time(self,t0_vec,wing_body, time = 'time'):
         time = self.get_prop(time,wing_body)
