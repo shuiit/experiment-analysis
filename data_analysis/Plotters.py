@@ -221,6 +221,8 @@ def subplot_histograms_delta_prop(time_vec,experiments,prop,color_map,xbins,wing
                 )
           
         fig.update_yaxes(title_text=f'Time Fin: {tfin}', row=i + 1, col=1)
+        fig.for_each_xaxis(lambda x: x.update( {"range":[xbins['start'], xbins['end']]}))
+
     fig.update_layout(title = prop)
     return fig
             
