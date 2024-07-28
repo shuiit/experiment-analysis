@@ -1,13 +1,13 @@
 
 % addpath('G:\Documents\micro-flight-lab\hull_reconstruction_git')
 % saves fields in structure to csv
-dir_of_exps = 'H:\My Drive\Ronis Exp\standard_flies_sagiv\'%'H:\My Drive\dark 2022\10_8_23_dark_blink_40ms\'
-dir_to_save = 'H:\My Drive\Ronis Exp\standard_flies_sagiv\'
+dir_of_exps = 'H:\My Drive\dark 2022\10_8_23_dark_blink_40ms\'%'H:\My Drive\dark 2022\10_8_23_dark_blink_40ms\'
+dir_to_save = 'H:\My Drive\dark 2022\10_8_23_dark_blink_40ms\'
 path_to_save = [dir_to_save,'csv_dark\\']
 
 exps_names = dir(dir_of_exps)
 
-for idx_exp_name = 1:1:length(exps_names)
+for idx_exp_name = 5:1:length(exps_names)
     exp_name = exps_names(idx_exp_name).name
     path=sprintf('%s%s\\hull\\hull_Reorder\\',dir_of_exps,exp_name);
     files_in_dir = dir(path);
