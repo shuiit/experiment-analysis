@@ -168,9 +168,12 @@ class Movie():
     
     def calc_angle_unwarp(self, prop,delta_ang = 180,unwarped = True):
         
-        sgn = np.sign(np.cross(prop[0],prop[1]))[:,-1]
-        ang_mov  = sgn*np.arccos(np.sum(prop[0] * prop[1],axis = 1))*180/np.pi
+        
+        ang_mov  = np.abs(np.arccos(np.sum(prop[0] * prop[1],axis = 1))*180/np.pi)
         if unwarped == True: 
+            
+            sgn = np.sign(np.cross(prop[0],prop[1]))[:,-1]
+            ang_mov  = sgn*np.arccos(np.sum(prop[0] * prop[1],axis = 1))*180/np.pi
             idx = np.where(np.isnan(ang_mov))[0]
             ang_mov[idx] = 0
             unwarped = np.unwrap(ang_mov + delta_ang,period = 360) - delta_ang 
