@@ -86,7 +86,10 @@ class Experiment():
         mean_acc = []
         for mov_name in self.mov_names:
             mov = self.get_mov(mov_name)
-            mean_acc.append(self.get_mov(mov_name).get_prop('acc_norm',wing_body='body')[mov.ref_frame])
+            acc_norm  = mov.get_prop('acc_norm',wing_body='body')
+
+            if mov.get_prop('acc_norm',wing_body='body')[mov.ref_frame] < 1.3:
+                mean_acc.append(acc_norm[mov.ref_frame])
         return np.mean(mean_acc) + np.std(mean_acc)*2
 
 

@@ -293,7 +293,7 @@ class Movie():
             idx =  np.where((np.diff(np.sign(acc - v0))<0) | (np.diff(np.sign(-acc - v0))<0))[0]
 
         if case == 'respone_time':
-            if acc[self.ref_frame] < 1.7:
+            if acc[self.ref_frame] < 1.3:
                 idx =  np.where(acc > th)[0]
 
 
@@ -427,8 +427,6 @@ class Movie():
         return  np.nanmean(data_to_mean) - get_delta*mean_delta,t0
     
 
-    
-    
     def mean_prop_time_vector(self,prop,delta_t,t_vec,sub_mean = True, get_delta = 0,**kwargs):
         mean_delta = self.get_mean_prop_time(0,0 + delta_t,prop,'mean_body',0,get_delta = get_delta,**kwargs) if sub_mean == True else [0] 
         return [self.get_mean_prop_time(t0,t0 + delta_t,prop,'mean_body',mean_delta[0],get_delta = get_delta,**kwargs) for t0 in t_vec[get_delta:]]
