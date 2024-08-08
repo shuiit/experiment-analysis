@@ -293,8 +293,11 @@ class Movie():
             idx =  np.where((np.diff(np.sign(acc - v0))<0) | (np.diff(np.sign(-acc - v0))<0))[0]
 
         if case == 'respone_time':
+
             if acc[self.ref_frame] < 1.3:
                 idx =  np.where(acc > th)[0]
+            else:
+                return self.data['body'][0,:]*0 + 999
 
 
         if len(idx) > 0:
