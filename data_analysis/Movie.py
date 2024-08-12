@@ -264,8 +264,8 @@ class Movie():
         diff_model_exp = model_x-exp_x
         return diff_model_exp,diff_model_exp/exp_x,np.sqrt(np.nanmean(diff_model_exp**2))
 
-    def norm_prop(self,prop,header,wing_body='body'):
-        prop_to_norm = self.get_prop(prop,wing_body='body',three_col=3)
+    def norm_prop(self,prop,header,wing_body='body',three_col = 3):
+        prop_to_norm = self.get_prop(prop,wing_body='body',three_col=three_col)
 
         self.data[wing_body] = np.hstack((self.data[wing_body], np.linalg.norm(prop_to_norm,axis = 1)[:,np.newaxis]))
         self.add_to_header( [header],wing_body)

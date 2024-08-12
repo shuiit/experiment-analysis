@@ -137,8 +137,8 @@ class Experiment():
         return [self.get_mov(mov_name).get_prop(prop,wing_body=wing_body) for mov_name in self.mov_names]
     
 
-    def norm_prop_movies(self,prop,header):
-        [self.get_mov(mov_name).norm_prop(prop,header) for  mov_name in self.mov_names]
+    def norm_prop_movies(self,prop,header,**kwargs):
+        [self.get_mov(mov_name).norm_prop(prop,header,**kwargs) for  mov_name in self.mov_names]
 
 
 
