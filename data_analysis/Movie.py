@@ -272,7 +272,7 @@ class Movie():
 
 
 
-    def get_peaks_min_max(self,prop,case,t1 = False,t0 = False,prominence = 0.05, th = False):
+    def get_peaks_min_max(self,prop,case,t1 = False,t0 = False,prominence = 0.05, th = False, th_mean = 1.4):
 
         idx_time = (0,-1 )if (t1 == False) | (t0 == False) else self.t0_t1_idx(t0,t1)
         acc = self.get_prop(prop,'body')[idx_time[0]:idx_time[1],0]
@@ -294,7 +294,7 @@ class Movie():
 
         if case == 'respone_time':
 
-            if acc[self.ref_frame] < 1.3:
+            if np.mean(acc[0:self.ref_frame]) < th_mean:
                 idx =  np.where(acc > th)[0]
             else:
                 return self.data['body'][0,:]*0 + 999

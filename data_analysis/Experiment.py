@@ -82,13 +82,15 @@ class Experiment():
         [self.get_mov(mov_name).calculate_drag(**kwargs) for mov_name in self.mov_names]
  
 
-    def th_for_response_time(self):
+    def th_for_response_time(self,th_mean):
+        # th_mean - mean of all frames from the beginning of the movie to the t = 0. the purpose is to add to the analysis only flies that do not accelerate before
+        #
         mean_acc = []
         for mov_name in self.mov_names:
             mov = self.get_mov(mov_name)
             acc_norm  = mov.get_prop('acc_norm',wing_body='body')
 
-            if mov.get_prop('acc_norm',wing_body='body')[mov.ref_frame] < 1.3:
+            if np.mean(mov.get_prop('acc_norm',wing_body='body')[0:mov.ref_frame]) < th_mean:
                 mean_acc.append(acc_norm[mov.ref_frame])
         return np.mean(mean_acc) + np.std(mean_acc)*2
 
