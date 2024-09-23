@@ -12,7 +12,7 @@ import h5py
 from scipy.signal import argrelextrema, savgol_filter,find_peaks
 from scipy.spatial.transform import Rotation as R
 import Plotters 
-
+import time
 
 
 pio.renderers.default='browser'
@@ -144,14 +144,33 @@ class Movie():
         if add_to_vectors != False:
             self.from_wing_body_to_vectors(f'{header_name}_projected_all_axes',add_to_vectors[0],add_to_vectors[1])
     
-    def acc_dir(self,t):
+    def acc_dir(self,t,prop):
     
         idx_t0,idx_t1 = self.t0_t1_idx(t,120)
         degree_to_rotate = self.get_prop('pitch_body',wing_body='body',three_col=3)*np.pi/180
         rot_mat = self.rotation_matrix(degree_to_rotate[idx_t0,1],-degree_to_rotate[idx_t0,0],degree_to_rotate[idx_t0,2])
-        acc = self.get_prop('CM_real_x_body_dot_dot_smth',wing_body='body',three_col=3)
+        acc = self.get_prop(prop,wing_body='body',three_col=3)
         acc_rotated = np.dot(self.rot_mat_sp.T,np.dot(rot_mat.T,acc.T)).T
         return acc_rotated[idx_t0,:]/np.linalg.norm(acc_rotated[idx_t0,:])
+    
+
+    def vel_dir(self,prop):
+        degree_to_rotate = self.get_prop('pitch_body',wing_body='body',three_col=3)*np.pi/180
+        rot_mat = self.rotation_matrix(degree_to_rotate[:,1],-degree_to_rotate[:,0],degree_to_rotate[:,2])
+        array_3d = np.stack(rot_mat, axis=-1)
+        array_3d = np.array(array_3d.tolist())
+        transposed_rot_mat = np.transpose(array_3d, (2, 0, 1))
+
+        acc = self.get_prop(prop,wing_body='body',three_col=3)
+
+        # Initialize an array to store the result
+        result = np.empty((acc.shape[0], 3))
+        
+        # Perform batch matrix-vector multiplication
+        for idx,rot_fr in enumerate(transposed_rot_mat):
+            acc_rotated = np.dot(self.rot_mat_sp.T,np.dot(rot_fr,acc[idx])).T
+            result[idx] = acc_rotated/np.linalg.norm(acc_rotated)
+        return result
     
 
 
@@ -310,6 +329,19 @@ class Movie():
         idx_y = self.header[wing_body][ydata] 
         idx_x = self.header[wing_body][xdata] 
         Plotters.add_point_to_plot(interest_points[idx_x],interest_points[idx_y],self.name,color,fig,**kwargs) 
+
+
+    def calc_cone_angle(self):
+    
+       projected_v = self.get_prop('X_x_body_projected',three_col=2,wing_body = 'body')
+       vector_v = self.get_prop('CM_real_x_body_dot_smth',three_col=3,wing_body = 'body')
+       proj_v = np.hstack((projected_v,projected_v[:,0:1]*0))
+
+       vector_v2 = vector_v.T/np.linalg.norm(vector_v.T,axis = 0)
+       proj_v2 = proj_v.T/np.linalg.norm(proj_v.T,axis = 0)
+       ang = np.arccos(np.sum(vector_v2.T*proj_v2.T,axis = 1))*180/np.pi
+       self.data['body'] = np.vstack((self.data['body'].T, ang)).T
+       self.add_to_header(['cone_angle'],'body')
 
 
     def calc_force(self):

@@ -81,6 +81,9 @@ class Experiment():
     def calc_drag_movies(self,**kwargs):
         [self.get_mov(mov_name).calculate_drag(**kwargs) for mov_name in self.mov_names]
  
+    def calc_cone_angle_movies(self,**kwargs):
+        [self.get_mov(mov_name).calc_cone_angle(**kwargs) for mov_name in self.mov_names]
+        
 
     def th_for_response_time(self,th_mean):
         # th_mean - mean of all frames from the beginning of the movie to the t = 0. the purpose is to add to the analysis only flies that do not accelerate before
@@ -90,11 +93,11 @@ class Experiment():
             mov = self.get_mov(mov_name)
             acc_norm  = mov.get_prop('acc_norm',wing_body='body')
 
-            if np.mean(mov.get_prop('acc_norm',wing_body='body')[0:mov.ref_frame]) < th_mean:
-                mean_acc.append(acc_norm[mov.ref_frame])
-        return np.mean(mean_acc) + np.std(mean_acc)*2
+            if np.nanmean(mov.get_prop('acc_norm',wing_body='body')[0:mov.ref_frame]) < th_mean:
+                mean_acc.append(np.nanmean(acc_norm[0:mov.ref_frame]))
+        return np.nanmean(mean_acc) + np.nanstd(mean_acc)*2
 
-
+    
 
     def rotate_prop_movies(self,prop,header,**kwargs):
         [self.get_mov(mov_name).rotate_prop(prop,header,**kwargs) for mov_name in self.mov_names]
@@ -181,8 +184,11 @@ class Experiment():
         [self.get_mov(mov_name).mean_by_stroke(prop,mean_wing_body,wing_body) for  mov_name in self.mov_names]
 
 
-    def acc_dir_movies(self, t):
-        return np.vstack([self.get_mov(mov_name).acc_dir(t) for  mov_name in self.mov_names])
+    def acc_dir_movies(self, t,prop):
+        return np.vstack([self.get_mov(mov_name).acc_dir(t,prop) for  mov_name in self.mov_names])
+
+    def vel_dir_movies(self,prop):
+        return np.vstack([self.get_mov(mov_name).vel_dir(prop) for  mov_name in self.mov_names])
 
 
     def angles_between_vector_and_ref_frame_movies(self,prop,header):
