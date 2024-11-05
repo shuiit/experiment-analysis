@@ -54,7 +54,7 @@ max_time_xax = 250
 
 
 insect = fly
-mov = 11
+mov = 13
 plotter.plot_pitch_for_vel_z_vel_model_mov_mean(insect,exp_name,mov,pert,color_idx_fly,color_idx_mov_fly,max_time_xax,cluster_mean_color,cluster_mean_color_all_data)
 xlim([-20,250])
 
@@ -195,12 +195,15 @@ fly_fvec = get_fvec(exp_name_cell,fly,prop_name,time_to_violin);
 
 f_norm_vec = max([fly_fvec;mos_fvec]);
 
-ax1 = subplot(2,1,2)
+ax1 = subplot(1,1,1)
 plotter.violin_plot(fly.(exp_name),prop_name,time_to_violin,f_norm_vec,prop_name,fly_color,'fly','scatter_loc',0,'box_xdata',0)
 plotter.pert_plot(pert,0,1,ax1)
 ylabel('delta velocity angle [deg]')
 title('40ms pertubation')
 ylim([0,180])
+xlim([-50,300])
+set([ax1,ax2], 'LineWidth', 3,'TickLength',[0.00,0.00]);box on
+
 
 %% Violin delta angle
 fly_col_idx = 190
