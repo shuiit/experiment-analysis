@@ -260,8 +260,9 @@ class Experiment():
     
     @staticmethod
     def del_initial_tim_and_length(mov,movie_length,time_idx):
-        if (mov['body'].shape[0] < movie_length) | (mov['body'][0,time_idx] > 0):
-            return True
+        if ('body' in mov) & ('vectors' in mov):
+            if ((mov['body'].shape[0] < movie_length) | (mov['body'][0,time_idx] > 0)):
+                return True
 
     
     
