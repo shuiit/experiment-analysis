@@ -23,7 +23,7 @@ def manipulte_and_save_to_h5(pre_proc,mov_name):
 #     movie.project_body_props_on_xy(['CM_real_x_body_dot','CM_real_y_body_dot','CM_real_z_body_dot'],'v_xy')
 
     movie.calculate_angles_frame_ref_axes()
-    movie.calcate_mean_stroke('phi_rw_min_idx')
+#     movie.calcate_mean_stroke('phi_rw_min_idx')
     [pre_proc.create_datasets(pre_proc.exp_file_manipulated[mov_name],sub_group_name,movie.data[sub_group_name].astype(float),movie.header[sub_group_name]) for sub_group_name in list(movie.data.keys())]
 
 def clip_movie(pre_proc,movs):
@@ -55,7 +55,7 @@ def clip_and_manipulate(smoothing_config,exp_dir,exp_name,pert,clip_flag = True)
 if __name__ == '__main__':   
 
         exp_dir = 'H:/My Drive/dark 2022/csv_dark/'
-        exp_name = ['2023_08_10_100ms']#2024_11_12_darkan,'2022_03_10']#,'2023_08_10_100ms','2022_02_03']
+        exp_name = ['2024_11_12_darkan']#2024_11_12_darkan,'2022_03_10']#,'2023_08_10_100ms','2022_02_03']
         
         pert_list = ['']
 
@@ -63,7 +63,7 @@ if __name__ == '__main__':
                         'smooth_poly_wing': 2, 'zscore_window':200,'zscore_threashold': 3,
                         'interp_method' : 'cubic'}
 
-        [clip_and_manipulate(smoothing_config,exp_dir,exp,pert) for exp,pert in zip(exp_name,pert_list)]
+        [clip_and_manipulate(smoothing_config,exp_dir,exp,pert,clip_flag = True) for exp,pert in zip(exp_name,pert_list)]
 
 
 
