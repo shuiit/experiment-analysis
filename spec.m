@@ -2,37 +2,33 @@
 all_body_quats = 109
 all_pix_counts_cam1=cell(length(all_body_quats),1);
 all_pix_counts_cam2=cell(length(all_body_quats),1);
-sparse_folder_path = 'J:\My Drive\dark 2022\2023_08_09_60ms\hull\hull_Reorder\'
+sparse_folder_path = 'H:\My Drive\dark 2022\2023_08_09_60ms\hull\hull_Reorder\'
 
 mov_num = '109'
 save_file = fullfile(sparse_folder_path,'all_pix_counts_cam2.mat')
 
+for cam = 1:1:4
 
-for mov_ind=1:all_body_quats
-    
-    dir_mov_name = sprintf('mov%d',mov_ind);
-    file_name = fullfile(sparse_folder_path,[dir_mov_name,'\',dir_mov_name,'_cam2_sparse.mat']);
-    
-    if ~exist(file_name, 'file')
-        continue
+        cam_name = sprintf('_cam%d',cam)
+        save_file = fullfile(sparse_folder_path,['all_pix_counts',cam_name,'.mat'])
+    for mov_ind=1:all_body_quats
+        dir_mov_name = sprintf('mov%d',mov_ind);
+        file_name = fullfile(sparse_folder_path,[dir_mov_name,'\',dir_mov_name,cam_name,'_sparse.mat']);
+
+        if ~exist(file_name, 'file')
+            continue
+        end
+
+        disp(dir_mov_name)
+        qq=load(file_name);
+        pix_count=arrayfun(@(x)length(x.indIm) ,qq.frames ,'UniformOutput' ,true);
+
+        all_pix_counts_cam2{mov_ind}=pix_count;
+
     end
 
-    disp(dir_mov_name)
-    qq=load(file_name);
-    pix_count=arrayfun(@(x)length(x.indIm) ,qq.frames ,'UniformOutput' ,true);
- 
-    all_pix_counts_cam2{mov_ind}=pix_count;
-    
-    %     if isfile(fullfile(sparse_folder_path,['mov',mov_num,'_cam1.mat']))
-    %         qq=load(fullfile(sparse_folder_path,['mov',mov_num,'_cam1.mat']));
-    %         pix_count=arrayfun(@(x)length(x.indIm) ,qq.frames ,'UniformOutput' ,true);
-    %         pix_count=pix_count(frame_inds);
-    %
-    %         all_pix_counts_cam1{mov_ind}=pix_count;
-    %     end
+    save(save_file,'all_pix_counts_cam2')
 end
-
-save(save_file,'all_pix_counts_cam2')
 
 %% frquency from images
 %  fourier of amount of pixels
