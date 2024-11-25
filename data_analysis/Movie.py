@@ -145,12 +145,19 @@ class Movie():
             self.from_wing_body_to_vectors(f'{header_name}_projected_all_axes',add_to_vectors[0],add_to_vectors[1])
     
     def acc_dir(self,t,prop):
-    
-        idx_t0,idx_t1 = self.t0_t1_idx(t,120)
-        degree_to_rotate = self.get_prop('pitch_body',wing_body='body',three_col=3)*np.pi/180
-        rot_mat = self.rotation_matrix(degree_to_rotate[idx_t0,1],-degree_to_rotate[idx_t0,0],degree_to_rotate[idx_t0,2])
-        acc = self.get_prop(prop,wing_body='body',three_col=3)
-        acc_rotated = np.dot(self.rot_mat_sp.T,np.dot(rot_mat.T,acc.T)).T
+        try:
+            time = self.get_prop('time','body')[:,0]
+            if (len(np.where(t == time)[0]) == 0) :
+                return np.ones((3))*np.nan
+            
+            idx_t0,idx_t1 = self.t0_t1_idx(t,-1)
+            degree_to_rotate = self.get_prop('pitch_body',wing_body='body',three_col=3)*np.pi/180
+            rot_mat = self.rotation_matrix(degree_to_rotate[idx_t0,1],-degree_to_rotate[idx_t0,0],degree_to_rotate[idx_t0,2])
+            acc = self.get_prop(prop,wing_body='body',three_col=3)
+            acc_rotated = np.dot(self.rot_mat_sp.T,np.dot(rot_mat.T,acc.T)).T
+        except:
+            idx_t0,idx_t1 = self.t0_t1_idx(t,-1)
+
         return acc_rotated[idx_t0,:]/np.linalg.norm(acc_rotated[idx_t0,:])
     
 
@@ -292,38 +299,56 @@ class Movie():
 
 
     def get_peaks_min_max(self,prop,case,t1 = False,t0 = False,prominence = 0.05, th = False, th_mean = 1.4):
-
-        idx_time = (0,-1 )if (t1 == False) | (t0 == False) else self.t0_t1_idx(t0,t1)
-        acc = self.get_prop(prop,'body')[idx_time[0]:idx_time[1],0]
-        v0 = acc[self.ref_frame]/2
-        idx = []
-
-        if case == 'peaks_max':
-            idx = find_peaks(acc, prominence=prominence )[0]
-        if case == 'peaks_min':
-            idx = find_peaks(-acc, prominence=prominence )[0]
-        if case == 'min':
-            idx = [np.argmin(acc)]
-        if case == 'max':
-            idx = [np.argmax(acc)]
-        if case == 'zero_v':
-            idx =  np.where((np.diff(np.sign(acc))<0) | (np.diff(np.sign(-acc))<0))[0]
-        if case == 'half_v':
-            idx =  np.where((np.diff(np.sign(acc - v0))<0) | (np.diff(np.sign(-acc - v0))<0))[0]
-
-        if case == 'respone_time':
-
-            if np.mean(acc[0:self.ref_frame]) < th_mean:
-                idx =  np.where(acc > th)[0]
-            else:
-                return self.data['body'][0,:]*0 + 999
-
-
-        if len(idx) > 0:
+        # try:
             time = self.get_prop('time','body')[:,0]
-            return self.data['body'][idx[0]+ idx_time[0],:]
-        else:
-            return self.data['body'][0,:]*np.nan
+            if (t1 == False) | (t0 == False):
+                idx_time = (0,-1 )
+            else:
+                if (len(np.where(t1 == time)[0]) == 0) | (len(np.where(t0 == time)[0]) == 0) :
+                    return self.data['body'][0,:]*np.nan
+                idx_time = self.t0_t1_idx(t0,t1)
+
+            acc = self.get_prop(prop,'body')[idx_time[0]:idx_time[1],0]
+            v0 = acc[self.ref_frame]/2
+            idx = []
+
+            if case == 'peaks_max':
+                idx = find_peaks(acc, prominence=prominence )[0]
+            if case == 'peaks_min':
+                idx = find_peaks(-acc, prominence=prominence )[0]
+            if case == 'min':
+                idx = [np.argmin(acc)]
+            if case == 'max':
+                idx = [np.argmax(acc)]
+            if case == 'zero_v':
+                idx =  np.where((np.diff(np.sign(acc))<0) | (np.diff(np.sign(-acc))<0))[0]
+            if case == 'half_v':
+                idx =  np.where((np.diff(np.sign(acc - v0))<0) | (np.diff(np.sign(-acc - v0))<0))[0]
+
+            if case == 'respone_time':
+
+                if np.mean(acc[0:self.ref_frame]) < th_mean:
+                    idx =  np.where(acc > th)[0]
+                else:
+                    return self.data['body'][0,:]*0 + 999
+
+
+            if len(idx) > 0:
+                time = self.get_prop('time','body')[:,0]
+                return self.data['body'][idx[0]+ idx_time[0],:]
+            else:
+                return self.data['body'][0,:]*np.nan
+        # except:
+        #     wakk = 2
+        #     time = self.get_prop('time','body')[:,0]
+
+        #     time = self.get_prop('time','body')[:,0]
+        #     if (t1 == False) | (t0 == False):
+        #         idx_time = (0,-1 )
+        #     else:
+        #         if (len(np.where(t1 == time)) == 0) | (len(np.where(t0 == time)) == 0) :
+        #             wakk = 2
+        #         # self.t0_t1_idx(t0,t1)
 
     def add_point_to_plot(self,interest_points,ydata,fig,color,wing_body = 'body',xdata = 'time',**kwargs):   
         idx_y = self.header[wing_body][ydata] 
