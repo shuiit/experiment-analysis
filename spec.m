@@ -2,7 +2,7 @@
 all_body_quats = 109
 all_pix_counts_cam1=cell(length(all_body_quats),1);
 all_pix_counts_cam2=cell(length(all_body_quats),1);
-sparse_folder_path = 'H:\My Drive\dark 2022\2023_08_09_60ms\hull\hull_Reorder\'
+sparse_folder_path = 'J:\My Drive\dark 2022\2023_08_09_60ms\hull\hull_Reorder\'
 
 mov_num = '109'
 save_file = fullfile(sparse_folder_path,'all_pix_counts_cam2.mat')
@@ -29,19 +29,49 @@ for cam = 1:1:4
 
     save(save_file,'all_pix_counts_cam2')
 end
+%%
+
+sparse_folder_path = 'J:\My Drive\dark 2022\2023_08_09_60ms\hull\hull_Reorder\'
+% sparse_folder_path = 'J:\My Drive\dark 2022\2024_11_12_darkan\hull\hull_Reorder\'
+
+figure
+for cam = 1:1:4
+cam_name = sprintf('_cam%d',cam);
+save_file = fullfile(sparse_folder_path,['all_pix_counts',cam_name,'.mat']);
+load(save_file);
+pix_count=all_pix_counts_cam2{mov_ind};
+ [ampSpec, f] = myFFT(pix_count - mean(pix_count), Fs, false)
+ subplot(2,2,cam)
+
+        plot(f, ampSpec, '.-') ;
+        title(cam_name)
+        xlabel('Frequency, $f$ [Hz]') ;
+        grid on ; box on ;
+        axis tight
+        xlim([0,500])
+end
+
+
 
 %% frquency from images
 %  fourier of amount of pixels
 
+sparse_folder_path = 'J:\My Drive\dark 2022\2023_08_09_60ms\hull\hull_Reorder\'
+figure
+for cam = 1:1:4
+cam_name = sprintf('_cam%d',cam);
+save_file = fullfile(sparse_folder_path,['all_pix_counts',cam_name,'.mat']);
+load(save_file);
+
 Fs=16000%20e3;
-min_mosquito_area=2000;
 flap_freqs=cell(length(all_body_quats),1);
 tvecs=cell(length(all_body_quats),1);
 all_freqs=nan(4,length(all_body_quats));
-for mov_ind=1:length(all_body_quats)
+
+for mov_ind=1:length(all_pix_counts_cam2)
     % for mov_ind=1:489
     % for mov_ind=8 % only 4cams
-    disp(mov_ind)
+    disp(mov_ind);
     %     sparse_folder_path=folder_names(mov_ind);
     %     mov_num=num2str(mov_names(mov_ind));
     
@@ -61,15 +91,16 @@ for mov_ind=1:length(all_body_quats)
         continue
     end
     
-    [S, tvec, f] = mySpectrogram(pix_count-mean(pix_count), Fs, hann(window_size),true, true, false);
+    [S, tvec, f] = mySpectrogram(pix_count-mean(pix_count), Fs, hann(window_size*1.2),false, true, false);
     
-    flap_freq=nan(length(tvec),2);
+    flap_freq=nan(length(tvec),1);
     for time_ind=1:length(tvec)
         %         [pks,locs] = findpeaks(S(f>200,time_ind),f(f>200),'MinPeakProminence',2);
-        [pks,locs] = findpeaks(S((f>400)&(f<650),time_ind),f((f>400)&(f<650)),'MinPeakProminence',2);
+        [pks,locs] = findpeaks(S((f>1100)&(f<1300),time_ind),f((f>1100)&(f<1300)),'MinPeakProminence',2);
         [~,m_ind]=max(pks);
+
         if ~isempty(m_ind)
-            flap_freq(time_ind,1)=locs(m_ind)/2;
+            flap_freq(time_ind,1)=locs(m_ind);
             %             flap_freq(time_ind,2)=locs(m_ind);
             
             %             if flap_freq(time_ind,1)<500
@@ -88,16 +119,18 @@ for mov_ind=1:length(all_body_quats)
         %             flap_freq(time_ind,2)=locs(2)/2;
         %         end
     end
-    tvecs{mov_ind}=tvec%+x_ms(1)*1e-3;
+    tvecs{mov_ind}=tvec;%+x_ms(1)*1e-3;
     flap_freqs{mov_ind}=flap_freq;
     
     for time_ind=1:length(flap_freqs{mov_ind})
         all_freqs(time_ind,mov_ind)=flap_freqs{mov_ind}(time_ind);
     end
 end
-figure;
-plot(tvec,flap_freq)
 
 
+hold on;
+cam1 = cell2mat(flap_freqs);
+plot(tvec,cam1(:,2) - cam1(1,2))
+end
 
 % all_freqs(all_freqs==0)=nan;
