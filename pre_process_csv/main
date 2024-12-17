@@ -53,7 +53,7 @@ def clip_and_manipulate(smoothing_config,exp_dir,exp_name,pert,clip_flag = True)
 
 
 if __name__ == '__main__':   
-        exp_dir = 'H:/My Drive/dark 2022/csv_dark/'
+        exp_dir = 'J:/My Drive/dark 2022/csv_dark/'
         exp_name = ['2024_11_12_darkan']#2024_11_12_darkan,'2022_03_10']#,'2023_08_10_100ms','2022_02_03']
         
         pert_list = ['']
