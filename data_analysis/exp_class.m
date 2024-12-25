@@ -23,7 +23,13 @@ classdef exp_class
             obj.exp_mat = nan(length(obj.time_vec),size(exp,2),length(movie_numbers));
             for mov_idx = [1:1:length(movie_numbers)]
                 movie = exp(exp.mov_num == movie_numbers(mov_idx),:);
-                obj.exp_mat(ismember(obj.time_vec,round(movie.time*100)/100),:,mov_idx) = table2array(movie);
+                try
+                [~,exp_mat_idx] = intersect(obj.time_vec,round(movie.time*100)/100);
+                [~,movie_idx] = intersect(round(movie.time*100)/100,obj.time_vec);
+                obj.exp_mat(exp_mat_idx,:,mov_idx) = table2array(movie(movie_idx,:));
+                catch
+                    wakk = 2
+                end
             end
             obj.insect_prop = dictionary([string(header)],[1:1:length(header)]);
             obj.mov_num = dictionary(movie_numbers',[1:1:length(movie_numbers)]);

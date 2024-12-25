@@ -24,13 +24,13 @@ for idx_file = 1:1:length(pert)
     mos.name = 'mosquito'
 end
 
-plotter = plotter()
+plotter_obj = plotter()
 
 %%
 
 figure;
-for i = 1:10:size(plotter.col_mat,1)
-yline(i,'color',plotter.col_mat(i,:),'LineWidth',5);hold on
+for i = 1:10:size(plotter_obj.col_mat,1)
+yline(i,'color',plotter_obj.col_mat(i,:),'LineWidth',5);hold on
 end
 %% mean mov step
 
@@ -55,12 +55,12 @@ max_time_xax = 250
 
 insect = fly
 mov = 13
-plotter.plot_pitch_for_vel_z_vel_model_mov_mean(insect,exp_name,mov,pert,color_idx_fly,color_idx_mov_fly,max_time_xax,cluster_mean_color,cluster_mean_color_all_data)
+plotter_obj.plot_pitch_for_vel_z_vel_model_mov_mean(insect,exp_name,mov,pert,color_idx_fly,color_idx_mov_fly,max_time_xax,cluster_mean_color,cluster_mean_color_all_data)
 xlim([-20,250])
 
 insect = mos
 mov = 580
-plotter.plot_pitch_for_vel_z_vel_model_mov_mean(insect,exp_name,mov,pert,color_idx_mos,color_idx_mov_mos,max_time_xax,cluster_mean_color,cluster_mean_color_all_data)
+plotter_obj.plot_pitch_for_vel_z_vel_model_mov_mean(insect,exp_name,mov,pert,color_idx_mos,color_idx_mov_mos,max_time_xax,cluster_mean_color,cluster_mean_color_all_data)
 xlim([-20,250])
 %% mean mov 100ms pertubation
 
@@ -72,7 +72,7 @@ color_idx = 15
 max_time_xax = 250
 prop_name = 'forward_vel'
 for i = 1:1:length(exp_name)
-plotter.plot_mean_subplot(fly,mos,exp_name{i},pert,color_idx + i*40,prop_name,max_time_xax);hold on
+plotter_obj.plot_mean_subplot(fly,mos,exp_name{i},pert,color_idx + i*40,prop_name,max_time_xax);hold on
 xlim([-20,250])
 end
 legend(exp_name)
@@ -106,12 +106,12 @@ exp_name = 'pert_60ms'
 pert = 60
 insect = fly
 mov = 70
-plotter.plot_pitch_for_vel_z_vel_model_mov_mean(insect,exp_name,mov,pert,color_idx_fly,color_idx_mov_fly,max_time_xax,cluster_mean_color,cluster_mean_color_all_data)
+plotter_obj.plot_pitch_for_vel_z_vel_model_mov_mean(insect,exp_name,mov,pert,color_idx_fly,color_idx_mov_fly,max_time_xax,cluster_mean_color,cluster_mean_color_all_data)
 xlim([-20,250])
 
 insect = mos
 mov = 596
-plotter.plot_pitch_for_vel_z_vel_model_mov_mean(insect,exp_name,mov,pert,color_idx_mos,color_idx_mov_mos,max_time_xax,cluster_mean_color,cluster_mean_color_all_data)
+plotter_obj.plot_pitch_for_vel_z_vel_model_mov_mean(insect,exp_name,mov,pert,color_idx_mos,color_idx_mov_mos,max_time_xax,cluster_mean_color,cluster_mean_color_all_data)
 xlim([-20,250])
 
 %% mean mov 60ms pertubation
@@ -120,12 +120,12 @@ exp_name = 'pert_40ms'
 pert = 40
 insect = fly
 mov = 24
-plotter.plot_pitch_for_vel_z_vel_model_mov_mean(insect,exp_name,mov,pert,color_idx_fly,color_idx_mov_fly,max_time_xax,cluster_mean_color,cluster_mean_color_all_data)
+plotter_obj.plot_pitch_for_vel_z_vel_model_mov_mean(insect,exp_name,mov,pert,color_idx_fly,color_idx_mov_fly,max_time_xax,cluster_mean_color,cluster_mean_color_all_data)
 xlim([-20,250])
 
 insect = mos
 mov = 596
-plotter.plot_pitch_for_vel_z_vel_model_mov_mean(insect,exp_name,mov,pert,color_idx_mos,color_idx_mov_mos,max_time_xax,cluster_mean_color,cluster_mean_color_all_data)
+plotter_obj.plot_pitch_for_vel_z_vel_model_mov_mean(insect,exp_name,mov,pert,color_idx_mos,color_idx_mov_mos,max_time_xax,cluster_mean_color,cluster_mean_color_all_data)
 xlim([-20,250])
 %% Violin delta angle
 fly_col_idx = 190
@@ -134,8 +134,8 @@ mos_col_idx = 40
 time_to_violin = linspace(-15,230,10)
 exp_name = 'pert_60ms'
 prop_name = 'vel_xy_ang_flat'
-fly_color = plotter.col_mat(fly_col_idx,:)
-mos_color = plotter.col_mat(mos_col_idx,:)
+fly_color = plotter_obj.col_mat(fly_col_idx,:)
+mos_color = plotter_obj.col_mat(mos_col_idx,:)
 
 
 exp_name_cell = {'pert_60ms'}
@@ -148,9 +148,9 @@ mos_fvec = get_fvec(exp_name_cell,mos,prop_name,time_to_violin);
 f_norm_vec = max([fly_fvec;mos_fvec]);
 
 ax1 = subplot(2,1,2)
-plotter.violin_plot(fly.(exp_name),prop_name,time_to_violin,f_norm_vec,prop_name,fly_color,'fly','scatter_loc',0,'box_xdata',0)
-plotter.violin_plot(mos.(exp_name),prop_name,time_to_violin,f_norm_vec,prop_name,mos_color,{'fly','mosquito'},'scatter_loc',0,'box_xdata',0)
-plotter.pert_plot(pert,0,1,ax1)
+plotter_obj.violin_plot(fly.(exp_name),prop_name,time_to_violin,f_norm_vec,prop_name,fly_color,'fly','scatter_loc',0,'box_xdata',0)
+plotter_obj.violin_plot(mos.(exp_name),prop_name,time_to_violin,f_norm_vec,prop_name,mos_color,{'fly','mosquito'},'scatter_loc',0,'box_xdata',0)
+plotter_obj.pert_plot(pert,0,1,ax1)
 ylabel('delta velocity angle [deg]')
 title('60ms pertubation')
 ylim([0,180])
@@ -169,9 +169,9 @@ mos_fvec = get_fvec(exp_name_cell,mos,prop_name,time_to_violin);
 f_norm_vec = max([fly_fvec;mos_fvec]);
 
 ax2 =subplot(2,1,1)
-plotter.violin_plot(fly.(exp_name),prop_name,time_to_violin,f_norm_vec,prop_name,fly_color,'fly','scatter_loc',0)
-plotter.violin_plot(mos.(exp_name),prop_name,time_to_violin,f_norm_vec,prop_name,mos_color,{'fly','mosquito'},'scatter_loc',0)
-plotter.pert_plot(pert,0,1,ax2)
+plotter_obj.violin_plot(fly.(exp_name),prop_name,time_to_violin,f_norm_vec,prop_name,fly_color,'fly','scatter_loc',0)
+plotter_obj.violin_plot(mos.(exp_name),prop_name,time_to_violin,f_norm_vec,prop_name,mos_color,{'fly','mosquito'},'scatter_loc',0)
+plotter_obj.pert_plot(pert,0,1,ax2)
 ylabel('delta velocity angle [deg]')
 title('step')
 ylim([0,180])
@@ -183,8 +183,8 @@ mos_col_idx = 40
 time_to_violin = linspace(-15,230,10)
 exp_name = 'pert_40ms'
 prop_name = 'vel_xy_ang_flat'
-fly_color = plotter.col_mat(fly_col_idx,:)
-mos_color = plotter.col_mat(mos_col_idx,:)
+fly_color = plotter_obj.col_mat(fly_col_idx,:)
+mos_color = plotter_obj.col_mat(mos_col_idx,:)
 
 
 exp_name_cell = {'pert_40ms'}
@@ -196,8 +196,8 @@ fly_fvec = get_fvec(exp_name_cell,fly,prop_name,time_to_violin);
 f_norm_vec = max([fly_fvec;mos_fvec]);
 
 ax1 = subplot(1,1,1)
-plotter.violin_plot(fly.(exp_name),prop_name,time_to_violin,f_norm_vec,prop_name,fly_color,'fly','scatter_loc',0,'box_xdata',0)
-plotter.pert_plot(pert,0,1,ax1)
+plotter_obj.violin_plot(fly.(exp_name),prop_name,time_to_violin,f_norm_vec,prop_name,fly_color,'fly','scatter_loc',0,'box_xdata',0)
+plotter_obj.pert_plot(pert,0,1,ax1)
 ylabel('delta velocity angle [deg]')
 title('40ms pertubation')
 ylim([0,180])
@@ -212,8 +212,8 @@ mos_col_idx = 40
 time_to_violin = linspace(-15,230,10)
 exp_name = 'pert_60ms'
 prop_name = 'cone_angle'
-fly_color = plotter.col_mat(fly_col_idx,:)
-mos_color = plotter.col_mat(mos_col_idx,:)
+fly_color = plotter_obj.col_mat(fly_col_idx,:)
+mos_color = plotter_obj.col_mat(mos_col_idx,:)
 
 
 exp_name_cell = {'pert_60ms'}
@@ -226,9 +226,9 @@ mos_fvec = get_fvec(exp_name_cell,mos,prop_name,time_to_violin);
 f_norm_vec = max([fly_fvec;mos_fvec]);
 
 ax1 = subplot(2,1,2)
-plotter.violin_plot(fly.(exp_name),prop_name,time_to_violin,f_norm_vec,prop_name,fly_color,'fly','scatter_loc',0,'box_xdata',0)
-plotter.violin_plot(mos.(exp_name),prop_name,time_to_violin,f_norm_vec,prop_name,mos_color,{'fly','mosquito'},'scatter_loc',0,'box_xdata',0)
-plotter.pert_plot(pert,0,1,ax1)
+plotter_obj.violin_plot(fly.(exp_name),prop_name,time_to_violin,f_norm_vec,prop_name,fly_color,'fly','scatter_loc',0,'box_xdata',0)
+plotter_obj.violin_plot(mos.(exp_name),prop_name,time_to_violin,f_norm_vec,prop_name,mos_color,{'fly','mosquito'},'scatter_loc',0,'box_xdata',0)
+plotter_obj.pert_plot(pert,0,1,ax1)
 ylabel('cone angle [deg]')
 title('60ms pertubation')
 ylim([0,180])
@@ -247,9 +247,9 @@ mos_fvec = get_fvec(exp_name_cell,mos,prop_name,time_to_violin);
 f_norm_vec = max([fly_fvec;mos_fvec]);
 
 ax2 =subplot(2,1,1)
-plotter.violin_plot(fly.(exp_name),prop_name,time_to_violin,f_norm_vec,prop_name,fly_color,'fly','scatter_loc',0)
-plotter.violin_plot(mos.(exp_name),prop_name,time_to_violin,f_norm_vec,prop_name,mos_color,{'fly','mosquito'},'scatter_loc',0)
-plotter.pert_plot(pert,0,1,ax2)
+plotter_obj.violin_plot(fly.(exp_name),prop_name,time_to_violin,f_norm_vec,prop_name,fly_color,'fly','scatter_loc',0)
+plotter_obj.violin_plot(mos.(exp_name),prop_name,time_to_violin,f_norm_vec,prop_name,mos_color,{'fly','mosquito'},'scatter_loc',0)
+plotter_obj.pert_plot(pert,0,1,ax2)
 ylabel('cone angle [deg]')
 title('step')
 ylim([0,180])
@@ -265,11 +265,11 @@ prop = 'z_vel'
 pert = 0
 insect = mos
 figure
-% [data_a,data_b] = plotter.cluster_plot(insect.('pert_60ms'),'z_vel',0,prop,'alpha',0.1);
-[data_a,data_b] = plotter.cluster_plot(insect.('pert_step'),'z_vel',0,prop,'alpha',0.1);
+% [data_a,data_b] = plotter_obj.cluster_plot(insect.('pert_60ms'),'z_vel',0,prop,'alpha',0.1);
+[data_a,data_b] = plotter_obj.cluster_plot(insect.('pert_step'),'z_vel',0,prop,'alpha',0.1);
 
-plotter.mean_plot(insect.pert_60ms,data_a,prop,'plot_all_data',0,'color_idx',1);
-plotter.mean_plot(insect.pert_60ms,data_b,prop,'plot_all_data',0,'color_idx',200);
+plotter_obj.mean_plot(insect.pert_60ms,data_a,prop,'plot_all_data',0,'color_idx',1);
+plotter_obj.mean_plot(insect.pert_60ms,data_b,prop,'plot_all_data',0,'color_idx',200);
 
 %%
 props = {'cone_angle','z_vel','forward_vel'};
