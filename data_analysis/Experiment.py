@@ -98,6 +98,20 @@ class Experiment():
         return np.nanmean(mean_acc) + np.nanstd(mean_acc)*2
 
     
+    def th_for_velocity_dec(self, time_to_sample = 80):
+        # th_mean - mean of all frames from the beginning of the movie to the t = 0. the purpose is to add to the analysis only flies that do not accelerate before
+        mean_acc = []
+        for mov_name in self.mov_names:
+                mov = self.get_mov(mov_name)
+                acc_norm  = mov.get_prop('CM_dot_x_projected',wing_body='body')
+                time = mov.get_prop('time','body')
+                row,col = np.where(time > time_to_sample)
+                if len(row) > 0:
+                    if acc_norm[mov.ref_frame] > acc_norm[row[0]]:
+                        mean_acc.append(np.nanmean(acc_norm[mov.ref_frame] - acc_norm[row[0]]))
+        # mean_std = np.nanmean(mean_acc) + np.nanstd(mean_acc) if len(mean_acc) > 0 else 10
+        
+        return mean_acc
 
     def rotate_prop_movies(self,prop,header,**kwargs):
         [self.get_mov(mov_name).rotate_prop(prop,header,**kwargs) for mov_name in self.mov_names]

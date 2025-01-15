@@ -307,9 +307,11 @@ class Movie():
                 if (len(np.where(t1 == time)[0]) == 0) | (len(np.where(t0 == time)[0]) == 0) :
                     return self.data['body'][0,:]*np.nan
                 idx_time = self.t0_t1_idx(t0,t1)
-
-            acc = self.get_prop(prop,'body')[idx_time[0]:idx_time[1],0]
-            v0 = acc[self.ref_frame]/2
+            
+            acc = self.get_prop(prop,'body')
+            ref_frame = acc[self.ref_frame].copy()
+            acc = acc[idx_time[0]:idx_time[1],0]
+            v0 = ref_frame/2
             idx = []
 
             if case == 'peaks_max':
@@ -323,7 +325,13 @@ class Movie():
             if case == 'zero_v':
                 idx =  np.where((np.diff(np.sign(acc))<0) | (np.diff(np.sign(-acc))<0))[0]
             if case == 'half_v':
-                idx =  np.where((np.diff(np.sign(acc - v0))<0) | (np.diff(np.sign(-acc - v0))<0))[0]
+                idx =  np.where(acc < v0)[0]
+                if len(idx) > 0:
+                    idx = idx[idx > self.ref_frame]
+
+            if case == 'slow':
+                idx =  np.where(ref_frame - acc > th)[0]
+
 
             if case == 'respone_time':
 
