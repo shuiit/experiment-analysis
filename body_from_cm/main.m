@@ -4,12 +4,12 @@ clear
 close all
 clc
 
-experiment_path = 'H:\My Drive\dark 2022\2022_03_03\'
+experiment_path = 'J:\My Drive\dark 2022\2022_03_03\'
 segmentation_path = [experiment_path,'hull\hull_Reorder\mov19\Segmentation\mov19_seg']
 easywand_path = [experiment_path,'3+4_post_03_03_2022_skip5_easyWandData']
 
 
-experiment_path = 'H:\My Drive\dark 2022\2024_11_12_darkan\'
+experiment_path = 'J:\My Drive\dark 2022\2024_11_12_darkan\'
 segmentation_path = [experiment_path,'hull\hull_Reorder\mov11\Segmentation\mov11_seg']
 easywand_path = [experiment_path,'coefs_12_11_24_easyWandData']
 
@@ -17,7 +17,6 @@ load(easywand_path)
 load(segmentation_path)
 %%
  
-
 
 for j= 1:1:4
 [R,K,X0,H] = decompose_dlt(easyWandData.coefs(:,j),easyWandData.rotationMatrices(:,:,j)');
@@ -49,33 +48,35 @@ cy_cam(index) = intrinsic{index}(2,3);
 rotation = rotation_allcam(:,:,index);
 end
 %%
-cm_3d= []
-time_vec = []
+ cam_index = 1;
+        ray_center_pixel = [];
+        ray = [];
+for idx_mov = 1:1:114
+try
+    cm_2d_fly_smooth = []
+    time_vec = []
+    cm_3d= []
 cm_idx = 1;
-start_frame = seg.st_enfr(1);
-for frame = 1:1:length(seg.body{index})
-    
+mov = sprintf('mov%d',idx_mov)
+segmentation_path = [experiment_path,'hull\hull_Reorder\',mov,'\Segmentation\',mov,'_seg'];
+load(segmentation_path);
+catch
+    continue
+end
+
+
+for frame = 1:1:min([length(seg.all{1}),length(seg.all{2}),length(seg.all{3}),length(seg.all{4})])
+        
+       
+
+        
         cam_index = 1;
         ray_center_pixel = [];
         ray = [];
+
 for index = 1:1:4
 
-% binaryImage = ImfromSp([800, 1280], seg.all{index}(frame).indIm); % Ensure this function is optimized
-% CC = bwconncomp(binaryImage); % Faster and memory-efficient labeling
-% if length(CC.PixelIdxList) > 1
-%     continue
-% end
-
-
-% labeledImage = bwlabel(binaryImage);
-% stats = regionprops(labeledImage, 'Area');
-% if length([stats.Area])> 1
-% [~, largestBlobIndex] = max([stats.Area]);
-% largestBlob = ismember(labeledImage, largestBlobIndex);
-% [row,col] = find(largestBlob);
-% cm(index,:) = mean([row,col]);
-% else
-if size(seg.all{index}(frame).indIm,1 ) > 700
+if size(seg.all{cam_index}(frame).indIm,1 ) > 700
     mean_cm = mean(seg.all{cam_index}(frame).indIm);
     cm(cam_index,:) = mean_cm(1:2);
 
@@ -99,17 +100,68 @@ cm_3d(cm_idx,:) = lineIntersect3D(ray,center);
 time_vec(cm_idx) = -(800)/16 + frame*1/16;
 
 cm_idx = cm_idx + 1;
+else
+    continue
 end
     
 end
+if size(cm_3d,1) > 0
+cm_labax = (m*cm_3d')';
+for idx = 1:1:3
+cm_2d_fly_smooth(:,idx)=smoothdata(cm_labax(:,idx),'sgolay','degree',3,'SamplePoints',time_vec(1:end),'SmoothingFactor',0.8);
+% subplot(3,1,idx);plot(time_vec(1:end),cm_labax(:,idx));hold on
+% plot(time_vec(1:end),cm_2d_fly_smooth(:,idx),'k','LineWidth',1)
+end
+cm_smoothed_mov{idx_mov} = cm_2d_fly_smooth;
+cm_raw_mov{idx_mov} = cm_labax;
+time{idx_mov} = time_vec(1:end);
 
+end
+end
 
+%%
+
+save('cm_smoothed_mov','cm_smoothed_mov')
+save('cm_raw_mov','cm_raw_mov')
+save('time')
+
+%%
+cm_smoothed_mov{11}(1,:)
+%%
+
+[SG0, SG1x, SG2] = get_sgolay_wDeriv(cm_raw_mov{idx}(:,1), 3, 73*7, 16000);
+plot(SG1x);hold on
+
+%%
+load('cm_smoothed_mov','cm_smoothed_mov')
+load('cm_raw_mov','cm_raw_mov')
+% load('time')
+for idx = 1:1:length(cm_smoothed_mov)
+    try
+[SG0, SG1x, SG2] = get_sgolay_wDeriv(cm_raw_mov{idx}(:,1), 2, 73*7, 16000);
+[SG0, SG1y, SG2] = get_sgolay_wDeriv(cm_raw_mov{idx}(:,1), 2, 73*7, 16000);
+
+vax = [SG1x,SG1y];
+idx_no_zero = find(vax(:,1) > 0);
+x_ax = vax(idx_no_zero(1),:)/norm(vax(idx_no_zero(1),:));
+x_v = dot([SG1x,SG1y]',repmat(x_ax,size(cm_smoothed_mov{idx},1),1)');
+
+% vx = diff(cm_smoothed_mov{idx}(:,1));
+% vy = diff(cm_smoothed_mov{idx}(:,2));
+% x_v = dot([vx,vy]',repmat(x_ax,size([vx,vy],1),1)');
+
+plot(time{idx},x_v);hold on
+    catch
+        continue
+    end
+end
+%% ממוצע מהירות התחלתית עד זמן 0, לבדוק שלא נדרס עם גולאי
+%% כמה בולמים? מאטים? 
 
 
 %%
 % plot_camera(rotation_allcam,translation,m,'standard wand')
 
-cm_labax = (m*cm_3d')'
 figure;plot(time_vec(1:end),cm_labax)
 
 figure;scatter3(cm_labax(:,1),cm_labax(:,2),cm_labax(:,3),5,'filled');hold on
