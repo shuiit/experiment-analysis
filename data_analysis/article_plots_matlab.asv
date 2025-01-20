@@ -170,107 +170,6 @@ set(gca,'fontsize',16,'LineWidth',3);
 if SAVE_FIGS
     print(gcf,'minimal_velocity.png','-dpng','-r300')
 end
-%%
-
-exps = {'pert_step','pert_60ms'};
-prop = {'forward_vel','pitch'};
-colors = [10,40,200];
-color_mean = [1,1,1];
-mov_num = [13,80]
-insect = fly ;% insect to plot
-
-for subplot_idx = 1:1:2
-    for k = 1:1:length(exps)
-        exp_name = exps{k} ;% name of pertubation
-        hold on
-
-        propip = fly.(exp_name).get_prop(prop{subplot_idx});
-        time = fly.(exp_name).time_vec;
-        ax1 = subplot(2,1,subplot_idx);
-        plotter_obj.all_data_plot(time,propip,'all_data_alpha',0.1,'all_data_color_idx',colors(k));hold on
-
-    end
-    % subplot(2,1,1)
-    % ylim([40,70]) ; set(gca,'fontsize',14);
-
-    for k = 1:1:length(exps)
-        exp_name = exps{k}; % name of pertubation
-        hold on
-
-        propip = fly.(exp_name).get_prop(prop{subplot_idx});
-        time = fly.(exp_name).time_vec;
-        ax1 = subplot(2,1,subplot_idx);
-
-        plotter_obj.mean_plot(insect.(exp_name),propip,prop{subplot_idx},'plot_all_data',0,'mean_color_idx',colors(k));
-        plotter_obj.mov_plot(insect.(exp_name),prop{subplot_idx},mov_num(k),prop{subplot_idx},'color_idx',color_struct_fly.color_idx_mov)
-    end
-    legend({'5ms','10ms','20ms'});
-
-end
-%% Tsevi plot (THIS)
-exp_name = 'pert_step' % name of pertubation
-pert = 0 % % pertubation (step - 0, 100 ms - 100, 60 ms - 60...)
-subplot(2,1,1)
-prop = [{'pitch'},{'forward_vel'}]
-insect = fly % insect to plot
-propip = fly.(exp_name).get_prop(prop{subplot_idx});
-time = fly.(exp_name).time_vec
-plotter_obj.all_data_plot(time,propip,'all_data_alpha',color_struct_fly.all_data_alpha,'all_data_color_idx',color_struct_fly.all_data_color_idx);hold on
-plotter_obj.mean_plot(insect.(exp_name),propip,prop{subplot_idx},'plot_all_data',0,'mean_color_idx',color_struct_fly.mean_color_idx);
-plotter_obj.mov_plot(insect.(exp_name),prop{subplot_idx},13,prop{subplot_idx},'color_idx',color_struct_fly.color_idx_mov)
-
-W = 425 ;
-H = 535 ;
-
-set(gcf,'position',[200 50 W H])
-subplot(2,1,1)
-
-ylim([0,100]) ; set(gca,'fontsize',14);
-xlim([-25 250])
-set(gca,'YTick',[30,50,70])
-set(gca,'TickDir','out','TickLength',[0.01, 0.025]);
-xlabel('') ;
-sgtitle('Fruit fly','Fontsize',16)
-%%
-subplot(2,1,1)
-ylim([-0.3,0.3]) ;
-set(gca,'ytick',[-0.3 0 0.3]) ;
-xlim([-25 250])
-set(gca,'fontsize',14);
-set(gca,'TickDir','out');
-set(gca,'TickDir','out','TickLength',[0.01, 0.025]);
-if SAVE_FIGS
-    print(gcf,'fly step response.png','-dpng','-r300')
-end
-
-
-insect = mos % insect to plot
-plotter_obj.plot_pitch_for_vel_mean(insect,exp_name,pert,max_time_xax,color_struct_mos)
-
-set(gcf,'position',[200 50 W H])
-subplot(2,1,1)
-ylim([25,70]) ; set(gca,'fontsize',14);
-xlim([-25 250])
-set(gca,'YTick',[30,50,70])
-set(gca,'TickDir','out','TickLength',[0.01, 0.025]);
-xlabel('') ;
-sgtitle('Mosquito','Fontsize',16)
-
-subplot(2,1,2)
-ylim([-0.3,0.3]) ;
-set(gca,'ytick',[-0.3 0 0.3]) ;
-xlim([-25 250])
-set(gca,'fontsize',14);
-set(gca,'TickDir','out','TickLength',[0.01, 0.025]);
-
-if SAVE_FIGS
-    print(gcf,'mosquito step response.png','-dpng','-r300')
-end
-
-
-
-
-
 
 %% Tsevi plot
 exps = {'pert_5ms','pert_10ms','pert_20ms'};
@@ -302,7 +201,8 @@ for subplot_idx = 1:1:2
         ax1 = subplot(2,1,subplot_idx);
 
         plotter_obj.mean_plot(insect.(exp_name),propip,prop{subplot_idx},'plot_all_data',0,'mean_color_idx',colors(k));
-        plotter_obj.mov_plot(insect.(exp_name),prop{subplot_idx},13,prop{subplot_idx},'color_idx',color_struct_fly.color_idx_mov)
+        plotter_obj.mov_plot(insect.(exp_name),propip,13,prop{subplot_idx},'color_idx',color_struct_fly.color_idx_mov);
+        plotter_obj.mov_plot(insect.(exp_name),prop{subplot_idx},13,prop{subplot_idx})
     end
     legend({'5ms','10ms','20ms'});
 

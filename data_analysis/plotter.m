@@ -5,23 +5,25 @@ classdef plotter
         gray_mat
         col_mat
     end
-    
+
 
     methods
         function obj = plotter()
             %UNTITLED4 Construct an instance of this class
             %   Detailed explanation goes here
-           
+
             obj.gray_mat = colormap(gray);
             obj.col_mat = colormap(turbo);
         end
 
         function all_data_plot(obj,time,prop,varargin)
             parser = inputParser;
-            addParameter(parser,'alpha',0.5); % number of camera pointing in Z lab axis
+            addParameter(parser,'all_data_alpha',0.5); % opacity of the plot
+            addParameter(parser,'all_data_color_idx',20); % color of the plot
             parse(parser, varargin{:})
 
-            plot(time,prop,'LineWidth',1.5,'color',[obj.gray_mat(200,:),parser.Results.alpha],'HandleVisibility','off')
+            %plot(time,prop,'LineWidth',1.5,'color',[obj.gray_mat(200,:),parser.Results.alpha],'HandleVisibility','off')
+            plot(time,prop,'LineWidth',0.5,'color',[obj.col_mat(parser.Results.all_data_color_idx,:),parser.Results.all_data_alpha],'HandleVisibility','off')
         end
 
         function cluster_plot_mean(obj,prop,insect,varargin)
@@ -30,35 +32,36 @@ classdef plotter
             addParameter(parser,'color_all_data',[180,85]); % number of camera pointing in Z lab axis
             parse(parser, varargin{:})
             [data_a,data_b] = obj.cluster_plot(insect,'z_vel',0,prop,parser.Results.color_all_data,'alpha',0.03);
-            
-            obj.mean_plot(insect,data_a,prop,'plot_all_data',0,'color_idx',parser.Results.colors(1));
-            obj.mean_plot(insect,data_b,prop,'plot_all_data',0,'color_idx',parser.Results.colors(2));
+
+            obj.mean_plot(insect,data_a,prop,'plot_all_data',0,'mean_color_idx',parser.Results.colors(1));
+            obj.mean_plot(insect,data_b,prop,'plot_all_data',0,'mean_color_idx',parser.Results.colors(2));
 
         end
 
 
         function ax = mean_plot(obj,insect,prop,label_y,varargin)
             parser = inputParser;
-            addParameter(parser,'color_idx',13); % number of camera pointing in Z lab axis
+            addParameter(parser,'mean_color_idx',13); % number of camera pointing in Z lab axis
             addParameter(parser,'plot_all_data',1); % number of camera pointing in Z lab axis
             addParameter(parser,'xlabel','time [ms]'); % number of camera pointing in Z lab axis
             addParameter(parser,'input_prop',0); % number of camera pointing in Z lab axis
+            addParameter(parser,'initial_time_to_plot',-20); % number of camera pointing in Z lab axis
 
             parse(parser, varargin{:})
             time = insect.time_vec;
-            
+
 
             if ischar(prop) == 1
                 prop = insect.get_prop(prop);
             end
-            idx_to_plot = find(time > -10);
+            idx_to_plot = find(time > parser.Results.initial_time_to_plot);
 
             mean_prop = mean(prop,2,'omitnan');
-            ax = plot(time(idx_to_plot),mean_prop(idx_to_plot),'LineWidth',3,'color',obj.col_mat(parser.Results.color_idx,:))
+            ax = plot(time(idx_to_plot),mean_prop(idx_to_plot),'LineWidth',3,'color',obj.col_mat(parser.Results.mean_color_idx,:))
             xlabel(parser.Results.xlabel)
             ylabel(label_y)
-            
-            
+
+
         end
 
 
@@ -87,22 +90,25 @@ classdef plotter
 
         function mov_mean_plot(obj,insect,prop_name,mov_num,label_y,varargin)
             parser = inputParser;
-            addParameter(parser,'color_idx',13); % number of camera pointing in Z lab axis
-            addParameter(parser,'color_idx_mov',50); % number of camera pointing in Z lab axis
-            addParameter(parser,'xlabel','time [ms]'); % number of camera pointing in Z lab axis
-            addParameter(parser,'plot_cluster',0); % number of camera pointing in Z lab axis
-            addParameter(parser,'cluser_mean_color',[25,85]); % number of camera pointing in Z lab axis
-            addParameter(parser,'color_all_data',[25,85]); % number of camera pointing in Z lab axis
-           parse(parser, varargin{:})
+            addParameter(parser,'mean_color_idx',13); % color of mean data
+            addParameter(parser,'color_idx_mov',50); % color of "model fly"
+            addParameter(parser,'all_data_alpha',0.5); % opacity pf all data plot
+            addParameter(parser,'all_data_color_idx',200); % index color of all data plot
+            addParameter(parser,'xlabel','time [ms]'); % x label
+
+            addParameter(parser,'plot_cluster',0); % plot/dont plot cluster (noam Vz) (1/0),  
+            addParameter(parser,'cluster_mean_color',[25,85]); % color of mean of each cluster (assuming only 2) [cluster one index, cluster 2 index]
+            addParameter(parser,'cluster_all_data_color',[25,85]);  % color of the clustered data (assuming only 2) [cluster one index, cluster 2 index]
+            parse(parser, varargin{:})
 
             time = insect.time_vec;
             prop = insect.get_prop(prop_name);
-            
+
             if parser.Results.plot_cluster == 1
-                obj.cluster_plot_mean(prop_name,insect,'colors',parser.Results.cluser_mean_color,'color_all_data',parser.Results.color_all_data);
+                obj.cluster_plot_mean(prop_name,insect,'colors',parser.Results.cluster_mean_color,'color_all_data',parser.Results.cluster_all_data_color);
             else
-                obj.all_data_plot(time,prop);hold on
-                obj.mean_plot(insect,prop,label_y,'plot_all_data',0,'color_idx',parser.Results.color_idx);
+                obj.all_data_plot(time,prop,'all_data_alpha',parser.Results.all_data_alpha,'all_data_color_idx',parser.Results.all_data_color_idx);hold on
+                obj.mean_plot(insect,prop,label_y,'plot_all_data',0,'mean_color_idx',parser.Results.mean_color_idx);
             end
             obj.mov_plot(insect,prop_name,mov_num,label_y,'color_idx',parser.Results.color_idx_mov);
             xlabel(parser.Results.xlabel);
@@ -118,22 +124,23 @@ classdef plotter
 
         function pert_plot(obj,pert,plot_zero_x,plot_zero_y,sp)
             if plot_zero_y == 1
-            yline(0,'--k','LineWidth',1.5,'handlevisibility','off');
+                yline(0,'--k','LineWidth',1.5,'handlevisibility','off');
             end
             if plot_zero_x == 1
-            xline(0,'--r','LineWidth',1.5,'handlevisibility','off','color',[0.8500 0.3250 0.0980]);
-            if pert ~= 0
-            xline(pert,'--','LineWidth',1.5,'handlevisibility','off','color',[0.2660 0.6740 0.1880]	);
-            end
+                xline(0,'--r','LineWidth',1.5,'handlevisibility','off','color',[0.8500 0.3250 0.0980]);
+                if pert ~= 0
+                    xline(pert,'--','LineWidth',1.5,'handlevisibility','off','color',[0.2660 0.6740 0.1880]	);
+                end
             end
 
             if pert == 0
                 pert = sp(1).XLim(2);
             end
-            
+
             rec =  [0,sp(1).YLim(1),pert,sp(1).YLim(2)-sp(1).YLim(1)];
-            rectangle('Position',rec,...
-                'EdgeColor','none','FaceColor',[0,0,0,0.1]); % Plots the rectangle
+            %rectangle('Position',rec,...
+            %    'EdgeColor','none','FaceColor',[0,0,0,0.1],'FaceAlpha',0.1); % Plots the rectangle
+            xregion(0, pert, "FaceColor",[0,0,0], "FaceAlpha",0.1,'handlevisibility','off') ; % tb
         end
 
         function [data_a,data_b] = cluster_by_prop(obj,prop_to_cluster,time_to_cluster,insect,prop_to_plot)
@@ -145,11 +152,11 @@ classdef plotter
             data_b = plot_prop(:,cluster_prop(idx_t,:) < 0);
 
         end
-        
+
         function [data_a,data_b] = cluster_plot(obj,insect,prop_to_cluster,time_to_cluster,prop_to_plot,color_all_data,varargin)
             parser = inputParser;
             addParameter(parser,'alpha',0.1); % number of camera pointing in Z lab axis
-           parse(parser, varargin{:})
+            parse(parser, varargin{:})
             [data_a,data_b] = cluster_by_prop(obj,prop_to_cluster,time_to_cluster,insect,prop_to_plot);
 
             plot(insect.time_vec,data_a,'color',[obj.col_mat(color_all_data(1),:),parser.Results.alpha],'LineWidth',2,'HandleVisibility','off');hold on
@@ -158,26 +165,28 @@ classdef plotter
         end
 
 
-        function plot_pitch_for_vel_z_vel_model_mov_mean(obj,insect,exp_name,mov,pert,color_idx,color_idx_mov,max_time_xax,cluser_mean_color,color_all_data)
+        function plot_pitch_for_vel_z_vel_model_mov_mean(obj,insect,exp_name,mov,pert,color_struct,max_time_xax)
             mos_flag = 0;
             figure();
             ax1 = subplot(3,1,1)
-            obj.mov_mean_plot(insect.(exp_name),'pitch',mov,'pitch [deg]','color_idx',color_idx,'color_idx_mov',color_idx_mov)
-            obj.pert_plot(pert,0,1,ax1)
+            obj.mov_mean_plot(insect.(exp_name),'pitch',mov,'pitch [deg]',color_struct)
 
             
+            obj.pert_plot(pert,0,1,ax1)
+
+
             ax2 = subplot(3,1,2)
-            obj.mov_mean_plot(insect.(exp_name),'forward_vel',mov,'V_f_w_d [m/s]','color_idx',color_idx,'color_idx_mov',color_idx_mov)
+            obj.mov_mean_plot(insect.(exp_name),'forward_vel',mov,'V_f_w_d [m/s]',color_struct)
             obj.pert_plot(pert,0,1,ax2)
-            
+
             ax3 = subplot(3,1,3)
             if strcmp(insect.name,'mosquito')
                 mos_flag = 1;
             end
-            obj.mov_mean_plot(insect.(exp_name),'z_vel',mov,'V_z [m/s]','color_idx',color_idx,'color_idx_mov',color_idx_mov,'plot_cluster',mos_flag,'cluser_mean_color',cluser_mean_color,'color_all_data',color_all_data)
+            obj.mov_mean_plot(insect.(exp_name),'z_vel',mov,'V_z [m/s]',color_struct,'plot_cluster',mos_flag)
             obj.pert_plot(pert,0,1,ax3)
 
-            
+
             ax1.XLim = [ax1.XLim(1),min(ax1.XLim(2),max_time_xax)]
             ax2.XLim = [ax1.XLim(1),min(ax1.XLim(2),max_time_xax)]
             ax3.XLim = [ax1.XLim(1),min(ax1.XLim(2),max_time_xax)]
@@ -191,16 +200,61 @@ classdef plotter
 
         end
 
+        function plot_pitch_for_vel_mean(obj,insect,exp_name,pert,max_time_xax,varargin)
+
+            parser = inputParser;
+            addParameter(parser,'mean_color_idx',13); % color of mean data
+            addParameter(parser,'color_idx_mov',50); % color of "model fly"
+            addParameter(parser,'all_data_alpha',0.5); % opacity pf all data plot
+            addParameter(parser,'all_data_color_idx',200); % index color of all data plot
+            addParameter(parser,'xlabel','time [ms]'); % x label
+
+            addParameter(parser,'plot_cluster',0); % plot/dont plot cluster (noam Vz) (1/0),  
+            addParameter(parser,'cluster_mean_color',[25,85]); % color of mean of each cluster (assuming only 2) [cluster one index, cluster 2 index]
+            addParameter(parser,'cluster_all_data_color',[25,85]);  % color of the clustered data (assuming only 2) [cluster one index, cluster 2 index]
+            parse(parser, varargin{:})
+            figure();
+
+            time = insect.(exp_name).time_vec;
+            prop = insect.(exp_name).get_prop('pitch');
+
+            ax1 = subplot(2,1,1)
+            obj.all_data_plot(time,prop,'all_data_alpha',parser.Results.all_data_alpha,'all_data_color_idx',parser.Results.all_data_color_idx);hold on
+            obj.mean_plot(insect.(exp_name),prop,'pitch [deg]','plot_all_data',0,'mean_color_idx',parser.Results.mean_color_idx);
+            obj.pert_plot(pert,0,1,ax1);
+
+
+            prop = insect.(exp_name).get_prop('forward_vel');
+
+            ax2 = subplot(2,1,2)
+            obj.all_data_plot(time,prop,'all_data_alpha',parser.Results.all_data_alpha,'all_data_color_idx',parser.Results.all_data_color_idx);hold on
+            obj.mean_plot(insect.(exp_name),prop,'V_f_w_d [m/s]','plot_all_data',0,'mean_color_idx',parser.Results.mean_color_idx);
+            obj.pert_plot(pert,0,1,ax1);
+
+
+
+            ax1.XLim = [ax1.XLim(1),min(ax1.XLim(2),max_time_xax)]
+            ax2.XLim = [ax1.XLim(1),min(ax1.XLim(2),max_time_xax)]
+            linkaxes([ax1,ax2],'x')
+            pert = split(exp_name,'_')
+            sgtitle([insect.name,' ',pert{2}])
+
+
+            set([ax1,ax2], 'LineWidth', 3,'TickLength',[0.00,0.00]);box on
+            % set(gca,'fontsize',20)
+
+        end
+
 
 
         function plot_mean_subplot(obj,fly,mos,exp_name,pert,color_idx,prop_name,max_time_xax)
-            % 
+            %
             % figure
             ax1 = subplot(1,1,1)
             obj.mean_plot(fly.(exp_name),prop_name,'pitch [deg]','color_idx',color_idx(1))
             obj.pert_plot(pert,0,1,ax1)
             title('fly')
-            
+
             % ax2 = subplot(2,1,2)
             % obj.mean_plot(mos.(exp_name),prop_name,'pitch [deg]','color_idx',color_idx(2))
             % obj.pert_plot(pert,0,1,ax2)
@@ -209,20 +263,20 @@ classdef plotter
             ax1.XLim = [ax1.XLim(1),min(ax1.XLim(2),max_time_xax)]
             % ax2.XLim = [ax1.XLim(1),min(ax1.XLim(2),max_time_xax)]
             % linkaxes([ax1,ax2],'x')
-            
+
         end
 
-        
+
 
         function h = violin_plot(obj,insect,prop_name,time_to_violin,f_norm_vec,label_y,color,legend_val,varargin)
             parser = inputParser;
             addParameter(parser,'xlabel','time [ms]'); % number of camera pointing in Z lab axis
-             addParameter(parser,'scatter_loc',5); % number of camera pointing in Z lab axis
-              addParameter(parser,'box_xdata',5); % number of camera pointing in Z lab axis
-          parse(parser, varargin{:})
+            addParameter(parser,'scatter_loc',5); % number of camera pointing in Z lab axis
+            addParameter(parser,'box_xdata',5); % number of camera pointing in Z lab axis
+            parse(parser, varargin{:})
             idx_to_violin = find(ismembertol(insect.time_vec,time_to_violin,1/(insect.fps/1000) -1/(insect.fps/1000)/2 ,'DataScale', 1))
             x_names = insect.time_vec(idx_to_violin)
-            
+
             prop = insect.get_prop(prop_name);
             prop_time = prop(idx_to_violin,:);
             h = daviolinplot(prop_time',x_names,f_norm_vec,'colors',color,'box',0,'whiskers',0,'violinalpha',0.5,'bins',15, ...
@@ -231,7 +285,7 @@ classdef plotter
             ylabel(label_y)
         end
 
-
+        
 
 
         function prop_mov = get_prop_mov(obj,prop,mov)
