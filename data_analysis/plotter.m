@@ -4,16 +4,81 @@ classdef plotter
     properties
         gray_mat
         col_mat
+        pertubations
+        path_to_save_fig
     end
 
 
     methods
-        function obj = plotter()
+        function obj = plotter(path_to_save_fig)
             %UNTITLED4 Construct an instance of this class
             %   Detailed explanation goes here
 
             obj.gray_mat = colormap(gray);
             obj.col_mat = colormap(turbo);
+            obj.path_to_save_fig = path_to_save_fig;
+        end
+        function plot_prop(obj,insect,prop,ylabel,pert,mov_num,alpha,yticks,xlim_val,ylim_val,color_struct,...
+                legend_val,name_of_figure,dir_to_save,cluster, position_cm)
+           
+            
+            
+            fig = figure()
+            hold on
+            propip = insect.get_prop(prop);
+            time = insect.time_vec;
+                            ax = subplot(1,1,1);
+
+            if cluster == false
+                obj.all_data_plot(time,propip,'all_data_alpha',alpha,'all_data_color_idx',color_struct.all_data_color_idx);hold on
+                obj.mean_plot(insect,propip,prop,'plot_all_data',0,'mean_color_idx',color_struct.mean_color_idx);
+                obj.mov_plot(insect,prop,mov_num,prop,'color_idx',color_struct.color_idx_mov)
+                obj.mean_plot(insect,prop,ylabel,'plot_all_data',0,'mean_color_idx',color_struct.mean_color_idx);
+                obj.pert_plot(pert,0,1,ax(1));
+            else
+
+                obj.cluster_plot_mean(prop,insect,'colors',color_struct.cluster_mean_color,'color_all_data',color_struct.cluster_all_data_color,'alpha',0.1);
+                obj.mov_plot(insect,prop,mov_num,ylabel,'color_idx',color_struct.color_idx_mov)
+                obj.pert_plot(pert,0,1,ax);
+            end
+            set([ax(1)], 'LineWidth', 1,'TickLength',[0.00,0.00]);box on
+            set(gca,'fontsize',10);
+            xlim(xlim_val)
+            ylim(ylim_val)
+        
+            set(gca,'YTick',yticks)
+            set(gca,'TickDir','out','TickLength',[0.01, 0.025]);
+            set(gca,'fontsize',10);
+            set(gca,'TickDir','out','TickLength',[0.01, 0.025]);
+            legend(legend_val)
+            % title(titletext,'Fontsize',10,'FontWeight','Normal')
+            set(gca,'units','centimeters'...
+            ,'position',position_cm);
+
+            % Get the required axes position
+            axPos = get(ax, 'Position');
+            
+            % Add margins to account for labels, ticks, etc.
+            margin = [1.5, 1]; % Example margins [width, height] in centimeters
+            
+            % Set the figure size
+            figWidth = axPos(3) + 2 * margin(1);
+            figHeight = axPos(4) + 2 * margin(2);
+            set(gcf, 'Units', 'centimeters', 'Position', [10, 10, figWidth, figHeight]); % [x, y, width, height]
+            
+            % Optional: Improve appearance
+            % set(gcf, 'PaperPositionMode', 'auto');
+            path = [obj.path_to_save_fig,dir_to_save,name_of_figure]
+            h = findall(fig,'-property','FontName');
+            set(h,'FontName','San Serif');
+            print(fig,'-dsvg',path)
+            % exportgraphics(gcf, [obj.path_to_save_fig,dir_to_save,name_of_figure], 'ContentType', 'vector');
+
+    
+
+        
+            
+        
         end
 
         function all_data_plot(obj,time,prop,varargin)
@@ -23,15 +88,16 @@ classdef plotter
             parse(parser, varargin{:})
 
             %plot(time,prop,'LineWidth',1.5,'color',[obj.gray_mat(200,:),parser.Results.alpha],'HandleVisibility','off')
-            plot(time,prop,'LineWidth',0.5,'color',[obj.col_mat(parser.Results.all_data_color_idx,:),parser.Results.all_data_alpha],'HandleVisibility','off')
+            plot(time,prop,'LineWidth',1,'color',[obj.col_mat(parser.Results.all_data_color_idx,:),parser.Results.all_data_alpha],'HandleVisibility','off')
         end
 
         function cluster_plot_mean(obj,prop,insect,varargin)
             parser = inputParser;
             addParameter(parser,'colors',[180,85]); % number of camera pointing in Z lab axis
             addParameter(parser,'color_all_data',[180,85]); % number of camera pointing in Z lab axis
-            parse(parser, varargin{:})
-            [data_a,data_b] = obj.cluster_plot(insect,'z_vel',0,prop,parser.Results.color_all_data,'alpha',0.03);
+            addParameter(parser,'alpha',0.03); % number of camera pointing in Z lab axis
+           parse(parser, varargin{:})
+            [data_a,data_b] = obj.cluster_plot(insect,'z_vel',0,prop,parser.Results.color_all_data,'alpha',parser.Results.alpha);
 
             obj.mean_plot(insect,data_a,prop,'plot_all_data',0,'mean_color_idx',parser.Results.colors(1));
             obj.mean_plot(insect,data_b,prop,'plot_all_data',0,'mean_color_idx',parser.Results.colors(2));
@@ -57,7 +123,7 @@ classdef plotter
             idx_to_plot = find(time > parser.Results.initial_time_to_plot);
 
             mean_prop = mean(prop,2,'omitnan');
-            ax = plot(time(idx_to_plot),mean_prop(idx_to_plot),'LineWidth',3,'color',obj.col_mat(parser.Results.mean_color_idx,:))
+            ax = plot(time(idx_to_plot),mean_prop(idx_to_plot),'LineWidth',2,'color',obj.col_mat(parser.Results.mean_color_idx,:))
             xlabel(parser.Results.xlabel)
             ylabel(label_y)
 
@@ -81,7 +147,7 @@ classdef plotter
 
             mov_prop = insect.get_prop_mov(prop_name,mov_num);
             ax1 = plot(time(idx_to_plot),mov_prop(idx_to_plot),'--','LineWidth',parser.Results.LineWidth,'color',obj.col_mat(parser.Results.color_idx,:))
-            plot(time(idx_to_plot),mov_prop(idx_to_plot),'LineWidth',parser.Results.LineWidth,'color',[obj.col_mat(parser.Results.color_idx,:),0.4],'HandleVisibility','off')
+            plot(time(idx_to_plot),mov_prop(idx_to_plot),'LineWidth',parser.Results.LineWidth,'color',[obj.col_mat(parser.Results.color_idx,:),0.2],'HandleVisibility','off')
             xlabel(parser.Results.xlabel)
             ylabel(label_y)
 
@@ -244,7 +310,31 @@ classdef plotter
             % set(gca,'fontsize',20)
 
         end
+        
+        function bar_plot(obj,data_to_plot,header,color,path_to_save)
 
+            fig = figure()
+            for k = 1:1:length(data_to_plot)               
+            pertubation = split(header{k}, '_');
+            pertubation_cell{k} = pertubation{end};
+            bar(k,data_to_plot(k),'FaceColor',color(k,:),'LineWidth',2);hold on
+            end
+            
+            % Bar plot formatting
+
+            pertubation_cell{end} = 'Step'
+            ylabel('Minimal velocity [m/s]');
+            xticks(1:length(data_to_plot));
+            xticklabels(pertubation_cell);
+            xlabel('Dark pulse duration');
+            set(gca,'fontsize',16,'LineWidth',3);
+            if path_to_save ~= false
+                path = [path_to_save,'minimal_velocity.svg']
+                h = findall(fig,'-property','FontName');
+                set(h,'FontName','San Serif');
+                print(fig,'-dsvg',path)
+            end
+        end
 
 
         function plot_mean_subplot(obj,fly,mos,exp_name,pert,color_idx,prop_name,max_time_xax)

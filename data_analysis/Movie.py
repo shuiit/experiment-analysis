@@ -298,7 +298,7 @@ class Movie():
 
 
 
-    def get_peaks_min_max(self,prop,case,t1 = False,t0 = False,prominence = 0.05, th = False, th_mean = 1.4,time_point = 80):
+    def get_peaks_min_max(self,prop,case,t1 = False,t0 = False,prominence = 0.05, th = False, th_mean = 1.4,time_point = 180):
         # try:
             time = self.get_prop('time','body')[:,0]
             if (t1 == False) | (t0 == False):
@@ -331,7 +331,7 @@ class Movie():
 
             
             if case == 'time_point':
-                if time_point > time[-1]:
+                if time_point < time[-1]:
                     idx =  [np.argmin(np.abs(time - time_point))]
 
             if case == 'slow':

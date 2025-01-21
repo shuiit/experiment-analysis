@@ -4,17 +4,20 @@ clear
 close all
 clc
 
-experiment_path = 'J:\My Drive\dark 2022\2022_03_03\'
+experiment_path = 'H:\My Drive\dark 2022\2022_03_03\'
 segmentation_path = [experiment_path,'hull\hull_Reorder\mov19\Segmentation\mov19_seg']
 easywand_path = [experiment_path,'3+4_post_03_03_2022_skip5_easyWandData']
 
 
-experiment_path = 'J:\My Drive\dark 2022\2024_11_12_darkan\'
+experiment_path = 'H:\My Drive\dark 2022\2024_11_12_darkan\'
 segmentation_path = [experiment_path,'hull\hull_Reorder\mov11\Segmentation\mov11_seg']
 easywand_path = [experiment_path,'coefs_12_11_24_easyWandData']
 
+
+experiment_path = 'H:\My Drive\dark 2022\2023_08_07_10ms\'
+easywand_path = [experiment_path,'7_8_23_easyWandData']
+
 load(easywand_path)
-load(segmentation_path)
 %%
  
 
@@ -51,7 +54,7 @@ end
  cam_index = 1;
         ray_center_pixel = [];
         ray = [];
-for idx_mov = 1:1:114
+for idx_mov = 1:1:79
 try
     cm_2d_fly_smooth = []
     time_vec = []
@@ -121,9 +124,9 @@ end
 
 %%
 
-save('cm_smoothed_mov','cm_smoothed_mov')
-save('cm_raw_mov','cm_raw_mov')
-save('time')
+save('cm_smoothed_mov_10ms','cm_smoothed_mov')
+save('cm_raw_mov_10ms','cm_raw_mov')
+save('time_10ms','time')
 
 %%
 cm_smoothed_mov{11}(1,:)
@@ -133,27 +136,36 @@ cm_smoothed_mov{11}(1,:)
 plot(SG1x);hold on
 
 %%
-load('cm_smoothed_mov','cm_smoothed_mov')
-load('cm_raw_mov','cm_raw_mov')
+load('cm_smoothed_mov_5ms')
+load('cm_raw_mov_5ms')
 % load('time')
 for idx = 1:1:length(cm_smoothed_mov)
     try
 [SG0, SG1x, SG2] = get_sgolay_wDeriv(cm_raw_mov{idx}(:,1), 2, 73*7, 16000);
-[SG0, SG1y, SG2] = get_sgolay_wDeriv(cm_raw_mov{idx}(:,1), 2, 73*7, 16000);
+[SG0, SG1y, SG2] = get_sgolay_wDeriv(cm_raw_mov{idx}(:,2), 2, 73*7, 16000);
+[SG0, SG1z, SG2] = get_sgolay_wDeriv(cm_raw_mov{idx}(:,3), 2, 73*7, 16000);
 
-vax = [SG1x,SG1y];
-x_ax = vax(sum(vax)!,:)/norm(x_ax);
-x_v = dot([SG1x,SG1y]',repmat(x_ax,size(cm_smoothed_mov{idx},1),1)');
+
+mean_v(idx) = mean(sqrt(SG1x(73*3:end).^2 + SG1y(73*3:end).^2 + SG1z(73*3:end).^2));
+
+% vax = [SG1x,SG1y];
+% idx_no_zero = find(vax(:,1) > 0);
+% x_ax = vax(idx_no_zero(1),:)/norm(vax(idx_no_zero(1),:));
+% x_v = dot([SG1x,SG1y]',repmat(x_ax,size(cm_smoothed_mov{idx},1),1)');
+
+
 
 % vx = diff(cm_smoothed_mov{idx}(:,1));
 % vy = diff(cm_smoothed_mov{idx}(:,2));
 % x_v = dot([vx,vy]',repmat(x_ax,size([vx,vy],1),1)');
 
-plot(time{idx},x_v);hold on
+% plot(time{idx},x_v);hold on
     catch
         continue
     end
 end
+
+mean(mean_v(mean_v>0))
 %% ממוצע מהירות התחלתית עד זמן 0, לבדוק שלא נדרס עם גולאי
 %% כמה בולמים? מאטים? 
 

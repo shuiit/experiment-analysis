@@ -8,6 +8,10 @@ classdef exp_class
         exp_mat
         t0_idx
         fps
+        min_v
+        response_time
+        zero_v
+        delta_angle
     end
     
 
@@ -71,6 +75,23 @@ classdef exp_class
             size_exp_mat = size(obj.exp_mat);
             obj.exp_mat(:,size_exp_mat(2) + 1,:) = prop_t0;
             obj.insect_prop = insert(obj.insect_prop,header,size_exp_mat(2) + 1);
+
+        end
+
+        function percent = get_percent(obj,prop)
+
+            percent = sum(obj.(prop)~= 1000)*100/length(obj.(prop))
+        end
+
+
+        function percent = get_percent_with_th(obj,prop,th)
+
+            percent = sum(( abs(obj.(prop)) <th)*100/sum(obj.(prop) ~= 1000))
+        end
+
+        function mean_min_v = get_mean(obj,prop)
+
+            mean_min_v = mean(obj.(prop)(obj.(prop) < 1000),1,'omitmissing')
 
         end
     end

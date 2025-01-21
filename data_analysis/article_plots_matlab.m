@@ -5,18 +5,33 @@ clc
 SAVE_FIGS = false ;
 
 % Load data
-path = 'I:\.shortcut-targets-by-id\1OA70vOJHDfV63DqG7LJCifTwW1h055ny\2024 Flight in the dark paper\data_exchange\'
+path = 'G:\.shortcut-targets-by-id\1OA70vOJHDfV63DqG7LJCifTwW1h055ny\2024 Flight in the dark paper\data_exchange\'
+path_for_figs = 'G:\.shortcut-targets-by-id\1OA70vOJHDfV63DqG7LJCifTwW1h055ny\2024 Flight in the dark paper\media\'
 fly_data = 'fly\all_data\'
 mos_data = 'mosquito\'
 
 file_name = '60ms_all_data.csv'
 
-pert = {'5ms','10ms','20ms','100ms','60ms','step'} % Fly: pertubations to load (for all - {'40ms','80ms','100ms','60ms','step'})
+pert = {'5ms','10ms','20ms','60ms','100ms','step'} % Fly: pertubations to load (for all - {'40ms','80ms','100ms','60ms','step'})
 for idx_file = 1:1:length(pert)
     fly.(['pert_',pert{idx_file}]) =  exp_class(readtable([path,fly_data,pert{idx_file},'_all_data']),16000);
     fly.fps = 16000;
     fly.name = 'fly';
 end
+
+props = [{'min_v'},{'zero_v'},{'response_time'},{'delta_angle'}]
+for idx_file = 1:1:length(pert)
+for k = 1:1:length(props)
+    path_pulses = ['\fly\pulses\',props{k},'.csv']
+    data = readtable([path  ,path_pulses]);
+    header = data.Properties.VariableNames(2:end);
+    fly.(['pert_',pert{idx_file}]).(props{k}) = data.(header{idx_file});
+    fly.(['pert_',pert{idx_file}]).(props{k})(isnan(fly.(['pert_',pert{idx_file}]).(props{k}))) = [];
+    fly.(['pert_',pert{idx_file}]).(props{k})(fly.(['pert_',pert{idx_file}]).(props{k}) == 999) = [];
+end
+end
+
+
 
 pert = {'60ms','100ms','step'} ;% Mosquito: pertubations to load
 for idx_file = 1:1:length(pert)
@@ -25,7 +40,7 @@ for idx_file = 1:1:length(pert)
     mos.name = 'mosquito';
 end
 
-plotter_obj = plotter();
+plotter_obj = plotter(path_for_figs);
 
 %% a plot to help decide which colors to choose for the other plots (it plots the color matrix)
 
@@ -45,8 +60,8 @@ max_time_xax = 250;
 
 color_struct_fly.mean_color_idx = 240 ;% mean of data color
 color_struct_fly.color_idx_mov  = 240 ;% "model movie" color
-color_struct_fly.all_data_alpha = 0.5 ;% all data opacity
-color_struct_fly.all_data_color_idx = 190; % all data color
+color_struct_fly.all_data_alpha = 0.3 ;% all data opacity
+color_struct_fly.all_data_color_idx = 200; % all data color
 
 % color struct - mosquito:----------------------------------------
 color_struct_mos.mean_color_idx = 15 ;% mean of data color
@@ -122,96 +137,176 @@ red = [0.8549    0.2078    0.0039];
 % title('forward_vel(leg spreading times)')
 % mu = mean(open_leg_mat(:,1))
 % st = std(open_leg_mat(:,1))
+%% feature table
 
+props = [{'response_time'},{'zero_v'},{'delta_angle'}];
+pert = {'5ms','10ms','20ms','60ms','100ms','step'};
 
+for idx_prop = 1:1:length(props)
+    for k = 1:1:length(pert)
+        if strcmp(props{idx_prop},'delta_angle')
+            percent_feature(idx_prop,k) = fly.(['pert_',pert{k}]).get_percent_with_th(props{idx_prop},20);
+        else
+            percent_feature(idx_prop,k) = fly.(['pert_',pert{k}]).get_percent(props{idx_prop});
+        end
+    end
+end
 
+%% min_v bar plot
 
-%% Percent of responding flies
-
-path_pulses = '\fly\pulses\zero_v.csv'
-[zero_v] = calculate_percent([path  ,path_pulses],false)
-
-path_pulses = '\fly\pulses\response_time.csv'
-[response_time] = calculate_percent([path  ,path_pulses],false)
-
-path_pulses = '\fly\pulses\delta_angle.csv'
-[delta_angle] = calculate_percent([path  ,path_pulses],40)
-
-% feature table
-[response_time;zero_v;delta_angle]
-%% min v
-path_pulses = '\fly\pulses\min_v.csv'
-data = readtable([path  ,path_pulses]); 
-data = table2array(data(:,2:end));
-numinator = (isnan(data) == true) | (data == 999) | (abs(data) == 1000);
-data(numinator) = NaN
-mean_min_v = mean(data,1,'omitmissing')
-
-%cmap = lines(num_bars); % Choose a colormap (e.g., 'lines')
+path_to_save_fig = [path_for_figs,'\figure5\']
+for k = 1:1:length(pert)
+mean_min_v(k) = fly.(['pert_',pert{k}]).get_mean('min_v')
+end
 gray_cmap = (gray(ceil(1*length(mean_min_v)))) ;
 cmap = flipud(gray_cmap(1:length(mean_min_v),:)) ;
-cmap = cmap .* red ;
+color = cmap .* red ;
+plotter_obj.bar_plot(mean_min_v,pert,color,path_to_save_fig)
 
-for k = 1:1:length(mean_min_v)    
 
-pertubation = split(header{k + 1}, '_');
-pertubation_cell{k} = pertubation{end};
+%% fly step
+W = 425 ;
+H = 350 ;
+mov = 13
+position_cm = [1.5,1.5 5 4]
+plotter_obj.plot_prop(fly.pert_step,'forward_vel','V_f_w_d [m/s]',0,mov,0.3,[-0.3, 0 0.3],[-25 250],[-0.3,0.3],...
+    color_struct_fly,{'Mean','movie'},'fly_vfwd_step.svg','\figure2\',false,position_cm)
 
-bar(k,mean_min_v(k),'FaceColor',cmap(k,:),'LineWidth',2);hold on
-end
+position_cm = [1.5,1.5 5 4]
+plotter_obj.plot_prop(fly.pert_step,'pitch','pitch [deg]',0,mov,0.3,[20,50,80],[-25 250],[20,80],...
+    color_struct_fly,{'Mean','movie'},'fly_pitch_step.svg','\figure2\',false,position_cm)
 
-% Bar plot formatting
-pertubation_cell{end} = 'Step'
-ylabel('Minimal velocity [m/s]');
-xticks(1:length(mean_min_v));
-xticklabels(pertubation_cell);
-xlabel('Dark pulse duration');
-set(gca,'fontsize',16,'LineWidth',3);
-if SAVE_FIGS
-    print(gcf,'minimal_velocity.png','-dpng','-r300')
-end
+position_cm= [2,1.5 8 4]
+plotter_obj.plot_prop(fly.pert_step,'z_vel','V_z [m/s]',0,mov,0.3,[-0.2,-0.1, 0 0.1],[-25 250],[-0.3 0.2],...
+    color_struct_fly,{'Mean','Sample'},'fly_vz_step.svg','\figure3\',false,position_cm)
+
+%% mosquito step
+W = 425 ;
+H = 350 ;
+mov = 580
+
+plotter_obj.plot_prop(mos.pert_step,'forward_vel','V_f_w_d [m/s]',0,mov,0.3,[-0.2, 0 0.3],[-25 250],[-0.2,0.3],...
+    color_struct_mos,{'Mean','Sample'},'mos_vfwd_step.svg','\figure2\',false,position_cm)
+plotter_obj.plot_prop(mos.pert_step,'pitch','pitch [deg]',0,mov,0.3,[20,50,80],[-25 250],[20,80],...
+    color_struct_mos,{'Mean','Sample'},'mos_pitch_step.svg','\figure2\',false,position_cm)
 %%
+color_struct_mos.cluster_all_data_color = [30,80] ;% indices of colors for the mean of clusters (clustered by Vz) [idx1, idx2]
+color_struct_mos.cluster_mean_color = [15,50]
+position_cm= [2,1.5 8 4]
+plotter_obj.plot_prop(mos.pert_step,'z_vel','V_z [m/s]',0,mov,0.3,[-0.25,-0.1, 0 0.1],[-25 250],[-0.25 0.2],...
+    color_struct_mos,{'Mean a','Mean b','Sample'},'mos_vz_step.svg','\figure3\',true,position_cm)
 
-exps = {'pert_step','pert_60ms'};
-prop = {'forward_vel','pitch'};
-colors = [10,40,200];
-color_mean = [1,1,1];
-mov_num = [13,80]
-insect = fly ;% insect to plot
 
-for subplot_idx = 1:1:2
-    for k = 1:1:length(exps)
-        exp_name = exps{k} ;% name of pertubation
-        hold on
+%% fly 60
+W = 425 ;
+H = 350 ;
+mov = 80
+position_cm= [1.5,1.5 5 4]
 
-        propip = fly.(exp_name).get_prop(prop{subplot_idx});
-        time = fly.(exp_name).time_vec;
-        ax1 = subplot(2,1,subplot_idx);
-        plotter_obj.all_data_plot(time,propip,'all_data_alpha',0.1,'all_data_color_idx',colors(k));hold on
+% plotter_obj.plot_prop(fly.pert_60ms,'z_vel','V_z [m/s]',60,mov,0.3,[-0.2, 0 0.3],[-25 250],[-0.2,0.3],...
+%     color_struct_fly,{'mean','movie'},'fly_vz_60ms.svg','\figure4\',false,position_cm)
+plotter_obj.plot_prop(fly.pert_60ms,'forward_vel','V_f_w_d [m/s]',60,mov,0.3,[-0.2, 0 0.3],[-25 250],[-0.2,0.3],...
+    color_struct_fly,{'mean','movie'},'fly_vfwd_60ms.svg','\figure4\',false,position_cm)
+plotter_obj.plot_prop(fly.pert_60ms,'pitch','pitch [deg]',60,mov,0.3,[20,50,80],[-25 250],[20,80],...
+    color_struct_fly,{'mean','movie'},'fly_pitch_60ms.svg','\figure4\',false,position_cm)
 
-    end
-    % subplot(2,1,1)
-    % ylim([40,70]) ; set(gca,'fontsize',14);
+%% mosquito 60
+W = 425 ;
+H = 350 ;
+mov = 596;
+position_cm= [1.5,1.5 5 4]
 
-    for k = 1:1:length(exps)
-        exp_name = exps{k}; % name of pertubation
-        hold on
+plotter_obj.plot_prop(mos.pert_60ms,'forward_vel','V_f_w_d [m/s]',60,mov,0.3,[-0.2, 0 0.3],[-25 250],[-0.2,0.3],...
+    color_struct_mos,{'mean','movie'},'mos_vfwd_60ms.svg','\figure4\',false,position_cm)
+plotter_obj.plot_prop(mos.pert_60ms,'pitch','pitch [deg]',60,mov,0.3,[20,50,80],[-25 250],[20,80],...
+    color_struct_mos,{'mean','movie'},'mos_pitch_60ms.svg','\figure4\',false,position_cm)
 
-        propip = fly.(exp_name).get_prop(prop{subplot_idx});
-        time = fly.(exp_name).time_vec;
-        ax1 = subplot(2,1,subplot_idx);
 
-        plotter_obj.mean_plot(insect.(exp_name),propip,prop{subplot_idx},'plot_all_data',0,'mean_color_idx',colors(k));
-        plotter_obj.mov_plot(insect.(exp_name),prop{subplot_idx},mov_num(k),prop{subplot_idx},'color_idx',color_struct_fly.color_idx_mov)
-    end
-    legend({'5ms','10ms','20ms'});
+% plotter_obj.plot_prop(mos.pert_60ms,'z_vel','V_z [m/s]',60,mov,0.3,[W,H],[-0.2,-0.1, 0 0.1],[-25 250],[-0.3 0.2],...
+%     color_struct_mos,{'mean','movie'},'60 ms','mos_vz_60ms.svg','\figure4\',true)
 
-end
+
+
+%% Violin delta angle
+% ---- colors (defined by the indices in color mat) --------------
+fly_col_idx = 190 % color of fly
+mos_col_idx = 40 % color of mosquito
+% time to plot violin (x axis, the initial point of the violin)
+time_to_violin = linspace(-15,230,10)
+
+%----- violin plot properties-----------
+prop_name = 'vel_xy_ang_flat' % property, a list of all properies: fly.pert_60ms.insect_prop
+fly_color = plotter_obj.col_mat(fly_col_idx,:) % color of the fly's violin
+mos_color = plotter_obj.col_mat(mos_col_idx,:) % color of the mosquito's violin
+
+
+% 60 ms pertubation -----------------------------
+exp_name_cell = {'pert_60ms'}  % pertubation
+exp_name = exp_name_cell{1}
+pert = 60 % used to plot the pertubation as a gray box
+
+% plot violin-------------
+figure
+fly_fvec = get_fvec(exp_name_cell,fly,prop_name,time_to_violin);
+mos_fvec = get_fvec(exp_name_cell,mos,prop_name,time_to_violin);
+f_norm_vec = max([fly_fvec;mos_fvec]); % normalize
+
+%f_norm_vec(:) = max(max([fly_fvec;mos_fvec])) / 4 ;
+fig = figure()
+ax1 = subplot(1,1,1)
+plotter_obj.violin_plot(fly.(exp_name),prop_name,time_to_violin,f_norm_vec,prop_name,fly_color,'fly','scatter_loc',0,'box_xdata',0)
+plotter_obj.violin_plot(mos.(exp_name),prop_name,time_to_violin,f_norm_vec,prop_name,mos_color,{'fly','mosquito'},'scatter_loc',0,'box_xdata',0)
+plotter_obj.pert_plot(pert,0,1,ax1)
+ylabel('delta velocity angle [deg]')
+ylim([0,180])
+ set(gcf,'inverthardcopy','off','color','w','paperpositionmode','auto','units','centimeters'...
+            ,'position',[6 5 20 6]);
+set([ax1], 'LineWidth', 2,'TickLength',[0.00,0.00]);box on
+legend('Location', 'northwest');
+
+path = [plotter_obj.path_to_save_fig,'/figure4/','violin_60ms.svg']
+h = findall(fig,'-property','FontName');
+set(h,'FontName','San Serif');
+print(fig,'-dsvg',path)
+
+
+% step pertubation ------------
+exp_name_cell = {'pert_step'}
+exp_name = exp_name_cell{1}
+pert = 0 % used to plot the pertubation as a gray box
+
+
+fly_fvec = get_fvec(exp_name_cell,fly,prop_name,time_to_violin);
+mos_fvec = get_fvec(exp_name_cell,mos,prop_name,time_to_violin);
+f_norm_vec = max([fly_fvec;mos_fvec]);
+
+fig = figure()
+
+ax2 =subplot(1,1,1)
+plotter_obj.violin_plot(fly.(exp_name),prop_name,time_to_violin,f_norm_vec,prop_name,fly_color,'fly','scatter_loc',0)
+plotter_obj.violin_plot(mos.(exp_name),prop_name,time_to_violin,f_norm_vec,prop_name,mos_color,{'fly','mosquito'},'scatter_loc',0)
+plotter_obj.pert_plot(pert,0,1,ax2)
+ylabel('delta velocity angle [deg]')
+ylim([0,180])
+set([ax2], 'LineWidth', 2,'TickLength',[0.00,0.00]);box on
+ set(gcf,'inverthardcopy','off','color','w','paperpositionmode','auto','units','centimeters'...
+            ,'position',[6 5 20 6]);
+
+legend('Location', 'northwest');
+path = [plotter_obj.path_to_save_fig,'/figure4/','violin_step.svg']
+h = findall(fig,'-property','FontName');
+set(h,'FontName','San Serif');
+print(fig,'-dsvg',path)
+
+
+
+
+
 %% Tsevi plot (THIS)
 exp_name = 'pert_step' % name of pertubation
 pert = 0 % % pertubation (step - 0, 100 ms - 100, 60 ms - 60...)
 subplot(2,1,1)
-prop = [{'pitch'},{'forward_vel'}]
+prop = [{'forward_vel'},{'forward_vel'}]
 insect = fly % insect to plot
 propip = fly.(exp_name).get_prop(prop{subplot_idx});
 time = fly.(exp_name).time_vec
@@ -456,7 +551,6 @@ plotter_obj.violin_plot(fly.(exp_name),prop_name,time_to_violin,f_norm_vec,prop_
 plotter_obj.violin_plot(mos.(exp_name),prop_name,time_to_violin,f_norm_vec,prop_name,mos_color,{'fly','mosquito'},'scatter_loc',0,'box_xdata',0)
 plotter_obj.pert_plot(pert,0,1,ax1)
 ylabel('delta velocity angle [deg]')
-title('60ms pertubation')
 ylim([0,180])
 
 % step pertubation ------------
@@ -474,7 +568,6 @@ plotter_obj.violin_plot(fly.(exp_name),prop_name,time_to_violin,f_norm_vec,prop_
 plotter_obj.violin_plot(mos.(exp_name),prop_name,time_to_violin,f_norm_vec,prop_name,mos_color,{'fly','mosquito'},'scatter_loc',0)
 plotter_obj.pert_plot(pert,0,1,ax2)
 ylabel('delta velocity angle [deg]')
-title('step')
 ylim([0,180])
 set([ax1,ax2], 'LineWidth', 3,'TickLength',[0.00,0.00]);box on
 
