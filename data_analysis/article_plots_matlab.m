@@ -5,8 +5,8 @@ clc
 SAVE_FIGS = false ;
 
 % Load data
-path = 'G:\.shortcut-targets-by-id\1OA70vOJHDfV63DqG7LJCifTwW1h055ny\2024 Flight in the dark paper\data_exchange\'
-path_for_figs = 'G:\.shortcut-targets-by-id\1OA70vOJHDfV63DqG7LJCifTwW1h055ny\2024 Flight in the dark paper\media\'
+path = 'I:\.shortcut-targets-by-id\1OA70vOJHDfV63DqG7LJCifTwW1h055ny\2024 Flight in the dark paper\data_exchange\'
+path_for_figs = 'I:\.shortcut-targets-by-id\1OA70vOJHDfV63DqG7LJCifTwW1h055ny\2024 Flight in the dark paper\media\'
 fly_data = 'fly\all_data\'
 mos_data = 'mosquito\'
 
@@ -25,9 +25,14 @@ for k = 1:1:length(props)
     path_pulses = ['\fly\pulses\',props{k},'.csv']
     data = readtable([path  ,path_pulses]);
     header = data.Properties.VariableNames(2:end);
-    fly.(['pert_',pert{idx_file}]).(props{k}) = data.(header{idx_file});
-    fly.(['pert_',pert{idx_file}]).(props{k})(isnan(fly.(['pert_',pert{idx_file}]).(props{k}))) = [];
-    fly.(['pert_',pert{idx_file}]).(props{k})(fly.(['pert_',pert{idx_file}]).(props{k}) == 999) = [];
+    pertubation = ['pert_',pert{idx_file}];
+    movs = cell(data.Var1);
+    fly.(pertubation).(props{k}) = data.(pertubation);
+    fly.(pertubation).(props{k})(isnan(fly.(pertubation).(props{k}))) = [];
+    fly.(pertubation).(props{k})(fly.(pertubation).(props{k}) == 999) = [];
+
+
+
 end
 end
 
@@ -41,6 +46,25 @@ for idx_file = 1:1:length(pert)
 end
 
 plotter_obj = plotter(path_for_figs);
+%%
+
+props = [{'min_v'},{'zero_v'},{'response_time'},{'delta_angle'}]
+for idx_file = 1:1:length(pert)
+for k = 1:1:length(props)
+    path_pulses = ['\fly\pulses\',props{k},'.csv']
+    data = readtable([path  ,path_pulses]);
+    header = data.Properties.VariableNames(2:end);
+    pertubation = ['pert_',pert{idx_file}];
+    movs = cell(data.Var1);
+
+    idx_to_keep = isnan(data.(pertubation)) == false & data.(pertubation) ~= 999
+    fly.(pertubation).(props{k}) = table(data.(pertubation)(idx_to_keep));
+    fly.(pertubation).(props{k}).Properties.RowNames = movs(idx_to_keep);
+end
+end
+
+
+
 
 %% a plot to help decide which colors to choose for the other plots (it plots the color matrix)
 
@@ -145,7 +169,7 @@ pert = {'5ms','10ms','20ms','60ms','100ms','step'};
 for idx_prop = 1:1:length(props)
     for k = 1:1:length(pert)
         if strcmp(props{idx_prop},'delta_angle')
-            percent_feature(idx_prop,k) = fly.(['pert_',pert{k}]).get_percent_with_th(props{idx_prop},20);
+            percent_feature(idx_prop,k) = fly.(['pert_',pert{k}]).get_percent_with_th(props{idx_prop},30);
         else
             percent_feature(idx_prop,k) = fly.(['pert_',pert{k}]).get_percent(props{idx_prop});
         end
@@ -162,16 +186,27 @@ gray_cmap = (gray(ceil(1*length(mean_min_v)))) ;
 cmap = flipud(gray_cmap(1:length(mean_min_v),:)) ;
 color = cmap .* red ;
 plotter_obj.bar_plot(mean_min_v,pert,color,path_to_save_fig)
-
+%%
 
 %% fly step
 W = 425 ;
 H = 350 ;
-mov = 13
+mov = 15 %71 21
 position_cm = [1.5,1.5 5 4]
 plotter_obj.plot_prop(fly.pert_step,'forward_vel','V_f_w_d [m/s]',0,mov,0.3,[-0.3, 0 0.3],[-25 250],[-0.3,0.3],...
     color_struct_fly,{'Mean','movie'},'fly_vfwd_step.svg','\figure2\',false,position_cm)
 
+[response_fv,time_response] = fly.pert_step.get_prop_point_in_time('forward_vel',15,'response_time')
+[break_fv,time_break] = fly.pert_step.get_prop_point_in_time('forward_vel',15,'zero_v')
+
+scatter(time_response,response_fv,'black','filled','HandleVisibility','off')
+scatter(time_break,break_fv,'black','filled','HandleVisibility','off')
+
+annotation('textarrow',[time_response,time_response-1]/28.5,[response_fv,response_fv - 0.01],'String','y = x ')
+
+% quiver(time_response,response_fv,time_response - 1,response_fv-0.1)
+
+%%
 position_cm = [1.5,1.5 5 4]
 plotter_obj.plot_prop(fly.pert_step,'pitch','pitch [deg]',0,mov,0.3,[20,50,80],[-25 250],[20,80],...
     color_struct_fly,{'Mean','movie'},'fly_pitch_step.svg','\figure2\',false,position_cm)

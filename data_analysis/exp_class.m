@@ -57,7 +57,15 @@ classdef exp_class
         function prop_mov = get_prop_mov(obj,prop,mov)
             prop_mov = obj.exp_mat(:,obj.insect_prop(prop),obj.mov_num(mov));
         end
-
+        
+        function [prop_in_time,time] = get_prop_point_in_time(obj,prop_name,mov,interest_point)
+            mov_name = sprintf('mov%d',mov);
+            time_vec = obj.get_prop_mov('time',mov);
+            idx = find(obj.(interest_point)(mov_name,:).Var1 == time_vec);
+            prop = obj.get_prop_mov(prop_name,mov);
+            prop_in_time = prop(idx);
+            time = time_vec(idx);
+        end
         
         function fvec = calc_ksdensity(obj,prop_name,time_vec)
             prop = obj.get_prop(prop_name);
