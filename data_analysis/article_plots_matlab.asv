@@ -5,48 +5,19 @@ clc
 SAVE_FIGS = false ;
 
 % Load data
-path = 'I:\.shortcut-targets-by-id\1OA70vOJHDfV63DqG7LJCifTwW1h055ny\2024 Flight in the dark paper\data_exchange\'
-path_for_figs = 'I:\.shortcut-targets-by-id\1OA70vOJHDfV63DqG7LJCifTwW1h055ny\2024 Flight in the dark paper\media\'
+path = 'G:\.shortcut-targets-by-id\1OA70vOJHDfV63DqG7LJCifTwW1h055ny\2024 Flight in the dark paper\data_exchange\'
+path_for_figs = 'G:\.shortcut-targets-by-id\1OA70vOJHDfV63DqG7LJCifTwW1h055ny\2024 Flight in the dark paper\media\'
 fly_data = 'fly\all_data\'
 mos_data = 'mosquito\'
 
 file_name = '60ms_all_data.csv'
 
-pert = {'5ms','10ms','20ms','60ms','100ms','step'} % Fly: pertubations to load (for all - {'40ms','80ms','100ms','60ms','step'})
+pert = {'5ms','10ms','20ms','40ms','60ms','80ms','100ms','step'} % Fly: pertubations to load (for all - {'40ms','80ms','100ms','60ms','step'})
 for idx_file = 1:1:length(pert)
-    fly.(['pert_',pert{idx_file}]) =  exp_class(readtable([path,fly_data,pert{idx_file},'_all_data']),16000);
+    fly.(['pert_',pert{idx_file}]) =  exp_class(readtable([path,fly_data,pert{idx_file},'_all_data']),16000,'fly');
     fly.fps = 16000;
     fly.name = 'fly';
 end
-
-props = [{'min_v'},{'zero_v'},{'response_time'},{'delta_angle'}]
-for idx_file = 1:1:length(pert)
-for k = 1:1:length(props)
-    path_pulses = ['\fly\pulses\',props{k},'.csv']
-    data = readtable([path  ,path_pulses]);
-    header = data.Properties.VariableNames(2:end);
-    pertubation = ['pert_',pert{idx_file}];
-    movs = cell(data.Var1);
-    fly.(pertubation).(props{k}) = data.(pertubation);
-    fly.(pertubation).(props{k})(isnan(fly.(pertubation).(props{k}))) = [];
-    fly.(pertubation).(props{k})(fly.(pertubation).(props{k}) == 999) = [];
-
-
-
-end
-end
-
-
-
-pert = {'60ms','100ms','step'} ;% Mosquito: pertubations to load
-for idx_file = 1:1:length(pert)
-    mos.(['pert_',pert{idx_file}]) =  exp_class(load([path,mos_data,'mosquito_',pert{idx_file},'_shadow']).T,20000);
-    mos.fps = 20000;
-    mos.name = 'mosquito';
-end
-
-plotter_obj = plotter(path_for_figs);
-%%
 
 props = [{'min_v'},{'zero_v'},{'response_time'},{'delta_angle'}]
 for idx_file = 1:1:length(pert)
@@ -64,6 +35,31 @@ end
 end
 
 
+
+
+pert = {'60ms','100ms','step'} ;% Mosquito: pertubations to load
+for idx_file = 1:1:length(pert)
+    mos.(['pert_',pert{idx_file}]) =  exp_class(load([path,mos_data,'mosquito_',pert{idx_file},'_shadow']).T,20000,'mosquito');
+    mos.fps = 20000;
+    mos.name = 'mosquito';
+end
+
+mos.pert_60ms.response_time = table(48.6)
+mos.pert_60ms.response_time.Properties.RowNames = {'mov395'}
+mos.pert_60ms.zero_v = table(NaN)
+mos.pert_60ms.zero_v.Properties.RowNames = {'mov395'}
+
+
+mos.pert_step.response_time = table(36.6)
+mos.pert_step.response_time.Properties.RowNames = {'mov169'}
+mos.pert_step.zero_v = table(82)
+mos.pert_step.zero_v.Properties.RowNames = {'mov169'}
+
+
+
+
+plotter_obj = plotter(path_for_figs);
+%%
 
 
 %% a plot to help decide which colors to choose for the other plots (it plots the color matrix)
@@ -96,96 +92,145 @@ color_struct_mos.all_data_color_idx = 40 ;% all data color
 color_struct_mos.cluster_mean_color = [15,60] ;% indices of colors for the clusters (clustered by Vz) [idx1, idx2]
 color_struct_mos.cluster_all_data_color = [30,100] ;% indices of colors for the mean of clusters (clustered by Vz) [idx1, idx2]
 % --------------------------------------------------------------------
-% %% Fly leg spreading times
-% time = fly.('pert_step').time_vec;
-% open_leg_mat = readmatrix('h:\My Drive\dark 2022\plots_for_tsevi\all_data_for_tsevi\fly\leg_open.xlsx');
-% 
-% property_to_plot = 'forward_vel' ; % you can choose any property from this list: fly.pert_step.insect_prop
-% property = fly.('pert_step').get_prop(property_to_plot);
-% %time_mov = open_leg_mat(idx_of_movie,:);
-% time_mov = open_leg_mat(:,1);
-% 
-% figure();
-% 
-% for k = 1:1:length(open_leg_mat(:,1))
-%     try
-% 
-%         [v,i] =min(abs(open_leg_mat(k,1)- time));
-%         mov_num = fly.pert_step.mov_num(open_leg_mat(k,2));
-% 
-%         plot(time,property(:,mov_num));hold on
-%         scatter(time(i),property(i,mov_num),'*k');
-%         property_legs_open(k) = property(i,mov_num);
-% 
-%     catch
-%         continue
-%     end
-% end
-% 
-% xlabel('time [ms]')
-% ylabel(property_to_plot)
-% yline(0,'LineWidth',5)
-% legend({'movie','leg spreading times'})
-% 
-% 
+%% Fly leg spreading times
+time = fly.('pert_step').time_vec;
+open_leg_mat = readmatrix('h:\My Drive\dark 2022\plots_for_tsevi\all_data_for_tsevi\fly\leg_open.xlsx');
+
+
+pert = {'5ms','10ms','20ms'}
+for k = 1:1:length(pert)
+pertubation = sprintf('pert_%s',pert{k});
+file_name = ['leg_open_',pert{k}];
+open_leg_mat = readmatrix(['h:\My Drive\dark 2022\excel\',file_name]);
+open_leg_mat = open_leg_mat(:,2)
+
+    idx_to_keep = isnan(open_leg_mat) == false & open_leg_mat~= 999 & open_leg_mat~= 1
+    fly.(pertubation).open_leg = open_leg_mat(idx_to_keep);
+
+
+end
+
+%%
+
+
+
+
+property_to_plot = 'forward_vel' ; % you can choose any property from this list: fly.pert_step.insect_prop
+property = fly.('pert_step').get_prop(property_to_plot);
+%time_mov = open_leg_mat(idx_of_movie,:);
+time_mov = open_leg_mat(:,1);
+
+figure();
+
+for k = 1:1:length(open_leg_mat(:,1))
+    try
+
+        [v,i] =min(abs(open_leg_mat(k,1)- time));
+        mov_num = fly.pert_step.mov_num(open_leg_mat(k,2));
+
+        plot(time,property(:,mov_num));hold on
+        scatter(time(i),property(i,mov_num),'*k');
+        property_legs_open(k) = property(i,mov_num);
+
+    catch
+        continue
+    end
+end
+
+%% open legs histogram
+
+pert = {'5ms','10ms','20ms'}
+for k = 1:1:length(pert)
+pertubation = sprintf('pert_%s',pert{k})
+cell_openleg{k} = fly.(pertubation).open_leg
+
+end
+all_open_leg_time = cell2mat(cell_openleg');
+all_open_leg_time= all_open_leg_time(all_open_leg_time > 0);
+
+histogram(all_open_leg_time)
+
+%%
+
+
+xlabel('time [ms]')
+yline(0,'LineWidth',5)
+
+
 red = [0.8549    0.2078    0.0039];
-% blue = [0.2706    0.4863    0.9569];
-% figure('Position',[   415.8000   60.0000  796.0000  635.2000]) ;
-% % size was chosen manually to make axes same as freq plot while accounting
-% % for fat title
-% 
-% % same as 
-% % uiopen('G:\My Drive\_Talks\2025-01 SICB Flight in the Dark\noam figs and vids\combined_flap_freq_step.fig',1)
-% 
-% %histogram(open_leg_mat(:,1),'FaceColor',plotter_obj.col_mat(color_struct_fly.mean_color_idx,:));
-% histogram(open_leg_mat(:,1),'FaceColor',red,'FaceAlpha',1,'LineWidth',2);
-% set(gca,'fontsize',26,'LineWidth',3);
-% 
-% xlabel('Time [ms]');
-% ylabel('Counts');
-% %
-% mu = mean(open_leg_mat(:,1))
-% st = std(open_leg_mat(:,1))
-% 
-% title({"Fly leg spreading times \mu=" + round(mu) + "\pm" + round(st) + " ms"; " "})
-% if SAVE_FIGS
-%     print(gcf, "fly spread leg statistics.png",'-dpng','-r300');
-% end
-% 
-% 
-% 
-% 
-% figure();
-% histogram(property_legs_open,'FaceColor',plotter_obj.col_mat(color_struct_fly.mean_color_idx,:));
-% xlabel('time [ms]');
-% title('forward_vel(leg spreading times)')
-% mu = mean(open_leg_mat(:,1))
-% st = std(open_leg_mat(:,1))
+blue = [0.2706    0.4863    0.9569];
+figure('Position',[   415.8000   60.0000  796.0000  635.2000]) ;
+path_to_save_fig = [path_for_figs,'\appendix\leg_spread.svg']
+
+% size was chosen manually to make axes same as freq plot while accounting
+% for fat title
+
+% same as 
+% uiopen('G:\My Drive\_Talks\2025-01 SICB Flight in the Dark\noam figs and vids\combined_flap_freq_step.fig',1)
+
+%histogram(open_leg_mat(:,1),'FaceColor',plotter_obj.col_mat(color_struct_fly.mean_color_idx,:));
+histogram(all_open_leg_time,'FaceColor',red,'FaceAlpha',1,'LineWidth',2);
+
+histogram_plot(all_open_leg_time,red,path_to_save_fig,position_cm,margin)
+
+
+
+set(gca,'fontsize',26,'LineWidth',3);
+
+xlabel('Time [ms]');
+ylabel('Counts');
+%
+mu = mean(open_leg_mat(:,1))
+st = std(open_leg_mat(:,1))
+
+title({"Fly leg spreading times \mu=" + round(mu) + "\pm" + round(st) + " ms"; " "})
+if SAVE_FIGS
+    print(gcf, "fly spread leg statistics.png",'-dpng','-r300');
+end
+
+
+
 %% feature table
 
-props = [{'response_time'},{'zero_v'},{'delta_angle'}];
-pert = {'5ms','10ms','20ms','60ms','100ms','step'};
+props = [{'response_time'},{'zero_v'},{'delta_angle'},{'open_leg'}];
+pert = {'5ms','10ms','20ms','40ms','60ms','80ms','100ms','step'};
 
 for idx_prop = 1:1:length(props)
     for k = 1:1:length(pert)
+
         if strcmp(props{idx_prop},'delta_angle')
             percent_feature(idx_prop,k) = fly.(['pert_',pert{k}]).get_percent_with_th(props{idx_prop},30);
+        elseif strcmp(props{idx_prop},'open_leg')
+                percent_feature(idx_prop,k) = fly.(['pert_',pert{k}]).get_percent_with_th(props{idx_prop},2,'th_st',false);
+
         else
             percent_feature(idx_prop,k) = fly.(['pert_',pert{k}]).get_percent(props{idx_prop});
         end
+        end
     end
-end
 
 %% min_v bar plot
 
 path_to_save_fig = [path_for_figs,'\figure5\']
 for k = 1:1:length(pert)
+
+        if istable(fly.(['pert_',pert{k}]).min_v)
+            min_v = fly.(['pert_',pert{k}]).min_v.Var1;
+        else
+            min_v = fly.(['pert_',pert{k}]).min_v;
+        end
+
+
 mean_min_v(k) = fly.(['pert_',pert{k}]).get_mean('min_v')
+min_v = min_v(min_v < 1000);
+std_minv(k) = std(min_v)
 end
 gray_cmap = (gray(ceil(1*length(mean_min_v)))) ;
 cmap = flipud(gray_cmap(1:length(mean_min_v),:)) ;
 color = cmap .* red ;
-plotter_obj.bar_plot(mean_min_v,pert,color,path_to_save_fig)
+position_cm = [2,2 8 6]
+margin = [1.5,1.5]
+plotter_obj.bar_plot(mean_min_v,pert,color,path_to_save_fig,std_minv,position_cm,margin)
 %%
 
 %% fly step
@@ -193,59 +238,44 @@ W = 425 ;
 H = 350 ;
 mov = 15 %71 21
 position_cm = [1.5,1.5 5 4]
+margin = [1.5, 1]; % Example margins [width, height] in centimeters
+
+
+location_text = [35,-0.05]
 plotter_obj.plot_prop(fly.pert_step,'forward_vel','V_f_w_d [m/s]',0,mov,0.3,[-0.3, 0 0.3],[-25 250],[-0.3,0.3],...
-    color_struct_fly,{'Mean','movie'},'fly_vfwd_step.svg','\figure2\',false,position_cm)
+    color_struct_fly,{'Mean','movie'},'fly_vfwd_step.svg','\figure2\',false,position_cm,margin,location_text)
 
-[response_fv,time_response] = fly.pert_step.get_prop_point_in_time('forward_vel',15,'response_time')
-[break_fv,time_break] = fly.pert_step.get_prop_point_in_time('forward_vel',15,'zero_v')
 
-scatter(time_response,response_fv,'black','filled','HandleVisibility','off')
-scatter(time_break,break_fv,'black','filled','HandleVisibility','off')
-
-%Solution
-x1 = time_break
-y1 = break_fv
-x2 = 
-xL = xlim;
-yL = ylim;
-ah = gca;
-aPos = ah.Position;
-ahx = [aPos(1), aPos(1)+aPos(3)];
-ahy = [aPos(2), aPos(2)+aPos(4)];
-x1p = interp1(xL, ahx, x1);
-x2p = interp1(xL, ahx, x2);
-y1p = interp1(yL, ahy, y1);
-y2p = interp1(yL, ahy, y2);
-arh2 = annotation('arrow');
-arh2.Units = 'normalized';
-arh2.Position = [x1p, y1p, x2p-x1p, y2p-y1p];
-arh2.Color = 'k';
-% quiver(time_response,response_fv,time_response - 1,response_fv-0.1)
-
-%%
+location_text = [20,-5]
 position_cm = [1.5,1.5 5 4]
 plotter_obj.plot_prop(fly.pert_step,'pitch','pitch [deg]',0,mov,0.3,[20,50,80],[-25 250],[20,80],...
-    color_struct_fly,{'Mean','movie'},'fly_pitch_step.svg','\figure2\',false,position_cm)
+    color_struct_fly,{'Mean','Sample'},'fly_pitch_step.svg','\figure2\',false,position_cm,margin,location_text)
 
-position_cm= [2,1.5 8 4]
+location_text = [0,0]
+position_cm= [1.8,1.5 4.5 3.5]
 plotter_obj.plot_prop(fly.pert_step,'z_vel','V_z [m/s]',0,mov,0.3,[-0.2,-0.1, 0 0.1],[-25 250],[-0.3 0.2],...
-    color_struct_fly,{'Mean','Sample'},'fly_vz_step.svg','\figure3\',false,position_cm)
+    color_struct_fly,{'Mean','Sample'},'fly_vz_step.svg','\figure3\',false,position_cm,margin,location_text)
 
 %% mosquito step
 W = 425 ;
 H = 350 ;
-mov = 580
+mov = 169
+location_text = [35,-0.06]
+position_cm = [1.5,1.5 5 4]
+plotter_obj.plot_prop(mos.pert_step,'forward_vel','V_f_w_d [m/s]',0,mov,0.3,[-0.3, 0 0.3],[-25 250],[-0.3,0.3],...
+    color_struct_mos,{'Mean','Sample'},'mos_vfwd_step.svg','\figure2\',false,position_cm,margin,location_text)
 
-plotter_obj.plot_prop(mos.pert_step,'forward_vel','V_f_w_d [m/s]',0,mov,0.3,[-0.2, 0 0.3],[-25 250],[-0.2,0.3],...
-    color_struct_mos,{'Mean','Sample'},'mos_vfwd_step.svg','\figure2\',false,position_cm)
+location_text = [20,7]
+position_cm = [1.5,1.5 5 4]
 plotter_obj.plot_prop(mos.pert_step,'pitch','pitch [deg]',0,mov,0.3,[20,50,80],[-25 250],[20,80],...
-    color_struct_mos,{'Mean','Sample'},'mos_pitch_step.svg','\figure2\',false,position_cm)
-%%
+    color_struct_mos,{'Mean','Sample'},'mos_pitch_step.svg','\figure2\',false,position_cm,margin,location_text)
+
 color_struct_mos.cluster_all_data_color = [30,80] ;% indices of colors for the mean of clusters (clustered by Vz) [idx1, idx2]
 color_struct_mos.cluster_mean_color = [15,50]
-position_cm= [2,1.5 8 4]
+position_cm= [1.8,1.5 4.5 3.5]
+margin = [1.3,1]
 plotter_obj.plot_prop(mos.pert_step,'z_vel','V_z [m/s]',0,mov,0.3,[-0.25,-0.1, 0 0.1],[-25 250],[-0.25 0.2],...
-    color_struct_mos,{'Mean a','Mean b','Sample'},'mos_vz_step.svg','\figure3\',true,position_cm)
+    color_struct_mos,{'Mean a','Mean b','Sample'},'mos_vz_step.svg','\figure3\',true,position_cm,margin)
 
 
 %% fly 60
@@ -253,24 +283,32 @@ W = 425 ;
 H = 350 ;
 mov = 80
 position_cm= [1.5,1.5 5 4]
+location_text = [10,0.06]
 
 % plotter_obj.plot_prop(fly.pert_60ms,'z_vel','V_z [m/s]',60,mov,0.3,[-0.2, 0 0.3],[-25 250],[-0.2,0.3],...
 %     color_struct_fly,{'mean','movie'},'fly_vz_60ms.svg','\figure4\',false,position_cm)
 plotter_obj.plot_prop(fly.pert_60ms,'forward_vel','V_f_w_d [m/s]',60,mov,0.3,[-0.2, 0 0.3],[-25 250],[-0.2,0.3],...
-    color_struct_fly,{'mean','movie'},'fly_vfwd_60ms.svg','\figure4\',false,position_cm)
+    color_struct_fly,{'mean','Sample'},'fly_vfwd_60ms.svg','\figure4\',false,position_cm,margin,location_text)
+
+location_text = [30,5]
+position_cm = [1.5,1.5 5 4]
 plotter_obj.plot_prop(fly.pert_60ms,'pitch','pitch [deg]',60,mov,0.3,[20,50,80],[-25 250],[20,80],...
-    color_struct_fly,{'mean','movie'},'fly_pitch_60ms.svg','\figure4\',false,position_cm)
+    color_struct_fly,{'mean','Sample'},'fly_pitch_60ms.svg','\figure4\',false,position_cm,margin,location_text)
 
 %% mosquito 60
 W = 425 ;
 H = 350 ;
-mov = 596;
+mov = 395;
 position_cm= [1.5,1.5 5 4]
+location_text = [10,0.06]
 
 plotter_obj.plot_prop(mos.pert_60ms,'forward_vel','V_f_w_d [m/s]',60,mov,0.3,[-0.2, 0 0.3],[-25 250],[-0.2,0.3],...
-    color_struct_mos,{'mean','movie'},'mos_vfwd_60ms.svg','\figure4\',false,position_cm)
+    color_struct_mos,{'mean','Sample'},'mos_vfwd_60ms.svg','\figure4\',false,position_cm,margin,location_text)
+
+location_text = [30,5]
+
 plotter_obj.plot_prop(mos.pert_60ms,'pitch','pitch [deg]',60,mov,0.3,[20,50,80],[-25 250],[20,80],...
-    color_struct_mos,{'mean','movie'},'mos_pitch_60ms.svg','\figure4\',false,position_cm)
+    color_struct_mos,{'mean','Sample'},'mos_pitch_60ms.svg','\figure4\',false,position_cm,margin,location_text)
 
 
 % plotter_obj.plot_prop(mos.pert_60ms,'z_vel','V_z [m/s]',60,mov,0.3,[W,H],[-0.2,-0.1, 0 0.1],[-25 250],[-0.3 0.2],...
@@ -361,9 +399,11 @@ prop = [{'forward_vel'},{'forward_vel'}]
 insect = fly % insect to plot
 propip = fly.(exp_name).get_prop(prop{subplot_idx});
 time = fly.(exp_name).time_vec
-plotter_obj.all_data_plot(time,propip,'all_data_alpha',color_struct_fly.all_data_alpha,'all_data_color_idx',color_struct_fly.all_data_color_idx);hold on
-plotter_obj.mean_plot(insect.(exp_name),propip,prop{subplot_idx},'plot_all_data',0,'mean_color_idx',color_struct_fly.mean_color_idx);
-plotter_obj.mov_plot(insect.(exp_name),prop{subplot_idx},13,prop{subplot_idx},'color_idx',color_struct_fly.color_idx_mov)
+
+
+plotter_obj.all_data_plot(time,propip,'all_data_alpha',color_struct_fly.all_data_alpha,'all_data_color_idx',color_struct_fly.all_data_color_idx,location_text);hold on
+plotter_obj.mean_plot(insect.(exp_name),propip,prop{subplot_idx},'plot_all_data',0,'mean_color_idx',color_struct_fly.mean_color_idx,location_text);
+plotter_obj.mov_plot(insect.(exp_name),prop{subplot_idx},13,prop{subplot_idx},'color_idx',color_struct_fly.color_idx_mov,location_text)
 
 W = 425 ;
 H = 535 ;

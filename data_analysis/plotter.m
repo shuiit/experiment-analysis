@@ -19,7 +19,7 @@ classdef plotter
             obj.path_to_save_fig = path_to_save_fig;
         end
         function plot_prop(obj,insect,prop,ylabel,pert,mov_num,alpha,yticks,xlim_val,ylim_val,color_struct,...
-                legend_val,name_of_figure,dir_to_save,cluster, position_cm)
+                legend_val,name_of_figure,dir_to_save,cluster, position_cm,margin,location)
            
             
             
@@ -41,6 +41,18 @@ classdef plotter
                 obj.mov_plot(insect,prop,mov_num,ylabel,'color_idx',color_struct.color_idx_mov)
                 obj.pert_plot(pert,0,1,ax);
             end
+            if strcmp('z_vel',prop) == false 
+                [response_fv,time_response] = insect.get_prop_point_in_time(prop,mov_num,'response_time')
+                [break_fv,time_break] = insect.get_prop_point_in_time(prop,mov_num,'zero_v')
+               
+                scatter(time_response,response_fv,'^k','HandleVisibility','off','LineWidth',2)
+                scatter(time_break,break_fv,'sk','HandleVisibility','off','LineWidth',2)
+
+     
+                text(time_break - location(1),break_fv+location(2),' BT')
+                text(time_response - location(1),response_fv+location(2),'RT')
+                
+            end
             set([ax(1)], 'LineWidth', 1,'TickLength',[0.00,0.00]);box on
             set(gca,'fontsize',10);
             xlim(xlim_val)
@@ -59,7 +71,6 @@ classdef plotter
             axPos = get(ax, 'Position');
             
             % Add margins to account for labels, ticks, etc.
-            margin = [1.5, 1]; % Example margins [width, height] in centimeters
             
             % Set the figure size
             figWidth = axPos(3) + 2 * margin(1);
@@ -88,7 +99,7 @@ classdef plotter
             parse(parser, varargin{:})
 
             %plot(time,prop,'LineWidth',1.5,'color',[obj.gray_mat(200,:),parser.Results.alpha],'HandleVisibility','off')
-            plot(time,prop,'LineWidth',1,'color',[obj.col_mat(parser.Results.all_data_color_idx,:),parser.Results.all_data_alpha],'HandleVisibility','off')
+            plot(time,prop,'LineWidth',0.5,'color',[obj.col_mat(parser.Results.all_data_color_idx,:),parser.Results.all_data_alpha],'HandleVisibility','off')
         end
 
         function cluster_plot_mean(obj,prop,insect,varargin)
@@ -311,23 +322,40 @@ classdef plotter
 
         end
         
-        function bar_plot(obj,data_to_plot,header,color,path_to_save)
+        function bar_plot(obj,data_to_plot,header,color,path_to_save,err,position_cm,margin)
 
             fig = figure()
+            ax = subplot(1,1,1);
             for k = 1:1:length(data_to_plot)               
             pertubation = split(header{k}, '_');
             pertubation_cell{k} = pertubation{end};
             bar(k,data_to_plot(k),'FaceColor',color(k,:),'LineWidth',2);hold on
+            errorbar(k,data_to_plot(k),err(k))
+
+
+
             end
             
             % Bar plot formatting
+            set(gca,'units','centimeters'...
+            ,'position',position_cm);
 
+            % Get the required axes position
+            axPos = get(ax, 'Position');
+            
+            % Add margins to account for labels, ticks, etc.
+            
+            % Set the figure size
+            figWidth = axPos(3) + 2 * margin(1);
+            figHeight = axPos(4) + 2 * margin(2);
+            set(gcf, 'Units', 'centimeters', 'Position', [10, 10, figWidth, figHeight]); % [x, y, width, height]
+            
             pertubation_cell{end} = 'Step'
             ylabel('Minimal velocity [m/s]');
             xticks(1:length(data_to_plot));
             xticklabels(pertubation_cell);
             xlabel('Dark pulse duration');
-            set(gca,'fontsize',16,'LineWidth',3);
+            set(gca,'fontsize',12,'LineWidth',1);
             if path_to_save ~= false
                 path = [path_to_save,'minimal_velocity.svg']
                 h = findall(fig,'-property','FontName');
@@ -336,6 +364,42 @@ classdef plotter
             end
         end
 
+
+
+        function histogram_plot(obj,data_to_plot,color,path_to_save,position_cm,margin,ttl)
+
+            fig = figure()
+            ax = subplot(1,1,1);
+            histogram(data_to_plot,'FaceColor',color,'FaceAlpha',1,'LineWidth',2);
+
+            
+            % Bar plot formatting
+            set(gca,'units','centimeters'...
+            ,'position',position_cm);
+
+            % Get the required axes position
+            axPos = get(ax, 'Position');
+            
+            % Add margins to account for labels, ticks, etc.
+            
+            % Set the figure size
+            figWidth = axPos(3) + 2 * margin(1);
+            figHeight = axPos(4) + 2 * margin(2);
+            set(gcf, 'Units', 'centimeters', 'Position', [10, 10, figWidth, figHeight]); % [x, y, width, height]
+            
+
+            xlabel('Time [ms]');
+            ylabel('Counts');
+            title(ttl)
+
+            set(gca,'fontsize',12,'LineWidth',1);
+            if path_to_save ~= false
+                path = [path_to_save]
+                h = findall(fig,'-property','FontName');
+                set(h,'FontName','San Serif');
+                print(fig,'-dsvg',path)
+            end
+        end
 
         function plot_mean_subplot(obj,fly,mos,exp_name,pert,color_idx,prop_name,max_time_xax)
             %

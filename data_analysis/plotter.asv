@@ -5,58 +5,85 @@ classdef plotter
         gray_mat
         col_mat
         pertubations
-        save_fig
+        path_to_save_fig
     end
 
 
     methods
-        function obj = plotter()
+        function obj = plotter(path_to_save_fig)
             %UNTITLED4 Construct an instance of this class
             %   Detailed explanation goes here
 
             obj.gray_mat = colormap(gray);
             obj.col_mat = colormap(turbo);
-            obj.save_fig = false;
+            obj.path_to_save_fig = path_to_save_fig;
         end
-        function plot_prop(obj,insect,prop,ylabel,pert,mov_num,alpha,size_plot)
+        function plot_prop(obj,insect,prop,ylabel,pert,mov_num,alpha,yticks,xlim_val,ylim_val,color_struct,...
+                legend_val,name_of_figure,dir_to_save,cluster, position_cm,margin)
            
-        %% fly Vz
-    path_to_save_fig = [path_for_figs,'\figure3\']
-    k = 1
-    
-    
-    fig = figure()
-    hold on
-    propip = insect.get_prop(prop);
-    time = insect.time_vec;
-    
-    ax = subplot(1,1,1);
-    plotter_obj.all_data_plot(time,propip,'all_data_alpha',alpha,'all_data_color_idx',color_struct_fly.all_data_color_idx);hold on
-    plotter_obj.mean_plot(insect,propip,prop,'plot_all_data',0,'mean_color_idx',color_struct_fly.mean_color_idx);
-    plotter_obj.mov_plot(insect,prop,mov_num(k),prop,'color_idx',color_struct_fly.color_idx_mov)
-    plotter_obj.mean_plot(insect,prop,ylabel,'plot_all_data',0,'mean_color_idx',color_struct_fly.mean_color_idx);
-    plotter_obj.pert_plot(pert,0,1,ax(1));
-    
-    set([ax(1)], 'LineWidth', 3,'TickLength',[0.00,0.00]);box on
-    set(gcf,'position',[200 50 size_plot(1) H])
-    set(gca,'fontsize',14);
-    xlim(xlim)
-    ylim(ylim)
+            
+            
+            fig = figure()
+            hold on
+            propip = insect.get_prop(prop);
+            time = insect.time_vec;
+                            ax = subplot(1,1,1);
 
-    set(gca,'YTick',yticks)
+            if cluster == false
+                obj.all_data_plot(time,propip,'all_data_alpha',alpha,'all_data_color_idx',color_struct.all_data_color_idx);hold on
+                obj.mean_plot(insect,propip,prop,'plot_all_data',0,'mean_color_idx',color_struct.mean_color_idx);
+                obj.mov_plot(insect,prop,mov_num,prop,'color_idx',color_struct.color_idx_mov)
+                obj.mean_plot(insect,prop,ylabel,'plot_all_data',0,'mean_color_idx',color_struct.mean_color_idx);
+                obj.pert_plot(pert,0,1,ax(1));
+            else
 
-    set(gca,'TickDir','out','TickLength',[0.01, 0.025]);
-    set(gca,'fontsize',14);
-    set(gca,'TickDir','out','TickLength',[0.01, 0.025]);
-    legend(legend)
-    title(titletext,'Fontsize',13,'FontWeight','Normal')
+                obj.cluster_plot_mean(prop,insect,'colors',color_struct.cluster_mean_color,'color_all_data',color_struct.cluster_all_data_color,'alpha',0.1);
+                obj.mov_plot(insect,prop,mov_num,ylabel,'color_idx',color_struct.color_idx_mov)
+                obj.pert_plot(pert,0,1,ax);
+            end
+            if strcmp('z_vel',prop) == false & strcmp('mosquito',insect.name) == false
+                [response_fv,time_response] = insect.get_prop_point_in_time(prop,mov_num,'response_time')
+                [break_fv,time_break] = insect.get_prop_point_in_time(prop,mov_num,'zero_v')
+               
+                scatter(time_response,response_fv,'^k','HandleVisibility','off','LineWidth',2)
+                scatter(time_break,break_fv,'sk','HandleVisibility','off','LineWidth',2)
+
+txt = 'BT';
+text(time_break,break_fv,txt)
+            end
+            set([ax(1)], 'LineWidth', 1,'TickLength',[0.00,0.00]);box on
+            set(gca,'fontsize',10);
+            xlim(xlim_val)
+            ylim(ylim_val)
+        
+            set(gca,'YTick',yticks)
+            set(gca,'TickDir','out','TickLength',[0.01, 0.025]);
+            set(gca,'fontsize',10);
+            set(gca,'TickDir','out','TickLength',[0.01, 0.025]);
+            legend(legend_val)
+            % title(titletext,'Fontsize',10,'FontWeight','Normal')
+            set(gca,'units','centimeters'...
+            ,'position',position_cm);
+
+            % Get the required axes position
+            axPos = get(ax, 'Position');
+            
+            % Add margins to account for labels, ticks, etc.
+            
+            % Set the figure size
+            figWidth = axPos(3) + 2 * margin(1);
+            figHeight = axPos(4) + 2 * margin(2);
+            set(gcf, 'Units', 'centimeters', 'Position', [10, 10, figWidth, figHeight]); % [x, y, width, height]
+            
+            % Optional: Improve appearance
+            % set(gcf, 'PaperPositionMode', 'auto');
+            path = [obj.path_to_save_fig,dir_to_save,name_of_figure]
+            h = findall(fig,'-property','FontName');
+            set(h,'FontName','San Serif');
+            print(fig,'-dsvg',path)
+            % exportgraphics(gcf, [obj.path_to_save_fig,dir_to_save,name_of_figure], 'ContentType', 'vector');
+
     
-    % name_of_figure = sprintf('fly_vz_pert%d.svg',perts(k))
-    % path = [path_to_save_fig,name_of_figure]
-    % h = findall(fig,'-property','FontName');
-    % set(h,'FontName','San Serif');
-    % print(fig,'-dsvg',path)
-
 
         
             
@@ -70,7 +97,7 @@ classdef plotter
             parse(parser, varargin{:})
 
             %plot(time,prop,'LineWidth',1.5,'color',[obj.gray_mat(200,:),parser.Results.alpha],'HandleVisibility','off')
-            plot(time,prop,'LineWidth',0.5,'color',[obj.col_mat(parser.Results.all_data_color_idx,:),parser.Results.all_data_alpha],'HandleVisibility','off')
+            plot(time,prop,'LineWidth',1,'color',[obj.col_mat(parser.Results.all_data_color_idx,:),parser.Results.all_data_alpha],'HandleVisibility','off')
         end
 
         function cluster_plot_mean(obj,prop,insect,varargin)
@@ -105,7 +132,7 @@ classdef plotter
             idx_to_plot = find(time > parser.Results.initial_time_to_plot);
 
             mean_prop = mean(prop,2,'omitnan');
-            ax = plot(time(idx_to_plot),mean_prop(idx_to_plot),'LineWidth',3,'color',obj.col_mat(parser.Results.mean_color_idx,:))
+            ax = plot(time(idx_to_plot),mean_prop(idx_to_plot),'LineWidth',2,'color',obj.col_mat(parser.Results.mean_color_idx,:))
             xlabel(parser.Results.xlabel)
             ylabel(label_y)
 

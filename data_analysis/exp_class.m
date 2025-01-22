@@ -12,13 +12,16 @@ classdef exp_class
         response_time
         zero_v
         delta_angle
+        name
+        open_leg
     end
     
 
     methods
-        function obj = exp_class(exp,fps)
+        function obj = exp_class(exp,fps,insect_name)
             %UNTITLED4 Construct an instance of this class
             %   Detailed explanation goes here
+            obj.name = insect_name
             obj.fps = fps;
             header = exp.Properties.VariableNames;
             delta_t = exp.time(2)-exp.time(1);    
@@ -87,19 +90,41 @@ classdef exp_class
         end
 
         function percent = get_percent(obj,prop)
+        if istable(obj.(prop))
+            prop = obj.(prop).Var1;
+        else
+            prop = obj.(prop);
+        end
+            percent = sum(prop~= 1000)*100/length(prop)
+        end
 
-            percent = sum(obj.(prop)~= 1000)*100/length(obj.(prop))
+        function percent = get_percent_with_th(obj,prop,th,varargin)
+            parser = inputParser;
+            addParameter(parser,'th_st',true); % color of mean data
+            parse(parser, varargin{:})
+
+        if istable(obj.(prop))
+            prop = obj.(prop).Var1;
+        else
+            prop = obj.(prop);
+        end
+        if parser.Results.th_st == true
+            percent = sum(( abs(prop) <th)*100/sum(prop ~= 1000))
+        else
+            percent = sum(( abs(prop) >th)*100/sum(prop ~= 1000))
+
+        end
         end
 
 
-        function percent = get_percent_with_th(obj,prop,th)
-
-            percent = sum(( abs(obj.(prop)) <th)*100/sum(obj.(prop) ~= 1000))
-        end
 
         function mean_min_v = get_mean(obj,prop)
-
-            mean_min_v = mean(obj.(prop)(obj.(prop) < 1000),1,'omitmissing')
+        if istable(obj.(prop))
+            prop = obj.(prop).Var1;
+        else
+            prop = obj.(prop);
+        end
+            mean_min_v = mean(prop(prop < 1000),1,'omitmissing')
 
         end
     end
