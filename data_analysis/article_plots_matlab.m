@@ -137,7 +137,7 @@ for k = 1:1:length(open_leg_mat(:,1))
     end
 end
 
-%% open legs histogram
+%% leg spreading histogram
 
 pert = {'5ms','10ms','20ms'}
 for k = 1:1:length(pert)
@@ -148,9 +148,8 @@ end
 all_open_leg_time = cell2mat(cell_openleg');
 all_open_leg_time= all_open_leg_time(all_open_leg_time > 0);
 
-histogram(all_open_leg_time)
 
-%%
+%% leg spreading histogram
 
 
 xlabel('time [ms]')
