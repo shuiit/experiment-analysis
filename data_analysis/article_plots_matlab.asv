@@ -5,8 +5,8 @@ clc
 SAVE_FIGS = false ;
 
 % Load data
-path = 'G:\.shortcut-targets-by-id\1OA70vOJHDfV63DqG7LJCifTwW1h055ny\2024 Flight in the dark paper\data_exchange\'
-path_for_figs = 'G:\.shortcut-targets-by-id\1OA70vOJHDfV63DqG7LJCifTwW1h055ny\2024 Flight in the dark paper\media\'
+path = 'I:\.shortcut-targets-by-id\1OA70vOJHDfV63DqG7LJCifTwW1h055ny\2024 Flight in the dark paper\data_exchange\'
+path_for_figs = 'I:\.shortcut-targets-by-id\1OA70vOJHDfV63DqG7LJCifTwW1h055ny\2024 Flight in the dark paper\media\'
 fly_data = 'fly\all_data\'
 mos_data = 'mosquito\'
 
@@ -94,14 +94,14 @@ color_struct_mos.cluster_all_data_color = [30,100] ;% indices of colors for the 
 % --------------------------------------------------------------------
 %% Fly leg spreading times
 time = fly.('pert_step').time_vec;
-open_leg_mat = readmatrix('h:\My Drive\dark 2022\plots_for_tsevi\all_data_for_tsevi\fly\leg_open.xlsx');
+open_leg_mat = readmatrix('J:\My Drive\dark 2022\plots_for_tsevi\all_data_for_tsevi\fly\leg_open.xlsx');
 
 
-pert = {'5ms','10ms','20ms'}
+pert = {'5ms','10ms','20ms','40ms','60ms','80ms','100ms','step'}
 for k = 1:1:length(pert)
 pertubation = sprintf('pert_%s',pert{k});
 file_name = ['leg_open_',pert{k}];
-open_leg_mat = readmatrix(['h:\My Drive\dark 2022\excel\',file_name]);
+open_leg_mat = readmatrix(['J:\My Drive\dark 2022\excel\',file_name]);
 open_leg_mat = open_leg_mat(:,2)
 
     idx_to_keep = isnan(open_leg_mat) == false & open_leg_mat~= 999 & open_leg_mat~= 1
@@ -120,7 +120,7 @@ property = fly.('pert_step').get_prop(property_to_plot);
 %time_mov = open_leg_mat(idx_of_movie,:);
 time_mov = open_leg_mat(:,1);
 
-figure();
+
 
 for k = 1:1:length(open_leg_mat(:,1))
     try
@@ -137,9 +137,8 @@ for k = 1:1:length(open_leg_mat(:,1))
     end
 end
 
-%% open legs histogram
+%% leg spreading histogram
 
-pert = {'5ms','10ms','20ms'}
 for k = 1:1:length(pert)
 pertubation = sprintf('pert_%s',pert{k})
 cell_openleg{k} = fly.(pertubation).open_leg
@@ -148,46 +147,28 @@ end
 all_open_leg_time = cell2mat(cell_openleg');
 all_open_leg_time= all_open_leg_time(all_open_leg_time > 0);
 
-histogram(all_open_leg_time)
 
-%%
+%% leg spreading histogram
 
 
 xlabel('time [ms]')
 yline(0,'LineWidth',5)
-
-
 red = [0.8549    0.2078    0.0039];
 blue = [0.2706    0.4863    0.9569];
 figure('Position',[   415.8000   60.0000  796.0000  635.2000]) ;
 path_to_save_fig = [path_for_figs,'\appendix\leg_spread.svg']
+position_cm = [2,2 8 6]
+margin = [2,2]
 
-% size was chosen manually to make axes same as freq plot while accounting
-% for fat title
+mu = mean(all_open_leg_time(:,1))
+st = std(all_open_leg_time(:,1))
+ttl = ({"Fly leg spreading times \mu=" + round(mu) + "\pm" + round(st) + " ms"; " "})
 
-% same as 
-% uiopen('G:\My Drive\_Talks\2025-01 SICB Flight in the Dark\noam figs and vids\combined_flap_freq_step.fig',1)
-
-%histogram(open_leg_mat(:,1),'FaceColor',plotter_obj.col_mat(color_struct_fly.mean_color_idx,:));
-histogram(all_open_leg_time,'FaceColor',red,'FaceAlpha',1,'LineWidth',2);
-
-histogram_plot(all_open_leg_time,red,path_to_save_fig,position_cm,margin)
+plotter_obj.histogram_plot(all_open_leg_time,red,path_to_save_fig,position_cm,margin,ttl)
 
 
-
-set(gca,'fontsize',26,'LineWidth',3);
-
-xlabel('Time [ms]');
-ylabel('Counts');
-%
-mu = mean(open_leg_mat(:,1))
-st = std(open_leg_mat(:,1))
-
-title({"Fly leg spreading times \mu=" + round(mu) + "\pm" + round(st) + " ms"; " "})
-if SAVE_FIGS
-    print(gcf, "fly spread leg statistics.png",'-dpng','-r300');
-end
-
+%%
+plot(1:1:lenfly.pert_step.open_leg)
 
 
 %% feature table

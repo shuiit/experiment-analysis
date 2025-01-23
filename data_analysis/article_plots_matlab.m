@@ -5,14 +5,14 @@ clc
 SAVE_FIGS = false ;
 
 % Load data
-path = 'G:\.shortcut-targets-by-id\1OA70vOJHDfV63DqG7LJCifTwW1h055ny\2024 Flight in the dark paper\data_exchange\'
-path_for_figs = 'G:\.shortcut-targets-by-id\1OA70vOJHDfV63DqG7LJCifTwW1h055ny\2024 Flight in the dark paper\media\'
+path = 'I:\.shortcut-targets-by-id\1OA70vOJHDfV63DqG7LJCifTwW1h055ny\2024 Flight in the dark paper\data_exchange\'
+path_for_figs = 'I:\.shortcut-targets-by-id\1OA70vOJHDfV63DqG7LJCifTwW1h055ny\2024 Flight in the dark paper\media\'
 fly_data = 'fly\all_data\'
 mos_data = 'mosquito\'
 
 file_name = '60ms_all_data.csv'
 
-pert = {'5ms','10ms','20ms','40ms','60ms','80ms','100ms','step'} % Fly: pertubations to load (for all - {'40ms','80ms','100ms','60ms','step'})
+pert = {'5ms','10ms','20ms','40ms','60ms','80ms','100ms','step','darkan'} % Fly: pertubations to load (for all - {'40ms','80ms','100ms','60ms','step'})
 for idx_file = 1:1:length(pert)
     fly.(['pert_',pert{idx_file}]) =  exp_class(readtable([path,fly_data,pert{idx_file},'_all_data']),16000,'fly');
     fly.fps = 16000;
@@ -94,14 +94,14 @@ color_struct_mos.cluster_all_data_color = [30,100] ;% indices of colors for the 
 % --------------------------------------------------------------------
 %% Fly leg spreading times
 time = fly.('pert_step').time_vec;
-open_leg_mat = readmatrix('h:\My Drive\dark 2022\plots_for_tsevi\all_data_for_tsevi\fly\leg_open.xlsx');
+open_leg_mat = readmatrix('J:\My Drive\dark 2022\plots_for_tsevi\all_data_for_tsevi\fly\leg_open.xlsx');
 
 
-pert = {'5ms','10ms','20ms'}
+pert = {'5ms','10ms','20ms','40ms','60ms','80ms','100ms','step'}
 for k = 1:1:length(pert)
 pertubation = sprintf('pert_%s',pert{k});
 file_name = ['leg_open_',pert{k}];
-open_leg_mat = readmatrix(['h:\My Drive\dark 2022\excel\',file_name]);
+open_leg_mat = readmatrix(['J:\My Drive\dark 2022\excel\',file_name]);
 open_leg_mat = open_leg_mat(:,2)
 
     idx_to_keep = isnan(open_leg_mat) == false & open_leg_mat~= 999 & open_leg_mat~= 1
@@ -120,7 +120,7 @@ property = fly.('pert_step').get_prop(property_to_plot);
 %time_mov = open_leg_mat(idx_of_movie,:);
 time_mov = open_leg_mat(:,1);
 
-figure();
+
 
 for k = 1:1:length(open_leg_mat(:,1))
     try
@@ -139,7 +139,6 @@ end
 
 %% leg spreading histogram
 
-pert = {'5ms','10ms','20ms'}
 for k = 1:1:length(pert)
 pertubation = sprintf('pert_%s',pert{k})
 cell_openleg{k} = fly.(pertubation).open_leg
@@ -174,7 +173,7 @@ plotter_obj.histogram_plot(all_open_leg_time,red,path_to_save_fig,position_cm,ma
 %% feature table
 
 props = [{'response_time'},{'zero_v'},{'delta_angle'},{'open_leg'}];
-pert = {'5ms','10ms','20ms','40ms','60ms','80ms','100ms','step'};
+pert = {'5ms','10ms','20ms','40ms','60ms','80ms','100ms','step','darkan'};
 
 for idx_prop = 1:1:length(props)
     for k = 1:1:length(pert)
@@ -188,7 +187,8 @@ for idx_prop = 1:1:length(props)
             percent_feature(idx_prop,k) = fly.(['pert_',pert{k}]).get_percent(props{idx_prop});
         end
         end
-    end
+end
+plot(percent_feature([1,2,4],:)','-*')
 
 %% min_v bar plot
 

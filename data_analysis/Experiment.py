@@ -95,7 +95,7 @@ class Experiment():
 
             if np.nanmean(mov.get_prop('acc_norm',wing_body='body')[0:mov.ref_frame]) < th_mean:
                 mean_acc.append(np.nanmean(acc_norm[0:mov.ref_frame]))
-        return np.nanmean(mean_acc) + np.nanstd(mean_acc)*2
+        return np.nanmean(mean_acc) + np.nanstd(mean_acc)*3
 
     
     def th_for_velocity_dec(self, time_to_sample = 80):

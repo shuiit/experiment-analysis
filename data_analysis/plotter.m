@@ -82,7 +82,9 @@ classdef plotter
             path = [obj.path_to_save_fig,dir_to_save,name_of_figure]
             h = findall(fig,'-property','FontName');
             set(h,'FontName','San Serif');
+            % set(fig,'renderer','painters')
             print(fig,'-dsvg',path)
+
             % exportgraphics(gcf, [obj.path_to_save_fig,dir_to_save,name_of_figure], 'ContentType', 'vector');
 
     
@@ -236,8 +238,8 @@ classdef plotter
             parse(parser, varargin{:})
             [data_a,data_b] = cluster_by_prop(obj,prop_to_cluster,time_to_cluster,insect,prop_to_plot);
 
-            plot(insect.time_vec,data_a,'color',[obj.col_mat(color_all_data(1),:),parser.Results.alpha],'LineWidth',2,'HandleVisibility','off');hold on
-            plot(insect.time_vec,data_b,'color',[obj.col_mat(color_all_data(2),:),parser.Results.alpha],'LineWidth',2,'HandleVisibility','off');hold on
+            plot(insect.time_vec,data_a,'color',[obj.col_mat(color_all_data(1),:),parser.Results.alpha],'LineWidth',0.5,'HandleVisibility','off');hold on
+            plot(insect.time_vec,data_b,'color',[obj.col_mat(color_all_data(2),:),parser.Results.alpha],'LineWidth',0.5,'HandleVisibility','off');hold on
 
         end
 
@@ -370,7 +372,7 @@ classdef plotter
 
             fig = figure()
             ax = subplot(1,1,1);
-            histogram(data_to_plot,'FaceColor',color,'FaceAlpha',1,'LineWidth',2);
+            histogram(data_to_plot,'FaceColor',color,'FaceAlpha',1,'LineWidth',2,BinWidth=4);
 
             
             % Bar plot formatting
