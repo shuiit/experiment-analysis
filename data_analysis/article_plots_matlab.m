@@ -5,8 +5,8 @@ clc
 SAVE_FIGS = false ;
 
 % Load data
-path = 'I:\.shortcut-targets-by-id\1OA70vOJHDfV63DqG7LJCifTwW1h055ny\2024 Flight in the dark paper\data_exchange\'
-path_for_figs = 'I:\.shortcut-targets-by-id\1OA70vOJHDfV63DqG7LJCifTwW1h055ny\2024 Flight in the dark paper\media\'
+path = 'G:\.shortcut-targets-by-id\1OA70vOJHDfV63DqG7LJCifTwW1h055ny\2024 Flight in the dark paper\data_exchange\'
+path_for_figs = 'G:\.shortcut-targets-by-id\1OA70vOJHDfV63DqG7LJCifTwW1h055ny\2024 Flight in the dark paper\media\'
 fly_data = 'fly\all_data\'
 mos_data = 'mosquito\'
 
@@ -94,17 +94,17 @@ color_struct_mos.cluster_all_data_color = [30,100] ;% indices of colors for the 
 % --------------------------------------------------------------------
 %% Fly leg spreading times
 time = fly.('pert_step').time_vec;
-open_leg_mat = readmatrix('J:\My Drive\dark 2022\plots_for_tsevi\all_data_for_tsevi\fly\leg_open.xlsx');
+open_leg_mat = readmatrix('H:\My Drive\dark 2022\plots_for_tsevi\all_data_for_tsevi\fly\leg_open.xlsx');
 
 
-pert = {'5ms','10ms','20ms','40ms','60ms','80ms','100ms','step'}
+pert = {'5ms','10ms','20ms','40ms','60ms','80ms','100ms','step','darkan'}
 for k = 1:1:length(pert)
 pertubation = sprintf('pert_%s',pert{k});
 file_name = ['leg_open_',pert{k}];
-open_leg_mat = readmatrix(['J:\My Drive\dark 2022\excel\',file_name]);
+open_leg_mat = readmatrix(['H:\My Drive\dark 2022\excel\',file_name]);
 open_leg_mat = open_leg_mat(:,2)
 
-    idx_to_keep = isnan(open_leg_mat) == false & open_leg_mat~= 999 & open_leg_mat~= 1
+    idx_to_keep = isnan(open_leg_mat) == false & open_leg_mat~= 999% & open_leg_mat~= 1
     fly.(pertubation).open_leg = open_leg_mat(idx_to_keep);
 
 
@@ -159,7 +159,7 @@ figure('Position',[   415.8000   60.0000  796.0000  635.2000]) ;
 path_to_save_fig = [path_for_figs,'\appendix\leg_spread.svg']
 position_cm = [2,2 8 6]
 margin = [2,2]
-
+all_open_leg_time = all_open_leg_time(all_open_leg_time > 1)
 mu = mean(all_open_leg_time(:,1))
 st = std(all_open_leg_time(:,1))
 ttl = ({"Fly leg spreading times \mu=" + round(mu) + "\pm" + round(st) + " ms"; " "})
@@ -181,10 +181,26 @@ for idx_prop = 1:1:length(props)
         if strcmp(props{idx_prop},'delta_angle')
             percent_feature(idx_prop,k) = fly.(['pert_',pert{k}]).get_percent_with_th(props{idx_prop},30);
         elseif strcmp(props{idx_prop},'open_leg')
-                percent_feature(idx_prop,k) = fly.(['pert_',pert{k}]).get_percent_with_th(props{idx_prop},2,'th_st',false);
+                % percent_feature(idx_prop+1,k) = fly.(['pert_',pert{k}]).get_percent_with_th(props{idx_prop},2,'th_st',false);
+
+                idx_open_all_time = (fly.(['pert_',pert{k}]).(props{idx_prop}) == 1);
+                idx_not_opening = (fly.(['pert_',pert{k}]).(props{idx_prop}) == 0);
+                
+                % only flies that spread legs during the video
+                percent_feature(idx_prop,k) = sum(idx_not_opening == 0 & idx_open_all_time == 0)*100/length(fly.(['pert_',pert{k}]).(props{idx_prop})(idx_open_all_time == 0));
+                
+                % flies that spread legs + crazy flies
+                percent_feature(idx_prop+1,k) = sum(idx_not_opening == 0 & idx_open_all_time == 0)*100/length(fly.(['pert_',pert{k}]).(props{idx_prop}));
+
+                % only crazy flies
+                percent_feature(idx_prop+2,k) = sum(idx_open_all_time)*100/length(fly.(['pert_',pert{k}]).(props{idx_prop}));
+
 
         else
             percent_feature(idx_prop,k) = fly.(['pert_',pert{k}]).get_percent(props{idx_prop});
+
+
+
         end
         end
 end
@@ -372,304 +388,304 @@ print(fig,'-dsvg',path)
 
 
 
-%% Tsevi plot (THIS)
-exp_name = 'pert_step' % name of pertubation
-pert = 0 % % pertubation (step - 0, 100 ms - 100, 60 ms - 60...)
-subplot(2,1,1)
-prop = [{'forward_vel'},{'forward_vel'}]
-insect = fly % insect to plot
-propip = fly.(exp_name).get_prop(prop{subplot_idx});
-time = fly.(exp_name).time_vec
-
-
-plotter_obj.all_data_plot(time,propip,'all_data_alpha',color_struct_fly.all_data_alpha,'all_data_color_idx',color_struct_fly.all_data_color_idx,location_text);hold on
-plotter_obj.mean_plot(insect.(exp_name),propip,prop{subplot_idx},'plot_all_data',0,'mean_color_idx',color_struct_fly.mean_color_idx,location_text);
-plotter_obj.mov_plot(insect.(exp_name),prop{subplot_idx},13,prop{subplot_idx},'color_idx',color_struct_fly.color_idx_mov,location_text)
-
-W = 425 ;
-H = 535 ;
-
-set(gcf,'position',[200 50 W H])
-subplot(2,1,1)
-
-ylim([0,100]) ; set(gca,'fontsize',14);
-xlim([-25 250])
-set(gca,'YTick',[30,50,70])
-set(gca,'TickDir','out','TickLength',[0.01, 0.025]);
-xlabel('') ;
-sgtitle('Fruit fly','Fontsize',16)
-%%
-subplot(2,1,1)
-ylim([-0.3,0.3]) ;
-set(gca,'ytick',[-0.3 0 0.3]) ;
-xlim([-25 250])
-set(gca,'fontsize',14);
-set(gca,'TickDir','out');
-set(gca,'TickDir','out','TickLength',[0.01, 0.025]);
-if SAVE_FIGS
-    print(gcf,'fly step response.png','-dpng','-r300')
-end
-
-
-insect = mos % insect to plot
-plotter_obj.plot_pitch_for_vel_mean(insect,exp_name,pert,max_time_xax,color_struct_mos)
-
-set(gcf,'position',[200 50 W H])
-subplot(2,1,1)
-ylim([25,70]) ; set(gca,'fontsize',14);
-xlim([-25 250])
-set(gca,'YTick',[30,50,70])
-set(gca,'TickDir','out','TickLength',[0.01, 0.025]);
-xlabel('') ;
-sgtitle('Mosquito','Fontsize',16)
-
-subplot(2,1,2)
-ylim([-0.3,0.3]) ;
-set(gca,'ytick',[-0.3 0 0.3]) ;
-xlim([-25 250])
-set(gca,'fontsize',14);
-set(gca,'TickDir','out','TickLength',[0.01, 0.025]);
-
-if SAVE_FIGS
-    print(gcf,'mosquito step response.png','-dpng','-r300')
-end
-
-
-
-
-
-
-%% Tsevi plot
-exps = {'pert_5ms','pert_10ms','pert_20ms'};
-prop = {'forward_vel','pitch'};
-colors = [10,40,200];
-color_mean = [1,1,1];
-insect = fly ;% insect to plot
-
-for subplot_idx = 1:1:2
-    for k = 1:1:3
-        exp_name = exps{k} ;% name of pertubation
-        hold on
-
-        propip = fly.(exp_name).get_prop(prop{subplot_idx});
-        time = fly.(exp_name).time_vec;
-        ax1 = subplot(2,1,subplot_idx);
-        plotter_obj.all_data_plot(time,propip,'all_data_alpha',0.1,'all_data_color_idx',colors(k));hold on
-
-    end
-    % subplot(2,1,1)
-    % ylim([40,70]) ; set(gca,'fontsize',14);
-
-    for k = 1:1:3
-        exp_name = exps{k}; % name of pertubation
-        hold on
-
-        propip = fly.(exp_name).get_prop(prop{subplot_idx});
-        time = fly.(exp_name).time_vec;
-        ax1 = subplot(2,1,subplot_idx);
-
-        plotter_obj.mean_plot(insect.(exp_name),propip,prop{subplot_idx},'plot_all_data',0,'mean_color_idx',colors(k));
-        plotter_obj.mov_plot(insect.(exp_name),prop{subplot_idx},13,prop{subplot_idx},'color_idx',color_struct_fly.color_idx_mov)
-    end
-    legend({'5ms','10ms','20ms'});
-
-end
-
-
-
-%% mean and "model" plots
-
-%% Tsevi plot (THIS)
-exp_name = 'pert_step' % name of pertubation
-pert = 0 % % pertubation (step - 0, 100 ms - 100, 60 ms - 60...)
-
-insect = fly % insect to plot
-plotter_obj.plot_pitch_for_vel_mean(insect,exp_name,pert,max_time_xax,color_struct_fly)
-
-W = 425 ;
-H = 535 ;
-
-set(gcf,'position',[200 50 W H])
-subplot(2,1,1)
-ylim([25,70]) ; set(gca,'fontsize',14);
-xlim([-25 250])
-set(gca,'YTick',[30,50,70])
-set(gca,'TickDir','out','TickLength',[0.01, 0.025]);
-xlabel('') ;
-sgtitle('Fruit fly','Fontsize',16)
-
-subplot(2,1,2)
-ylim([-0.3,0.3]) ;
-set(gca,'ytick',[-0.3 0 0.3]) ;
-xlim([-25 250])
-set(gca,'fontsize',14);
-set(gca,'TickDir','out');
-set(gca,'TickDir','out','TickLength',[0.01, 0.025]);
-if SAVE_FIGS
-    print(gcf,'fly step response.png','-dpng','-r300')
-end
-
-
-insect = mos % insect to plot
-plotter_obj.plot_pitch_for_vel_mean(insect,exp_name,pert,max_time_xax,color_struct_mos)
-
-set(gcf,'position',[200 50 W H])
-subplot(2,1,1)
-ylim([25,70]) ; set(gca,'fontsize',14);
-xlim([-25 250])
-set(gca,'YTick',[30,50,70])
-set(gca,'TickDir','out','TickLength',[0.01, 0.025]);
-xlabel('') ;
-sgtitle('Mosquito','Fontsize',16)
-
-subplot(2,1,2)
-ylim([-0.3,0.3]) ;
-set(gca,'ytick',[-0.3 0 0.3]) ;
-xlim([-25 250])
-set(gca,'fontsize',14);
-set(gca,'TickDir','out','TickLength',[0.01, 0.025]);
-
-if SAVE_FIGS
-    print(gcf,'mosquito step response.png','-dpng','-r300')
-end
-
-
-%% TSEVI: add vz plot in the same format as above
-
-% fly
-exp_name = 'pert_step' % name of pertubation
-pert = 0 % % pertubation (step - 0, 100 ms - 100, 60 ms - 60...)
-insect = fly % insect to plot
-mov = 13 % "model" movie
-plotter_obj.plot_pitch_for_vel_z_vel_model_mov_mean(insect,exp_name,mov,pert,color_struct_fly,max_time_xax)
-xlim([-20,250])
-xx = subplot(3,1,1) ;
-delete(xx) ;
-xx = subplot(3,1,2) ;
-delete(xx) ;
-
-% mosquito plot
-insect = mos % insect to plot
-mov = 580 % "model" movie
-
-plotter_obj.plot_pitch_for_vel_z_vel_model_mov_mean(insect,exp_name,mov,pert,color_struct_mos,max_time_xax)
-xlim([-20,250])
-xx = subplot(3,1,1) ;
-delete(xx) ;
-xx = subplot(3,1,2) ;
-delete(xx) ;
-
-
-
-%%
-% --------------Step pertubation------------------------------
-exp_name = 'pert_step' % name of pertubation
-pert = 0 % % pertubation (step - 0, 100 ms - 100, 60 ms - 60...)
-insect = fly % insect to plot
-mov = 13 % "model" movie
-plotter_obj.plot_pitch_for_vel_z_vel_model_mov_mean(insect,exp_name,mov,pert,color_struct_fly,max_time_xax)
-xlim([-20,250])
-
-% mosquito plot
-insect = mos % insect to plot
-mov = 580 % "model" movie
-
-plotter_obj.plot_pitch_for_vel_z_vel_model_mov_mean(insect,exp_name,mov,pert,color_struct_mos,max_time_xax)
-xlim([-20,250])
-
-% --------------60 ms ------------------------------
-
-exp_name = 'pert_60ms'
-pert = 60 % pertubation (step - 0, 100 ms - 100, 60 ms - 60...)
-insect = fly
-mov = 70
-plotter_obj.plot_pitch_for_vel_z_vel_model_mov_mean(insect,exp_name,mov,pert,color_struct_mos,max_time_xax)
-xlim([-20,250])
-
-insect = mos
-mov = 596
-plotter_obj.plot_pitch_for_vel_z_vel_model_mov_mean(insect,exp_name,mov,pert,color_struct_mos,max_time_xax)
-xlim([-20,250])
-
-
-%% Violin delta angle
-% ---- colors (defined by the indices in color mat) --------------
-fly_col_idx = 190 % color of fly
-mos_col_idx = 40 % color of mosquito
-% time to plot violin (x axis, the initial point of the violin)
-time_to_violin = linspace(-15,230,10)
-
-%----- violin plot properties-----------
-prop_name = 'vel_xy_ang_flat' % property, a list of all properies: fly.pert_60ms.insect_prop
-fly_color = plotter_obj.col_mat(fly_col_idx,:) % color of the fly's violin
-mos_color = plotter_obj.col_mat(mos_col_idx,:) % color of the mosquito's violin
-
-
-% 60 ms pertubation -----------------------------
-exp_name_cell = {'pert_60ms'}  % pertubation
-exp_name = exp_name_cell{1}
-pert = 60 % used to plot the pertubation as a gray box
-
-% plot violin-------------
-figure
-fly_fvec = get_fvec(exp_name_cell,fly,prop_name,time_to_violin);
-mos_fvec = get_fvec(exp_name_cell,mos,prop_name,time_to_violin);
-f_norm_vec = max([fly_fvec;mos_fvec]); % normalize
-
-%f_norm_vec(:) = max(max([fly_fvec;mos_fvec])) / 4 ;
-
-ax1 = subplot(2,1,2)
-plotter_obj.violin_plot(fly.(exp_name),prop_name,time_to_violin,f_norm_vec,prop_name,fly_color,'fly','scatter_loc',0,'box_xdata',0)
-plotter_obj.violin_plot(mos.(exp_name),prop_name,time_to_violin,f_norm_vec,prop_name,mos_color,{'fly','mosquito'},'scatter_loc',0,'box_xdata',0)
-plotter_obj.pert_plot(pert,0,1,ax1)
-ylabel('delta velocity angle [deg]')
-ylim([0,180])
-
-% step pertubation ------------
-exp_name_cell = {'pert_step'}
-exp_name = exp_name_cell{1}
-pert = 0 % used to plot the pertubation as a gray box
-
-
-fly_fvec = get_fvec(exp_name_cell,fly,prop_name,time_to_violin);
-mos_fvec = get_fvec(exp_name_cell,mos,prop_name,time_to_violin);
-f_norm_vec = max([fly_fvec;mos_fvec]);
-
-ax2 =subplot(2,1,1)
-plotter_obj.violin_plot(fly.(exp_name),prop_name,time_to_violin,f_norm_vec,prop_name,fly_color,'fly','scatter_loc',0)
-plotter_obj.violin_plot(mos.(exp_name),prop_name,time_to_violin,f_norm_vec,prop_name,mos_color,{'fly','mosquito'},'scatter_loc',0)
-plotter_obj.pert_plot(pert,0,1,ax2)
-ylabel('delta velocity angle [deg]')
-ylim([0,180])
-set([ax1,ax2], 'LineWidth', 3,'TickLength',[0.00,0.00]);box on
-
-
-
-%% violin for 40ms pertubation
-% fly_col_idx = 190
-% mos_col_idx = 40
-%
+% %% Tsevi plot (THIS)
+% exp_name = 'pert_step' % name of pertubation
+% pert = 0 % % pertubation (step - 0, 100 ms - 100, 60 ms - 60...)
+% subplot(2,1,1)
+% prop = [{'forward_vel'},{'forward_vel'}]
+% insect = fly % insect to plot
+% propip = fly.(exp_name).get_prop(prop{subplot_idx});
+% time = fly.(exp_name).time_vec
+% 
+% 
+% plotter_obj.all_data_plot(time,propip,'all_data_alpha',color_struct_fly.all_data_alpha,'all_data_color_idx',color_struct_fly.all_data_color_idx,location_text);hold on
+% plotter_obj.mean_plot(insect.(exp_name),propip,prop{subplot_idx},'plot_all_data',0,'mean_color_idx',color_struct_fly.mean_color_idx,location_text);
+% plotter_obj.mov_plot(insect.(exp_name),prop{subplot_idx},13,prop{subplot_idx},'color_idx',color_struct_fly.color_idx_mov,location_text)
+% 
+% W = 425 ;
+% H = 535 ;
+% 
+% set(gcf,'position',[200 50 W H])
+% subplot(2,1,1)
+% 
+% ylim([0,100]) ; set(gca,'fontsize',14);
+% xlim([-25 250])
+% set(gca,'YTick',[30,50,70])
+% set(gca,'TickDir','out','TickLength',[0.01, 0.025]);
+% xlabel('') ;
+% sgtitle('Fruit fly','Fontsize',16)
+% %%
+% subplot(2,1,1)
+% ylim([-0.3,0.3]) ;
+% set(gca,'ytick',[-0.3 0 0.3]) ;
+% xlim([-25 250])
+% set(gca,'fontsize',14);
+% set(gca,'TickDir','out');
+% set(gca,'TickDir','out','TickLength',[0.01, 0.025]);
+% if SAVE_FIGS
+%     print(gcf,'fly step response.png','-dpng','-r300')
+% end
+% 
+% 
+% insect = mos % insect to plot
+% plotter_obj.plot_pitch_for_vel_mean(insect,exp_name,pert,max_time_xax,color_struct_mos)
+% 
+% set(gcf,'position',[200 50 W H])
+% subplot(2,1,1)
+% ylim([25,70]) ; set(gca,'fontsize',14);
+% xlim([-25 250])
+% set(gca,'YTick',[30,50,70])
+% set(gca,'TickDir','out','TickLength',[0.01, 0.025]);
+% xlabel('') ;
+% sgtitle('Mosquito','Fontsize',16)
+% 
+% subplot(2,1,2)
+% ylim([-0.3,0.3]) ;
+% set(gca,'ytick',[-0.3 0 0.3]) ;
+% xlim([-25 250])
+% set(gca,'fontsize',14);
+% set(gca,'TickDir','out','TickLength',[0.01, 0.025]);
+% 
+% if SAVE_FIGS
+%     print(gcf,'mosquito step response.png','-dpng','-r300')
+% end
+% 
+% 
+% 
+% 
+% 
+% 
+% %% Tsevi plot
+% exps = {'pert_5ms','pert_10ms','pert_20ms'};
+% prop = {'forward_vel','pitch'};
+% colors = [10,40,200];
+% color_mean = [1,1,1];
+% insect = fly ;% insect to plot
+% 
+% for subplot_idx = 1:1:2
+%     for k = 1:1:3
+%         exp_name = exps{k} ;% name of pertubation
+%         hold on
+% 
+%         propip = fly.(exp_name).get_prop(prop{subplot_idx});
+%         time = fly.(exp_name).time_vec;
+%         ax1 = subplot(2,1,subplot_idx);
+%         plotter_obj.all_data_plot(time,propip,'all_data_alpha',0.1,'all_data_color_idx',colors(k));hold on
+% 
+%     end
+%     % subplot(2,1,1)
+%     % ylim([40,70]) ; set(gca,'fontsize',14);
+% 
+%     for k = 1:1:3
+%         exp_name = exps{k}; % name of pertubation
+%         hold on
+% 
+%         propip = fly.(exp_name).get_prop(prop{subplot_idx});
+%         time = fly.(exp_name).time_vec;
+%         ax1 = subplot(2,1,subplot_idx);
+% 
+%         plotter_obj.mean_plot(insect.(exp_name),propip,prop{subplot_idx},'plot_all_data',0,'mean_color_idx',colors(k));
+%         plotter_obj.mov_plot(insect.(exp_name),prop{subplot_idx},13,prop{subplot_idx},'color_idx',color_struct_fly.color_idx_mov)
+%     end
+%     legend({'5ms','10ms','20ms'});
+% 
+% end
+% 
+% 
+% 
+% %% mean and "model" plots
+% 
+% %% Tsevi plot (THIS)
+% exp_name = 'pert_step' % name of pertubation
+% pert = 0 % % pertubation (step - 0, 100 ms - 100, 60 ms - 60...)
+% 
+% insect = fly % insect to plot
+% plotter_obj.plot_pitch_for_vel_mean(insect,exp_name,pert,max_time_xax,color_struct_fly)
+% 
+% W = 425 ;
+% H = 535 ;
+% 
+% set(gcf,'position',[200 50 W H])
+% subplot(2,1,1)
+% ylim([25,70]) ; set(gca,'fontsize',14);
+% xlim([-25 250])
+% set(gca,'YTick',[30,50,70])
+% set(gca,'TickDir','out','TickLength',[0.01, 0.025]);
+% xlabel('') ;
+% sgtitle('Fruit fly','Fontsize',16)
+% 
+% subplot(2,1,2)
+% ylim([-0.3,0.3]) ;
+% set(gca,'ytick',[-0.3 0 0.3]) ;
+% xlim([-25 250])
+% set(gca,'fontsize',14);
+% set(gca,'TickDir','out');
+% set(gca,'TickDir','out','TickLength',[0.01, 0.025]);
+% if SAVE_FIGS
+%     print(gcf,'fly step response.png','-dpng','-r300')
+% end
+% 
+% 
+% insect = mos % insect to plot
+% plotter_obj.plot_pitch_for_vel_mean(insect,exp_name,pert,max_time_xax,color_struct_mos)
+% 
+% set(gcf,'position',[200 50 W H])
+% subplot(2,1,1)
+% ylim([25,70]) ; set(gca,'fontsize',14);
+% xlim([-25 250])
+% set(gca,'YTick',[30,50,70])
+% set(gca,'TickDir','out','TickLength',[0.01, 0.025]);
+% xlabel('') ;
+% sgtitle('Mosquito','Fontsize',16)
+% 
+% subplot(2,1,2)
+% ylim([-0.3,0.3]) ;
+% set(gca,'ytick',[-0.3 0 0.3]) ;
+% xlim([-25 250])
+% set(gca,'fontsize',14);
+% set(gca,'TickDir','out','TickLength',[0.01, 0.025]);
+% 
+% if SAVE_FIGS
+%     print(gcf,'mosquito step response.png','-dpng','-r300')
+% end
+% 
+% 
+% %% TSEVI: add vz plot in the same format as above
+% 
+% % fly
+% exp_name = 'pert_step' % name of pertubation
+% pert = 0 % % pertubation (step - 0, 100 ms - 100, 60 ms - 60...)
+% insect = fly % insect to plot
+% mov = 13 % "model" movie
+% plotter_obj.plot_pitch_for_vel_z_vel_model_mov_mean(insect,exp_name,mov,pert,color_struct_fly,max_time_xax)
+% xlim([-20,250])
+% xx = subplot(3,1,1) ;
+% delete(xx) ;
+% xx = subplot(3,1,2) ;
+% delete(xx) ;
+% 
+% % mosquito plot
+% insect = mos % insect to plot
+% mov = 580 % "model" movie
+% 
+% plotter_obj.plot_pitch_for_vel_z_vel_model_mov_mean(insect,exp_name,mov,pert,color_struct_mos,max_time_xax)
+% xlim([-20,250])
+% xx = subplot(3,1,1) ;
+% delete(xx) ;
+% xx = subplot(3,1,2) ;
+% delete(xx) ;
+% 
+% 
+% 
+% %%
+% % --------------Step pertubation------------------------------
+% exp_name = 'pert_step' % name of pertubation
+% pert = 0 % % pertubation (step - 0, 100 ms - 100, 60 ms - 60...)
+% insect = fly % insect to plot
+% mov = 13 % "model" movie
+% plotter_obj.plot_pitch_for_vel_z_vel_model_mov_mean(insect,exp_name,mov,pert,color_struct_fly,max_time_xax)
+% xlim([-20,250])
+% 
+% % mosquito plot
+% insect = mos % insect to plot
+% mov = 580 % "model" movie
+% 
+% plotter_obj.plot_pitch_for_vel_z_vel_model_mov_mean(insect,exp_name,mov,pert,color_struct_mos,max_time_xax)
+% xlim([-20,250])
+% 
+% % --------------60 ms ------------------------------
+% 
+% exp_name = 'pert_60ms'
+% pert = 60 % pertubation (step - 0, 100 ms - 100, 60 ms - 60...)
+% insect = fly
+% mov = 70
+% plotter_obj.plot_pitch_for_vel_z_vel_model_mov_mean(insect,exp_name,mov,pert,color_struct_mos,max_time_xax)
+% xlim([-20,250])
+% 
+% insect = mos
+% mov = 596
+% plotter_obj.plot_pitch_for_vel_z_vel_model_mov_mean(insect,exp_name,mov,pert,color_struct_mos,max_time_xax)
+% xlim([-20,250])
+% 
+% 
+% %% Violin delta angle
+% % ---- colors (defined by the indices in color mat) --------------
+% fly_col_idx = 190 % color of fly
+% mos_col_idx = 40 % color of mosquito
+% % time to plot violin (x axis, the initial point of the violin)
 % time_to_violin = linspace(-15,230,10)
-% exp_name = 'pert_40ms'
-% prop_name = 'vel_xy_ang_flat'
-% fly_color = plotter_obj.col_mat(fly_col_idx,:)
-% mos_color = plotter_obj.col_mat(mos_col_idx,:)
-
-
-% exp_name_cell = {'pert_40ms'}
-% pert = 40
+% 
+% %----- violin plot properties-----------
+% prop_name = 'vel_xy_ang_flat' % property, a list of all properies: fly.pert_60ms.insect_prop
+% fly_color = plotter_obj.col_mat(fly_col_idx,:) % color of the fly's violin
+% mos_color = plotter_obj.col_mat(mos_col_idx,:) % color of the mosquito's violin
+% 
+% 
+% % 60 ms pertubation -----------------------------
+% exp_name_cell = {'pert_60ms'}  % pertubation
+% exp_name = exp_name_cell{1}
+% pert = 60 % used to plot the pertubation as a gray box
+% 
+% % plot violin-------------
 % figure
 % fly_fvec = get_fvec(exp_name_cell,fly,prop_name,time_to_violin);
-%
-% f_norm_vec = max([fly_fvec;mos_fvec]);
-%
-% ax1 = subplot(1,1,1)
+% mos_fvec = get_fvec(exp_name_cell,mos,prop_name,time_to_violin);
+% f_norm_vec = max([fly_fvec;mos_fvec]); % normalize
+% 
+% %f_norm_vec(:) = max(max([fly_fvec;mos_fvec])) / 4 ;
+% 
+% ax1 = subplot(2,1,2)
 % plotter_obj.violin_plot(fly.(exp_name),prop_name,time_to_violin,f_norm_vec,prop_name,fly_color,'fly','scatter_loc',0,'box_xdata',0)
+% plotter_obj.violin_plot(mos.(exp_name),prop_name,time_to_violin,f_norm_vec,prop_name,mos_color,{'fly','mosquito'},'scatter_loc',0,'box_xdata',0)
 % plotter_obj.pert_plot(pert,0,1,ax1)
 % ylabel('delta velocity angle [deg]')
-% title('40ms pertubation')
 % ylim([0,180])
-% xlim([-50,300])
+% 
+% % step pertubation ------------
+% exp_name_cell = {'pert_step'}
+% exp_name = exp_name_cell{1}
+% pert = 0 % used to plot the pertubation as a gray box
+% 
+% 
+% fly_fvec = get_fvec(exp_name_cell,fly,prop_name,time_to_violin);
+% mos_fvec = get_fvec(exp_name_cell,mos,prop_name,time_to_violin);
+% f_norm_vec = max([fly_fvec;mos_fvec]);
+% 
+% ax2 =subplot(2,1,1)
+% plotter_obj.violin_plot(fly.(exp_name),prop_name,time_to_violin,f_norm_vec,prop_name,fly_color,'fly','scatter_loc',0)
+% plotter_obj.violin_plot(mos.(exp_name),prop_name,time_to_violin,f_norm_vec,prop_name,mos_color,{'fly','mosquito'},'scatter_loc',0)
+% plotter_obj.pert_plot(pert,0,1,ax2)
+% ylabel('delta velocity angle [deg]')
+% ylim([0,180])
 % set([ax1,ax2], 'LineWidth', 3,'TickLength',[0.00,0.00]);box on
-
+% 
+% 
+% 
+% %% violin for 40ms pertubation
+% % fly_col_idx = 190
+% % mos_col_idx = 40
+% %
+% % time_to_violin = linspace(-15,230,10)
+% % exp_name = 'pert_40ms'
+% % prop_name = 'vel_xy_ang_flat'
+% % fly_color = plotter_obj.col_mat(fly_col_idx,:)
+% % mos_color = plotter_obj.col_mat(mos_col_idx,:)
+% 
+% 
+% % exp_name_cell = {'pert_40ms'}
+% % pert = 40
+% % figure
+% % fly_fvec = get_fvec(exp_name_cell,fly,prop_name,time_to_violin);
+% %
+% % f_norm_vec = max([fly_fvec;mos_fvec]);
+% %
+% % ax1 = subplot(1,1,1)
+% % plotter_obj.violin_plot(fly.(exp_name),prop_name,time_to_violin,f_norm_vec,prop_name,fly_color,'fly','scatter_loc',0,'box_xdata',0)
+% % plotter_obj.pert_plot(pert,0,1,ax1)
+% % ylabel('delta velocity angle [deg]')
+% % title('40ms pertubation')
+% % ylim([0,180])
+% % xlim([-50,300])
+% % set([ax1,ax2], 'LineWidth', 3,'TickLength',[0.00,0.00]);box on
+% 
 
