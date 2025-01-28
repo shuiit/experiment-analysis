@@ -14,6 +14,7 @@ classdef exp_class
         delta_angle
         name
         open_leg
+        zero_v_z
     end
     
 

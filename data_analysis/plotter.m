@@ -324,46 +324,51 @@ classdef plotter
 
         end
         
-        function bar_plot(obj,data_to_plot,header,color,path_to_save,err,position_cm,margin)
+        function bar_plot(obj,data_to_plot,header,color,err,varargin)
 
-            fig = figure()
-            ax = subplot(1,1,1);
+            parser = inputParser;
+            addParameter(parser,'plot_err',true); % color of mean data
+            parse(parser, varargin{:})
+
             for k = 1:1:length(data_to_plot)               
             pertubation = split(header{k}, '_');
             pertubation_cell{k} = pertubation{end};
-            bar(k,data_to_plot(k),'FaceColor',color(k,:),'LineWidth',2);hold on
-            errorbar(k,data_to_plot(k),err(k))
+            bar(k,data_to_plot(k),'FaceColor',color(k,:),'LineWidth',1);hold on
+            if parser.Results.plot_err == true
+            e = errorbar(k,data_to_plot(k),err(k))
+            e.Color = color(k,:)
+            end
 
 
 
             end
             
-            % Bar plot formatting
-            set(gca,'units','centimeters'...
-            ,'position',position_cm);
-
-            % Get the required axes position
-            axPos = get(ax, 'Position');
-            
-            % Add margins to account for labels, ticks, etc.
-            
-            % Set the figure size
-            figWidth = axPos(3) + 2 * margin(1);
-            figHeight = axPos(4) + 2 * margin(2);
-            set(gcf, 'Units', 'centimeters', 'Position', [10, 10, figWidth, figHeight]); % [x, y, width, height]
-            
-            pertubation_cell{end} = 'Step'
-            ylabel('Minimal velocity [m/s]');
-            xticks(1:length(data_to_plot));
-            xticklabels(pertubation_cell);
-            xlabel('Dark pulse duration');
-            set(gca,'fontsize',12,'LineWidth',1);
-            if path_to_save ~= false
-                path = [path_to_save,'minimal_velocity.svg']
-                h = findall(fig,'-property','FontName');
-                set(h,'FontName','San Serif');
-                print(fig,'-dsvg',path)
-            end
+            % % Bar plot formatting
+            % set(gca,'units','centimeters'...
+            % ,'position',position_cm);
+            % 
+            % % Get the required axes position
+            % axPos = get(ax, 'Position');
+            % 
+            % % Add margins to account for labels, ticks, etc.
+            % 
+            % % Set the figure size
+            % figWidth = axPos(3) + 2 * margin(1);
+            % figHeight = axPos(4) + 2 * margin(2);
+            % set(gcf, 'Units', 'centimeters', 'Position', [10, 10, figWidth, figHeight]); % [x, y, width, height]
+            % 
+            % pertubation_cell{end} = 'Step'
+            % % ylabel(ylabel_in);
+            % xticks(1:length(data_to_plot));
+            % xticklabels(pertubation_cell);
+            % xlabel('Dark pulse duration');
+            % set(gca,'fontsize',12,'LineWidth',1);
+            % if path_to_save ~= false
+            %     path = [path_to_save]
+            %     h = findall(fig,'-property','FontName');
+            %     set(h,'FontName','San Serif');
+            %     print(fig,'-dsvg',path)
+            % end
         end
 
 
