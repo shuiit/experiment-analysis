@@ -15,6 +15,7 @@ classdef exp_class
         name
         open_leg
         zero_v_z
+        min_v_time
     end
     
 
@@ -91,12 +92,26 @@ classdef exp_class
         end
 
         function percent = get_percent(obj,prop)
-        if istable(obj.(prop))
             prop = obj.(prop).Var1;
-        else
-            prop = obj.(prop);
-        end
+       
             percent = sum(prop~= 1000)*100/length(prop)
+        end
+
+
+
+        function percent = get_legs_percent(obj,prop)
+                fly_open_legs = obj.(prop).Var1;
+                idx_open_all_time = (fly_open_legs == 1);
+                idx_not_opening = (fly_open_legs == 0);
+                
+                % only flies that spread legs during the video
+                percent(1) = sum(idx_not_opening == 0 & idx_open_all_time == 0)*100/length(fly_open_legs(idx_open_all_time == 0));
+                
+                % flies that spread legs + crazy flies
+                percent(2) = sum(idx_not_opening == 0 & idx_open_all_time == 0)*100/length(fly_open_legs);
+
+                % only crazy flies
+                percent(3) = sum(idx_open_all_time)*100/length(fly_open_legs);
         end
 
         function percent = get_percent_with_th(obj,prop,th,varargin)
@@ -104,11 +119,8 @@ classdef exp_class
             addParameter(parser,'th_st',true); % color of mean data
             parse(parser, varargin{:})
 
-        if istable(obj.(prop))
             prop = obj.(prop).Var1;
-        else
-            prop = obj.(prop);
-        end
+       
         if parser.Results.th_st == true
             percent = sum(( abs(prop) <th)*100/sum(prop ~= 1000))
         else
@@ -117,14 +129,20 @@ classdef exp_class
         end
         end
 
+        function [mean_prop,std_prop]= get_mean_std_open_legs(obj,prop,varargin)
+            idx_open_all_time = (obj.(prop).Var1 == 1);
+            idx_not_opening = (obj.(prop).Var1 == 0);
+            
+            time_open_legs = obj.open_leg.Var1(idx_not_opening == 0 & idx_open_all_time == 0)
+            mean_prop = mean(time_open_legs)
+            std_prop = std(time_open_legs)
+        end
+
 
 
         function mean_min_v = get_mean(obj,prop)
-        if istable(obj.(prop))
             prop = obj.(prop).Var1;
-        else
-            prop = obj.(prop);
-        end
+        
             mean_min_v = mean(prop(prop < 1000),1,'omitmissing')
 
         end

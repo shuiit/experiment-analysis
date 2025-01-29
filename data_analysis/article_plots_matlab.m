@@ -5,8 +5,8 @@ clc
 SAVE_FIGS = false ;
 
 % Load data
-path = 'I:\.shortcut-targets-by-id\1OA70vOJHDfV63DqG7LJCifTwW1h055ny\2024 Flight in the dark paper\data_exchange\'
-path_for_figs = 'I:\.shortcut-targets-by-id\1OA70vOJHDfV63DqG7LJCifTwW1h055ny\2024 Flight in the dark paper\media\'
+path = 'G:\.shortcut-targets-by-id\1OA70vOJHDfV63DqG7LJCifTwW1h055ny\2024 Flight in the dark paper\data_exchange\'
+path_for_figs = 'G:\.shortcut-targets-by-id\1OA70vOJHDfV63DqG7LJCifTwW1h055ny\2024 Flight in the dark paper\media\'
 fly_data = 'fly\all_data\'
 mos_data = 'mosquito\'
 
@@ -20,7 +20,7 @@ for idx_file = 1:1:length(pert)
 end
 pert = {'5ms','10ms','20ms','40ms','60ms','80ms','100ms','step','darkan'} % Fly: pertubations to load (for all - {'40ms','80ms','100ms','60ms','step'})
 
-props = [{'min_v'},{'zero_v'},{'response_time'},{'delta_angle'},{'zero_v_z'}]
+props = [{'min_v'},{'zero_v'},{'response_time'},{'delta_angle'},{'zero_v_z'},{'min_v_time'}]
 for idx_file = 1:1:length(pert)
 for k = 1:1:length(props)
     path_pulses = ['\fly\pulses\',props{k},'.csv']
@@ -34,8 +34,6 @@ for k = 1:1:length(props)
     fly.(pertubation).(props{k}).Properties.RowNames = movs(idx_to_keep);
 end
 end
-
-
 
 
 pert = {'60ms','100ms','step'} ;% Mosquito: pertubations to load
@@ -56,11 +54,22 @@ mos.pert_step.response_time.Properties.RowNames = {'mov169'}
 mos.pert_step.zero_v = table(82)
 mos.pert_step.zero_v.Properties.RowNames = {'mov169'}
 
+%% Fly leg spreading times
+time = fly.('pert_step').time_vec;
 
 
+pert = {'5ms','10ms','20ms','40ms','60ms','80ms','100ms','step','darkan'}
+for k = 1:1:length(pert)
+pertubation = sprintf('pert_%s',pert{k});
+file_name = ['leg_open_',pert{k}];
+open_leg_mat = readmatrix(['H:\My Drive\dark 2022\excel\',file_name]);
+open_leg_mat = open_leg_mat(:,2)
+idx_to_keep = isnan(open_leg_mat) == false & open_leg_mat~= 999% & open_leg_mat~= 1
+fly.(pertubation).open_leg = table(open_leg_mat(idx_to_keep));
+end
 
 plotter_obj = plotter(path_for_figs);
-%%
+
 
 
 %% a plot to help decide which colors to choose for the other plots (it plots the color matrix)
@@ -93,69 +102,50 @@ color_struct_mos.all_data_color_idx = 40 ;% all data color
 color_struct_mos.cluster_mean_color = [15,60] ;% indices of colors for the clusters (clustered by Vz) [idx1, idx2]
 color_struct_mos.cluster_all_data_color = [30,100] ;% indices of colors for the mean of clusters (clustered by Vz) [idx1, idx2]
 % --------------------------------------------------------------------
-%% Fly leg spreading times
-time = fly.('pert_step').time_vec;
 
-
-pert = {'5ms','10ms','20ms','40ms','60ms','80ms','100ms','step','darkan'}
-for k = 1:1:length(pert)
-pertubation = sprintf('pert_%s',pert{k});
-file_name = ['leg_open_',pert{k}];
-open_leg_mat = readmatrix(['J:\My Drive\dark 2022\excel\',file_name]);
-open_leg_mat = open_leg_mat(:,2)
-
-    idx_to_keep = isnan(open_leg_mat) == false & open_leg_mat~= 999% & open_leg_mat~= 1
-    fly.(pertubation).open_leg = open_leg_mat(idx_to_keep);
-
-
-end
 
 %%
 
+% 
+% 
+% 
+% property_to_plot = 'forward_vel' ; % you can choose any property from this list: fly.pert_step.insect_prop
+% property = fly.('pert_step').get_prop(property_to_plot);
+% %time_mov = open_leg_mat(idx_of_movie,:);
+% time_mov = open_leg_mat(:,1);
+% 
+% 
+% 
+% for k = 1:1:length(open_leg_mat(:,1))
+%     try
+% 
+%         [v,i] =min(abs(open_leg_mat(k,1)- time));
+%         mov_num = fly.pert_step.mov_num(open_leg_mat(k,2));
+% 
+%         plot(time,property(:,mov_num));hold on
+%         scatter(time(i),property(i,mov_num),'*k');
+%         property_legs_open(k) = property(i,mov_num);
+% 
+%     catch
+%         continue
+%     end
+% end
 
 
 
-property_to_plot = 'forward_vel' ; % you can choose any property from this list: fly.pert_step.insect_prop
-property = fly.('pert_step').get_prop(property_to_plot);
-%time_mov = open_leg_mat(idx_of_movie,:);
-time_mov = open_leg_mat(:,1);
-
-
-
-for k = 1:1:length(open_leg_mat(:,1))
-    try
-
-        [v,i] =min(abs(open_leg_mat(k,1)- time));
-        mov_num = fly.pert_step.mov_num(open_leg_mat(k,2));
-
-        plot(time,property(:,mov_num));hold on
-        scatter(time(i),property(i,mov_num),'*k');
-        property_legs_open(k) = property(i,mov_num);
-
-    catch
-        continue
-    end
-end
 
 %% leg spreading histogram
 
 for k = 1:1:length(pert)
 pertubation = sprintf('pert_%s',pert{k})
-cell_openleg{k} = fly.(pertubation).open_leg
+cell_openleg{k} = fly.(pertubation).open_leg.Var1
 
 end
 all_open_leg_time = cell2mat(cell_openleg');
 all_open_leg_time= all_open_leg_time(all_open_leg_time > 0);
 
-
-%% leg spreading histogram
-
-
-xlabel('time [ms]')
-yline(0,'LineWidth',5)
 red = [0.8549    0.2078    0.0039];
 blue = [0.2706    0.4863    0.9569];
-figure('Position',[   415.8000   60.0000  796.0000  635.2000]) ;
 path_to_save_fig = [path_for_figs,'\appendix\leg_spread.svg']
 position_cm = [2,2 8 6]
 margin = [2,2]
@@ -182,19 +172,11 @@ for idx_prop = 1:1:length(props)
         if strcmp(props{idx_prop},'delta_angle')
             percent_feature.(props{idx_prop})(k) = fly.(['pert_',pert{k}]).get_percent_with_th(props{idx_prop},50);
         elseif strcmp(props{idx_prop},'open_leg')
-                % percent_feature(idx_prop+1,k) = fly.(['pert_',pert{k}]).get_percent_with_th(props{idx_prop},2,'th_st',false);
 
-                idx_open_all_time = (fly.(['pert_',pert{k}]).(props{idx_prop}) == 1);
-                idx_not_opening = (fly.(['pert_',pert{k}]).(props{idx_prop}) == 0);
-                
-                % only flies that spread legs during the video
-                percent_feature.legs_nocrazy(k) = sum(idx_not_opening == 0 & idx_open_all_time == 0)*100/length(fly.(['pert_',pert{k}]).(props{idx_prop})(idx_open_all_time == 0));
-                
-                % flies that spread legs + crazy flies
-                percent_feature.legs_crazy(k) = sum(idx_not_opening == 0 & idx_open_all_time == 0)*100/length(fly.(['pert_',pert{k}]).(props{idx_prop}));
-
-                % only crazy flies
-                percent_feature.legs_only_crazy(k) = sum(idx_open_all_time)*100/length(fly.(['pert_',pert{k}]).(props{idx_prop}));
+            open_legs_perc = fly.(['pert_',pert{k}]).get_legs_percent(props{idx_prop});
+            percent_feature.legs_nocrazy(k) = open_legs_perc(1);
+            percent_feature.legs_crazy(k) = open_legs_perc(2);
+            percent_feature.legs_only_crazy(k) = open_legs_perc(3);
 
         else
             percent_feature.(props{idx_prop})(k) = fly.(['pert_',pert{k}]).get_percent(props{idx_prop});
@@ -209,28 +191,34 @@ path_to_save = [path_for_figs,'\figure5\','pulse_features.svg']
 pert = {'5ms','10ms','20ms','40ms','60ms','80ms','100ms','step'};
 props = [{'response_time'},{'legs_crazy'},{'zero_v'},{'delta_angle'}];
 title_cell = {'Response %','Spread legs','V_{fwd} = 0','|\Delta \gamma| < 50 [deg]'}
-pertubation_cell = pert
+pert_xlable = {'5','10','20','40','60','80','100','step'};
+props_color = [0.2, 0.7, 0.2;0.2, 0.1, 0.9;0.9, 0.1, 0.05;0.5, 0.1, 0.5;0.3, 0.1, 0.05]
 
-red = [0.9549    0.1078    0.0039];
+
 gray =[1,0.9,0.8,0.7,0.6,0.4,0.3,0]
 gray_cmap = repmat(gray,3,1)'
 cmap = gray_cmap(1:length(pert),:) ;
-color = cmap .* red ;
+
 
 fig = figure
 t = tiledlayout("vertical","TileSpacing","compact");
+ylocation  = [0.82,0.67,0.525,0.39,0.245]
+xlocation = [0.2,0.2,0.2,0.63,0.63]
+
 
 
 for k = 1:1:length(props)
 tl(k) = nexttile
-plotter_obj.bar_plot(percent_feature.(props{k})(1:end-1),pertubation_cell,color,percent_feature.(props{k})(1:end-1)*0,'plot_err',false)
+color = cmap .* props_color(k,:) ;
+plotter_obj.bar_plot(percent_feature.(props{k})(1:end-1),pert,color,percent_feature.(props{k})(1:end-1)*0,'plot_err',false)
 set(gca,'XTick',[])
 ylim([0,100])
-
-title(title_cell{k})
+tl(k).YAxis.FontSize = 10; % Set the Y-axis tick label font size
+annotation('textbox', [xlocation(k), ylocation(k), 0.3, 0.11], ...
+    'String', title_cell{k}, ...
+    'FontSize', 8,'LineStyle','none' );
 end
 
-pertubation_cell{end} = 'Step'
 
 for k = 1:1:length(pert)
     min_v = fly.(['pert_',pert{k}]).min_v.Var1;
@@ -238,48 +226,46 @@ for k = 1:1:length(pert)
     min_v = min_v(min_v < 1000);
     std_minv(k) = std(min_v)
 end
+
+
+annotation('textbox', [xlocation(5), ylocation(5), 0.3, 0.11], ...
+    'String', 'Minimum velocity', ...
+    'FontSize', 8,'LineStyle','none' );
 set(gca,'XTick',[])
 
 lastTile  = nexttile([2,1])
-
-plotter_obj.bar_plot(mean_min_v(1:end),pertubation_cell,color,std_minv)
+color = cmap .* props_color(end,:) ;
+plotter_obj.bar_plot(mean_min_v(1:end),pert,color,std_minv)
 xticks(1:length(pert));
-xticklabels(pertubation_cell);
-xlabel('Dark pulse duration');
-ylabel(lastTile,'V_{min} [m/s]')
-ylabel(tl(3),'percent [%]')
-title('Minimal Velocity [m/s]')
+xticklabels(pert_xlable);
 
+
+xlabel('Dark pulse duration [ms]','FontSize',10);
+ylabel(lastTile,'V_{min} [m/s]','FontSize',10)
+ylabel(tl(3),'percent [%]','FontSize',10)
 tl(3).YLabel.Position = [tl(3).YLabel.Position(1)-0.5,120,-1]
-tl(3).YLabel.FontSize = 10
-lastTile.YLabel.FontSize = 10
-lastTile.XLabel.FontSize = 10
 
 set(gcf, 'Units', 'centimeters', 'Position', [1, 1, 9, 13]); % [x, y, width, height]
-
 h = findall(fig,'-property','FontName');
 set(h,'FontName','San Serif');
     print(fig,'-dsvg',path_to_save)
 
 
 % plotter_obj.bar_plot(mean_min_v,pert,color,path_to_save_fig,std_minv,position_cm,margin)
-%%
+%% get mean and std of properties for the timeliene plot
 pert = {'5ms','10ms','20ms','40ms','60ms','80ms','100ms','step'};
-props = [{'response_time'},{'open_leg'},{'zero_v'},{'delta_angle'}];
+props = [{'response_time'},{'open_leg'},{'zero_v'},{'delta_angle'},{'min_v_time'}];
 for k = 1:1: length(pert)
     for idx_prop = 1:1:length(props)
-if strcmp('open_leg',props{idx_prop}) == true
-idx_open_all_time = (fly.(['pert_',pert{k}]).(props{idx_prop}) == 1);
-idx_not_opening = (fly.(['pert_',pert{k}]).(props{idx_prop}) == 0);
-
-time_open_legs = fly.(['pert_',pert{k}]).open_leg(idx_not_opening == 0 & idx_open_all_time == 0)
-mean_prop.(props{idx_prop})(k) = mean(time_open_legs)
-std_prop.(props{idx_prop})(k) = std(time_open_legs)
-else
-    idx = fly.(['pert_',pert{k}]).(props{idx_prop}).Var1 ~= 1000
-    mean_prop.(props{idx_prop})(k)= mean(fly.(['pert_',pert{k}]).(props{idx_prop}).Var1(idx))
-    std_prop.(props{idx_prop})(k)  = std(fly.(['pert_',pert{k}]).(props{idx_prop}).Var1(idx))
-end
+        if strcmp('open_leg',props{idx_prop}) == true
+            [mean_ol,std_ol]= fly.(['pert_',pert{k}]).get_mean_std_open_legs(props{idx_prop})
+            mean_prop.(props{idx_prop})(k) = mean_ol
+            std_prop.(props{idx_prop})(k) = std_ol
+        else
+            idx = fly.(['pert_',pert{k}]).(props{idx_prop}).Var1 ~= 1000
+            mean_prop.(props{idx_prop})(k)= mean(fly.(['pert_',pert{k}]).(props{idx_prop}).Var1(idx))
+            std_prop.(props{idx_prop})(k)  = std(fly.(['pert_',pert{k}]).(props{idx_prop}).Var1(idx))
+        end
     end
 end
 %%
@@ -293,51 +279,42 @@ margin = [2, 1];
 position_cm = [2, 1.5, 6.7, 3];
 time = fly.pert_60ms.time_vec;
 prop = fly.pert_60ms.get_prop('forward_vel');
+label_y = {'V_{fwd} [m/s]'}
+prop = 'forward_vel'
 
 % Plot the data
-plotter_obj.all_data_plot(time, prop);
-plotter_obj.pert_plot(60, 0, 1, ax);
+plotter_obj.mean_plot(fly.pert_60ms,prop,label_y,'mean_color_idx',color_struct_fly.mean_color_idx)
+plotter_obj.pert_plot(60, 0, 1, ax(1));
 
 % Add vertical lines with specific properties
-xline(mean_prop.open_leg(4) + 1.5, 'LineWidth', 2, 'LineStyle', '--', 'Color', [0.2, 0.1, 0.9]);
-xline(mean_prop.response_time(4), 'LineWidth', 2, 'LineStyle', '--', 'Color', [0.2, 0.7, 0.2]);
-xline(mean_prop.zero_v(4), 'LineWidth', 2, 'LineStyle', '--', 'Color', [0.9, 0.1, 0.05]);
+xline(mean_prop.open_leg(5) , 'LineWidth', 2, 'LineStyle', '--', 'Color', [0.2, 0.1, 0.9]);
+xline(mean_prop.response_time(5), 'LineWidth', 2, 'LineStyle', '--', 'Color', [0.2, 0.7, 0.2]);
+xline(mean_prop.zero_v(5), 'LineWidth', 2, 'LineStyle', '--', 'Color', [0.9, 0.1, 0.05]);
+xline(mean_prop.min_v_time(5), 'LineWidth', 2, 'LineStyle', '--', 'Color', [0.3, 0.1, 0.05]);
+
 xline(200, 'LineWidth', 2, 'LineStyle', '--', 'Color', [0.5, 0.1, 0.5]);
 
 % Set axis limits and labels
 xlim(xlim_val);
 ylim(ylim_val);
-ylabel('V_{fwd} [m/s]');
-xlabel('time [ms]');
+xlabel('time [ms]', 'FontSize', 10);
+ylabel('V_{fwd} [m/s]', 'FontSize', 10);
 
-% Set font for axes
-set(ax, 'FontSize', 10);
-
+text_features = {'Response','Legs spreading','Break','V_{min}','Re-orient velocity'}
+text_location = [0.36, 0.29, 0.18, 0.11;0.40, 0.29, 0.3, 0.11;0.44, 0.29, 0.12, 0.11;0.53, 0.3, 0.14, 0.15;0.76, 0.29, 0.14, 0.25]
+for k = 1:1:length(props)
 % Add annotations with explicit font size
-annotation('textbox', [0.15, 0.74, 0.18, 0.12], ...
-    'String', 'Response', ...
-    'BackgroundColor', 'white', ...
-    'Color', [0.2, 0.7, 0.2], ...
-    'FontSize', 10);
-annotation('textbox', [0.36, 0.74, 0.14, 0.24], ...
-    'String', 'Spread legs', ...
-    'BackgroundColor', 'white', ...
-    'Color', [0.2, 0.1, 0.9], ...
-    'FontSize', 10);
-annotation('textbox', [0.46, 0.60, 0.1, 0.1], ...
-    'String', 'Break', ...
-    'BackgroundColor', 'white', ...
-    'Color', [0.9, 0.1, 0.05], ...
-    'FontSize', 10);
-annotation('textbox', [0.74, 0.60, 0.14, 0.25], ...
-    'String', 'Re-orient velocity', ...
-    'BackgroundColor', 'white', ...
-    'Color', [0.5, 0.1, 0.5], ...
-    'FontSize', 8);
+annotation('textbox', text_location(k,:), ...
+    'String', text_features{k}, ...
+    'Color', props_color(k,:), ...
+    'FontSize', 8,'rotation',90,'LineStyle','none' );
+
+end
+
 
 % Ensure all text elements have the correct font size
 h = findall(fig, '-property', 'FontSize');
-set(h, 'FontSize', 8);
+set(h, 'FontSize', 10);
 
 % Set axis properties and position
 set(ax, 'LineWidth', 0.5, 'TickLength', [0.00, 0.00]);
@@ -356,6 +333,7 @@ set(gcf, 'Units', 'centimeters', 'Position', [1, 1, figWidth, figHeight]);
 h = findall(fig, '-property', 'FontName');
 set(h, 'FontName', 'San Serif');
 
+
 % Save the figure
 print(fig, '-dsvg', path_to_save);
 
@@ -370,27 +348,27 @@ step_and_100_props.zero_v = [fly.pert_100ms.zero_v.Var1;fly.pert_step.zero_v.Var
 step_and_100_props.open_leg = [fly.pert_100ms.open_leg;fly.pert_step.open_leg];
 step_and_100_props.zero_v_z = [fly.pert_100ms.zero_v_z.Var1;fly.pert_step.zero_v_z.Var1];
 
-idx_open_all_time = (step_and_100_props.open_leg == 1);
-idx_not_opening = (step_and_100_props.open_leg == 0);
+idx_open_all_time = (step_and_100_props.open_leg.Var1 == 1);
+idx_not_opening = (step_and_100_props.open_leg.Var1 == 0);
 
 step_100.response_time  = [sum(step_and_100_props.response_time ~= 1000),length(step_and_100_props.response_time) - sum(step_and_100_props.response_time ~= 1000)]
 step_100.zero_v  = [sum(step_and_100_props.zero_v ~= 1000),length(step_and_100_props.zero_v) - sum(step_and_100_props.zero_v ~= 1000)]
-step_100.open_leg  = [sum(idx_not_opening == 0 & idx_open_all_time == 0),length(step_and_100_props.open_leg) - sum(idx_not_opening == 0 & idx_open_all_time == 0)]
+step_100.open_leg  = [sum(idx_not_opening == 0 & idx_open_all_time == 0),length(step_and_100_props.open_leg.Var1) - sum(idx_not_opening == 0 & idx_open_all_time == 0)]
 step_100.zero_v_z  = [sum(step_and_100_props.zero_v_z ~= 1000),length(step_and_100_props.zero_v_z) - sum(step_and_100_props.zero_v_z ~= 1000)]
 
-idx_open_all_time = (fly.pert_darkan.open_leg == 1);
-idx_not_opening = (fly.pert_darkan.open_leg == 0);
+idx_open_all_time = (fly.pert_darkan.open_leg.Var1 == 1);
+idx_not_opening = (fly.pert_darkan.open_leg.Var1 == 0);
 
 
 antenna.response_time = [sum(fly.pert_darkan.response_time.Var1~= 1000),length(fly.pert_darkan.response_time.Var1) - sum(fly.pert_darkan.response_time.Var1~= 1000)]
 antenna.zero_v = [sum(fly.pert_darkan.zero_v.Var1~= 1000),length(fly.pert_darkan.zero_v.Var1) - sum(fly.pert_darkan.zero_v.Var1~= 1000)]
-antenna.open_leg  = [sum(idx_not_opening == 0 & idx_open_all_time == 0),length(fly.pert_darkan.open_leg) - sum(idx_not_opening == 0 & idx_open_all_time == 0)]
+antenna.open_leg  = [sum(idx_not_opening == 0 & idx_open_all_time == 0),length(fly.pert_darkan.open_leg.Var1) - sum(idx_not_opening == 0 & idx_open_all_time == 0)]
 antenna.zero_v_z = [sum(fly.pert_darkan.zero_v_z.Var1~= 1000),length(fly.pert_darkan.zero_v_z.Var1) - sum(fly.pert_darkan.zero_v_z.Var1~= 1000)]
 
-for k = 1:1:4
-    num_insect(k) = sum([step_100.(prop{k})',antenna.(prop{k})'],'all')
-
-end
+% for k = 1:1:4
+%     num_insect(k) = sum([step_100.(prop{k})',antenna.(prop{k})'],'all')
+% 
+% end
 
 %%
 fig = figure()
@@ -400,24 +378,27 @@ for k = 1:1:length(prop)
 subplot(1,length(prop),k)
 fisher_mat = [step_100.(prop{k});antenna.(prop{k})]
 fisher_table = table(fisher_mat(:,1),fisher_mat(:,2),'VariableNames',{'respond','do_not_respond'},'RowNames',{'intact','not_intact'})
-for k_row = 1:1:2
     [h,p,stats] = fishertest(fisher_table)
-    ba = bar(k_row,[fisher_mat(k_row,1);fisher_mat(k_row,2)],'stacked');hold on
-    set(ba, 'FaceColor', 'Flat')
-    ba(1).CData = [0.4660    0.6740    0.1880];
-    ba(2).CData = [0.900    0.1250    0.0980]
-    xticks(1)
+    fisher.(prop{k}) = p
 end
-
-xticks(1:2)
-xticklabels({'intact','detached'});
-
-title(title_prop{k})
-pval = sprintf('p_{val}=%.2e',p)
-text(0,max(num_insect) - 20,pval)
-ylim([0,max(num_insect) + 10])
-
-end
+% for k_row = 1:1:2
+%     ba = bar(k_row,[fisher_mat(k_row,1);fisher_mat(k_row,2)],'stacked');hold on
+%     set(ba, 'FaceColor', 'Flat')
+%     ba(1).CData = [0.4660    0.6740    0.1880];
+%     ba(2).CData = [0.900    0.1250    0.0980]
+%     xticks(1)
+% 
+% end
+% 
+% xticks(1:2)
+% xticklabels({'intact','detached'});
+% 
+% title(title_prop{k})
+% pval = sprintf('p_{val}=%.2e',p)
+% text(0,max(num_insect) - 20,pval)
+% ylim([0,max(num_insect) + 10])
+% 
+% end
 
 % ylabel(lastTile,'V_{min} [m/s]')
 % ylabel(tl(3),'percent [%]')
