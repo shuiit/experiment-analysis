@@ -1,0 +1,18 @@
+clear
+close all
+clc
+
+sparse_to_load = 'J:\My Drive\dark 2022\2023_08_09_60ms\hull\hull_Reorder\mov24\mov24_cam1_sparse.mat'
+sp = load(sparse_to_load)
+%%
+frame = 200
+
+sparse_coordinates = sp.frames(frame).indIm;
+
+[im] = ImfromSp([800,1280],sparse_coordinates);
+
+bb = [max(sparse_coordinates(:,2)) + 10,max(sparse_coordinates(:,1)) - 10;min(sparse_coordinates(:,2))+10,min(sparse_coordinates(:,1))+10]
+
+figure;imshow(im);hold on
+
+scatter(bb(:,1),bb(:,2),'*')

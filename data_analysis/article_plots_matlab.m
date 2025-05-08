@@ -5,8 +5,8 @@ clc
 SAVE_FIGS = false ;
 
 % Load data
-path = 'G:\.shortcut-targets-by-id\1OA70vOJHDfV63DqG7LJCifTwW1h055ny\2024 Flight in the dark paper\data_exchange\'
-path_for_figs = 'G:\.shortcut-targets-by-id\1OA70vOJHDfV63DqG7LJCifTwW1h055ny\2024 Flight in the dark paper\media\'
+path = 'I:\.shortcut-targets-by-id\1OA70vOJHDfV63DqG7LJCifTwW1h055ny\2024 Flight in the dark paper\data_exchange\'
+path_for_figs = 'I:\.shortcut-targets-by-id\1OA70vOJHDfV63DqG7LJCifTwW1h055ny\2024 Flight in the dark paper\media\report\'
 fly_data = 'fly\all_data\'
 mos_data = 'mosquito\'
 
@@ -62,7 +62,7 @@ pert = {'5ms','10ms','20ms','40ms','60ms','80ms','100ms','step','darkan'}
 for k = 1:1:length(pert)
 pertubation = sprintf('pert_%s',pert{k});
 file_name = ['leg_open_',pert{k}];
-open_leg_mat = readmatrix(['H:\My Drive\dark 2022\excel\',file_name]);
+open_leg_mat = readmatrix(['J:\My Drive\dark 2022\excel\',file_name]);
 open_leg_mat = open_leg_mat(:,2)
 idx_to_keep = isnan(open_leg_mat) == false & open_leg_mat~= 999% & open_leg_mat~= 1
 fly.(pertubation).open_leg = table(open_leg_mat(idx_to_keep));
@@ -154,7 +154,7 @@ mu = mean(all_open_leg_time(:,1))
 st = std(all_open_leg_time(:,1))
 ttl = ({"Fly leg spreading times \mu=" + round(mu) + "\pm" + round(st) + " ms"; " "})
 
-plotter_obj.histogram_plot(all_open_leg_time,red,path_to_save_fig,position_cm,margin,ttl)
+% plotter_obj.histogram_plot(all_open_leg_time,red,path_to_save_fig,position_cm,margin,ttl)
 
 
 
@@ -164,13 +164,13 @@ plotter_obj.histogram_plot(all_open_leg_time,red,path_to_save_fig,position_cm,ma
 
 props = [{'response_time'},{'zero_v'},{'delta_angle'},{'open_leg'},{'zero_v_z'}];
 pert = {'5ms','10ms','20ms','40ms','60ms','80ms','100ms','step','darkan'};
-path_to_save = [path_for_figs,'\figure5\','pulse_features.svg']
+path_to_save = [path_for_figs,'\figure4\','pulse_features.svg']
 
 
 for idx_prop = 1:1:length(props)
     for k = 1:1:length(pert)
         if strcmp(props{idx_prop},'delta_angle')
-            percent_feature.(props{idx_prop})(k) = fly.(['pert_',pert{k}]).get_percent_with_th(props{idx_prop},50);
+            percent_feature.(props{idx_prop})(k) = fly.(['pert_',pert{k}]).get_percent_with_th(props{idx_prop},50,'th_st',false);
         elseif strcmp(props{idx_prop},'open_leg')
 
             open_legs_perc = fly.(['pert_',pert{k}]).get_legs_percent(props{idx_prop});
@@ -184,13 +184,15 @@ for idx_prop = 1:1:length(props)
         end
      end
 end
+%%
+
 
 
 %% features histogram
-path_to_save = [path_for_figs,'\figure5\','pulse_features.svg']
+path_to_save = [path_for_figs,'\figure4\','pulse_features.svg']
 pert = {'5ms','10ms','20ms','40ms','60ms','80ms','100ms','step'};
 props = [{'response_time'},{'legs_crazy'},{'zero_v'},{'delta_angle'}];
-title_cell = {'Response %','Spread legs','V_{fwd} = 0','|\Delta \gamma| < 50 [deg]'}
+title_cell = {'Deceleration','Spread legs','V_{fwd} = 0','|\gamma| > 50 [deg]'}
 pert_xlable = {'5','10','20','40','60','80','100','step'};
 props_color = [0.2, 0.7, 0.2;0.2, 0.1, 0.9;0.9, 0.1, 0.05;0.5, 0.1, 0.5;0.3, 0.1, 0.05]
 
@@ -200,10 +202,10 @@ gray_cmap = repmat(gray,3,1)'
 cmap = gray_cmap(1:length(pert),:) ;
 
 
-fig = figure
+fig = figure()
 t = tiledlayout("vertical","TileSpacing","compact");
-ylocation  = [0.82,0.67,0.525,0.39,0.245]
-xlocation = [0.2,0.2,0.2,0.63,0.63]
+ylocation  = [0.81,0.67,0.525,0.38,0.243]
+xlocation = [0.25,0.25,0.25,0.25,0.25]
 
 
 
@@ -214,9 +216,9 @@ plotter_obj.bar_plot(percent_feature.(props{k})(1:end-1),pert,color,percent_feat
 set(gca,'XTick',[])
 ylim([0,100])
 tl(k).YAxis.FontSize = 10; % Set the Y-axis tick label font size
-annotation('textbox', [xlocation(k), ylocation(k), 0.3, 0.11], ...
-    'String', title_cell{k}, ...
-    'FontSize', 8,'LineStyle','none' );
+% annotation('textbox', [xlocation(k), ylocation(k), 0.3, 0.11], ...
+%     'String', title_cell{k}, ...
+%     'FontSize', 8,'LineStyle','none' );
 end
 
 
@@ -228,27 +230,31 @@ for k = 1:1:length(pert)
 end
 
 
-annotation('textbox', [xlocation(5), ylocation(5), 0.3, 0.11], ...
-    'String', 'Minimum velocity', ...
-    'FontSize', 8,'LineStyle','none' );
-set(gca,'XTick',[])
+% annotation('textbox', [xlocation(5), ylocation(5), 0.3, 0.11], ...
+%     'String', 'Minimum V_{fwd}', ...
+%     'FontSize', 8,'LineStyle','none' );
+% set(gca,'XTick',[])
 
 lastTile  = nexttile([2,1])
 color = cmap .* props_color(end,:) ;
 plotter_obj.bar_plot(mean_min_v(1:end),pert,color,std_minv)
 xticks(1:length(pert));
 xticklabels(pert_xlable);
-
-
+h2 = findall(fig,'-property','FontSize');
+set(h2,'FontSize',8);
+set(gca, 'FontName', 'Arial', 'FontWeight', 'normal', 'FontSize', 8)
 xlabel('Dark pulse duration [ms]','FontSize',10);
 ylabel(lastTile,'V_{min} [m/s]','FontSize',10)
-ylabel(tl(3),'percent [%]','FontSize',10)
-tl(3).YLabel.Position = [tl(3).YLabel.Position(1)-0.5,120,-1]
+ylabel(tl(3),'Percent [%]','FontSize',10)
+tl(3).YLabel.Position = [tl(3).YLabel.Position(1)-0.9,120,-1]
 
-set(gcf, 'Units', 'centimeters', 'Position', [1, 1, 9, 13]); % [x, y, width, height]
+set(gcf, 'Units', 'centimeters', 'Position', [1, 1, 8, 13]); % [x, y, width, height]
 h = findall(fig,'-property','FontName');
-set(h,'FontName','San Serif');
-    print(fig,'-dsvg',path_to_save)
+set(h,'FontName','Arial');
+
+
+set(fig,'renderer','painters')
+print(fig,path_to_save,'-dsvg')
 
 
 % plotter_obj.bar_plot(mean_min_v,pert,color,path_to_save_fig,std_minv,position_cm,margin)
@@ -269,14 +275,16 @@ for k = 1:1: length(pert)
     end
 end
 %%
+props = [{'response_time'},{'open_leg'},{'zero_v'},{'delta_angle'},{'min_v_time'}];
+
 fig = figure();
 ax = subplot(1,1,1);
-path_to_save = [path_for_figs, '\figure5\', 'manouver_timeline.svg'];
+path_to_save = [path_for_figs, '\figure4\', 'manouver_timeline.svg'];
 xlim_val = [-25 250];
 ylim_val = [-0.2 0.3];
 yticks = [-0.2, 0, 0.3];
 margin = [2, 1];
-position_cm = [2, 1.5, 6.7, 3];
+position_cm = [2, 1.5, 5.7, 3];
 time = fly.pert_60ms.time_vec;
 prop = fly.pert_60ms.get_prop('forward_vel');
 label_y = {'V_{fwd} [m/s]'}
@@ -289,10 +297,10 @@ plotter_obj.pert_plot(60, 0, 1, ax(1));
 % Add vertical lines with specific properties
 xline(mean_prop.open_leg(5) , 'LineWidth', 2, 'LineStyle', '--', 'Color', [0.2, 0.1, 0.9]);
 xline(mean_prop.response_time(5), 'LineWidth', 2, 'LineStyle', '--', 'Color', [0.2, 0.7, 0.2]);
-xline(mean_prop.zero_v(5), 'LineWidth', 2, 'LineStyle', '--', 'Color', [0.9, 0.1, 0.05]);
-xline(mean_prop.min_v_time(5), 'LineWidth', 2, 'LineStyle', '--', 'Color', [0.3, 0.1, 0.05]);
+xline(mean_prop.zero_v(5), 'LineWidth', 2, 'LineStyle', '--', 'Color', [0.9, 0.1, 0.05] );
+xline(mean_prop.min_v_time(5), 'LineWidth', 2, 'LineStyle', '--', 'Color', [0.5, 0.1, 0.5]);
 
-xline(200, 'LineWidth', 2, 'LineStyle', '--', 'Color', [0.5, 0.1, 0.5]);
+xline(200, 'LineWidth', 2, 'LineStyle', '--', 'Color', [0.3, 0.1, 0.05]);
 
 % Set axis limits and labels
 xlim(xlim_val);
@@ -301,7 +309,7 @@ xlabel('time [ms]', 'FontSize', 10);
 ylabel('V_{fwd} [m/s]', 'FontSize', 10);
 
 text_features = {'Response','Legs spreading','Break','V_{min}','Re-orient velocity'}
-text_location = [0.36, 0.29, 0.18, 0.11;0.40, 0.29, 0.3, 0.11;0.44, 0.29, 0.12, 0.11;0.53, 0.3, 0.14, 0.15;0.76, 0.29, 0.14, 0.25]
+text_location = [0.37, 0.29, 0.18, 0.11;0.41, 0.29, 0.3, 0.11;0.44, 0.29, 0.12, 0.11;0.53, 0.3, 0.14, 0.15;0.76, 0.29, 0.14, 0.25]
 for k = 1:1:length(props)
 % Add annotations with explicit font size
 annotation('textbox', text_location(k,:), ...
@@ -331,11 +339,13 @@ set(gcf, 'Units', 'centimeters', 'Position', [1, 1, figWidth, figHeight]);
 
 % Set font for all text objects explicitly
 h = findall(fig, '-property', 'FontName');
-set(h, 'FontName', 'San Serif');
+set(h, 'FontName', 'Arial');
 
 
 % Save the figure
-print(fig, '-dsvg', path_to_save);
+            set(fig,'renderer','painters')
+
+print(fig, path_to_save, '-dsvg');
 
 
 %% fly antenna
@@ -449,79 +459,79 @@ end
 %% fly step
 W = 425 ;
 H = 350 ;
-mov = 15 %71 21
-position_cm = [1.5,1.5 5 4]
+mov = 13%71 21
+position_cm = [1.5,1.5 4 3]
 margin = [1.5, 1]; % Example margins [width, height] in centimeters
 
 
 location_text = [35,-0.05]
-plotter_obj.plot_prop(fly.pert_step,'forward_vel','V_f_w_d [m/s]',0,mov,0.3,[-0.3, 0 0.3],[-25 250],[-0.3,0.3],...
-    color_struct_fly,{'Mean','movie'},'fly_vfwd_step.svg','\figure2\',false,position_cm,margin,location_text)
+plotter_obj.plot_prop(fly.pert_step,'forward_vel','V_f_w_d [m/s]',0,mov,0.3,[-0.3,-0.15, 0,0.15 0.3],[-25 250],[-0.3,0.3],...
+    color_struct_fly,{'Mean','Sample'},'fly_vfwd_step.svg','\figure1\',false,position_cm,margin,location_text)
 
 
 location_text = [20,-5]
-position_cm = [1.5,1.5 5 4]
-plotter_obj.plot_prop(fly.pert_step,'pitch','pitch [deg]',0,mov,0.3,[20,50,80],[-25 250],[20,80],...
-    color_struct_fly,{'Mean','Sample'},'fly_pitch_step.svg','\figure2\',false,position_cm,margin,location_text)
+position_cm = [1.5,1.5 4 3]
+plotter_obj.plot_prop(fly.pert_step,'pitch','pitch [deg]',0,mov,0.3,[20,35,50,65,80],[-25 250],[20,80],...
+    color_struct_fly,{'Mean','Sample'},'fly_pitch_step.svg','\figure1\',false,position_cm,margin,location_text)
 
 location_text = [0,0]
-position_cm= [1.8,1.5 4.5 3.5]
+position_cm= [1.5,1.5 4 3]
 plotter_obj.plot_prop(fly.pert_step,'z_vel','V_z [m/s]',0,mov,0.3,[-0.2,-0.1, 0 0.1],[-25 250],[-0.3 0.2],...
-    color_struct_fly,{'Mean','Sample'},'fly_vz_step.svg','\figure3\',false,position_cm,margin,location_text)
+    color_struct_fly,{'Mean','Sample'},'fly_vz_step.svg','\figure2\',false,position_cm,margin,location_text)
 
 %% mosquito step
 W = 425 ;
 H = 350 ;
 mov = 169
 location_text = [35,-0.06]
-position_cm = [1.5,1.5 5 4]
-plotter_obj.plot_prop(mos.pert_step,'forward_vel','V_f_w_d [m/s]',0,mov,0.3,[-0.3, 0 0.3],[-25 250],[-0.3,0.3],...
-    color_struct_mos,{'Mean','Sample'},'mos_vfwd_step.svg','\figure2\',false,position_cm,margin,location_text)
+position_cm = [2,1.5 4 3]
+plotter_obj.plot_prop(mos.pert_step,'forward_vel','V_f_w_d [m/s]',0,mov,0.3,[-0.3,-0.15, 0,0.15 0.3],[-25 250],[-0.3,0.3],...
+    color_struct_mos,{'Mean','Sample'},'mos_vfwd_step.svg','\figure1\',false,position_cm,margin,location_text)
 
 location_text = [20,7]
-position_cm = [1.5,1.5 5 4]
-plotter_obj.plot_prop(mos.pert_step,'pitch','pitch [deg]',0,mov,0.3,[20,50,80],[-25 250],[20,80],...
-    color_struct_mos,{'Mean','Sample'},'mos_pitch_step.svg','\figure2\',false,position_cm,margin,location_text)
+position_cm = [1.5,1.5 4 3]
+plotter_obj.plot_prop(mos.pert_step,'pitch','pitch [deg]',0,mov,0.3,[20,35,50,65,80],[-25 250],[20,80],...
+    color_struct_mos,{'Mean','Sample'},'mos_pitch_step.svg','\figure1\',false,position_cm,margin,location_text)
 
 color_struct_mos.cluster_all_data_color = [30,80] ;% indices of colors for the mean of clusters (clustered by Vz) [idx1, idx2]
 color_struct_mos.cluster_mean_color = [15,50]
-position_cm= [1.8,1.5 4.5 3.5]
+position_cm= [2,1.5 4 3]
 margin = [1.3,1]
 plotter_obj.plot_prop(mos.pert_step,'z_vel','V_z [m/s]',0,mov,0.3,[-0.25,-0.1, 0 0.1],[-25 250],[-0.25 0.2],...
-    color_struct_mos,{'Mean a','Mean b','Sample'},'mos_vz_step.svg','\figure3\',true,position_cm,margin)
+    color_struct_mos,{'Mean a','Mean b','Sample'},'mos_vz_step.svg','\figure2\',true,position_cm,margin)
 
 
 %% fly 60
 W = 425 ;
 H = 350 ;
-mov = 80
-position_cm= [1.5,1.5 5 4]
+mov = 24
+position_cm= [2,1.5 4 3]
 location_text = [10,0.06]
 
 % plotter_obj.plot_prop(fly.pert_60ms,'z_vel','V_z [m/s]',60,mov,0.3,[-0.2, 0 0.3],[-25 250],[-0.2,0.3],...
 %     color_struct_fly,{'mean','movie'},'fly_vz_60ms.svg','\figure4\',false,position_cm)
 plotter_obj.plot_prop(fly.pert_60ms,'forward_vel','V_f_w_d [m/s]',60,mov,0.3,[-0.2, 0 0.3],[-25 250],[-0.2,0.3],...
-    color_struct_fly,{'mean','Sample'},'fly_vfwd_60ms.svg','\figure4\',false,position_cm,margin,location_text)
+    color_struct_fly,{'Mean','Sample'},'fly_vfwd_60ms.svg','\figure3\',false,position_cm,margin,location_text)
 
 location_text = [30,5]
-position_cm = [1.5,1.5 5 4]
+position_cm = [2,1.5 4 3]
 plotter_obj.plot_prop(fly.pert_60ms,'pitch','pitch [deg]',60,mov,0.3,[20,50,80],[-25 250],[20,80],...
-    color_struct_fly,{'mean','Sample'},'fly_pitch_60ms.svg','\figure4\',false,position_cm,margin,location_text)
+    color_struct_fly,{'Mean','Sample'},'fly_pitch_60ms.svg','\figure3\',false,position_cm,margin,location_text)
 
 %% mosquito 60
 W = 425 ;
 H = 350 ;
 mov = 395;
-position_cm= [1.5,1.5 5 4]
+position_cm= [2,1.5 4 3]
 location_text = [10,0.06]
 
 plotter_obj.plot_prop(mos.pert_60ms,'forward_vel','V_f_w_d [m/s]',60,mov,0.3,[-0.2, 0 0.3],[-25 250],[-0.2,0.3],...
-    color_struct_mos,{'mean','Sample'},'mos_vfwd_60ms.svg','\figure4\',false,position_cm,margin,location_text)
+    color_struct_mos,{'Mean','Sample'},'mos_vfwd_60ms.svg','\figure3\',false,position_cm,margin,location_text)
 
 location_text = [30,5]
 
 plotter_obj.plot_prop(mos.pert_60ms,'pitch','pitch [deg]',60,mov,0.3,[20,50,80],[-25 250],[20,80],...
-    color_struct_mos,{'mean','Sample'},'mos_pitch_60ms.svg','\figure4\',false,position_cm,margin,location_text)
+    color_struct_mos,{'Mean','Sample'},'mos_pitch_60ms.svg','\figure3\',false,position_cm,margin,location_text)
 
 
 % plotter_obj.plot_prop(mos.pert_60ms,'z_vel','V_z [m/s]',60,mov,0.3,[W,H],[-0.2,-0.1, 0 0.1],[-25 250],[-0.3 0.2],...
@@ -545,7 +555,7 @@ mos_color = plotter_obj.col_mat(mos_col_idx,:) % color of the mosquito's violin
 % 60 ms pertubation -----------------------------
 exp_name_cell = {'pert_60ms'}  % pertubation
 exp_name = exp_name_cell{1}
-pert = 60 % used to plot the pertubation as a gray box
+pert = 100 % used to plot the pertubation as a gray box
 
 % plot violin-------------
 figure
@@ -558,19 +568,21 @@ fig = figure()
 ax1 = subplot(1,1,1)
 plotter_obj.violin_plot(fly.(exp_name),prop_name,time_to_violin,f_norm_vec,prop_name,fly_color,'fly','scatter_loc',0,'box_xdata',0)
 plotter_obj.violin_plot(mos.(exp_name),prop_name,time_to_violin,f_norm_vec,prop_name,mos_color,{'fly','mosquito'},'scatter_loc',0,'box_xdata',0)
-plotter_obj.pert_plot(pert,0,1,ax1)
-ylabel('\Delta velocity angle ,\Delta \gamma [deg]')
+plotter_obj.pert_plot(pert,0,0,ax1)
+ylabel('\gamma [deg]')
 ylim([0,180])
  set(gcf,'inverthardcopy','off','color','w','paperpositionmode','auto','units','centimeters'...
-            ,'position',[6 5 20 6]);
+            ,'position',[6 5 18 5]);
 set([ax1], 'LineWidth', 1,'TickLength',[0.00,0.00]);box on
 legend('Location', 'northwest');
 
-path = [plotter_obj.path_to_save_fig,'/figure4/','violin_60ms.svg']
+path = [plotter_obj.path_to_save_fig,'/figure3/','violin_60ms.svg']
 h = findall(fig,'-property','FontName');
-set(h,'FontName','San Serif');
-print(fig,'-dsvg',path)
+set(h,'FontName','Arial');
+            set(fig,'renderer','painters')
 
+print(fig,'-dsvg',path)
+%%
 
 % step pertubation ------------
 exp_name_cell = {'pert_step'}
@@ -587,20 +599,65 @@ fig = figure()
 ax2 =subplot(1,1,1)
 plotter_obj.violin_plot(fly.(exp_name),prop_name,time_to_violin,f_norm_vec,prop_name,fly_color,'fly','scatter_loc',0)
 plotter_obj.violin_plot(mos.(exp_name),prop_name,time_to_violin,f_norm_vec,prop_name,mos_color,{'fly','mosquito'},'scatter_loc',0)
-plotter_obj.pert_plot(pert,0,1,ax2)
-ylabel('\Delta velocity angle ,\Delta \gamma [deg]')
+plotter_obj.pert_plot(pert,0,0,ax2)
+ylabel('\gamma [deg]')
 ylim([0,180])
 set([ax2], 'LineWidth', 1,'TickLength',[0.00,0.00]);box on
  set(gcf,'inverthardcopy','off','color','w','paperpositionmode','auto','units','centimeters'...
-            ,'position',[6 5 20 6]);
+            ,'position',[6 5 11 4]);
 
 legend('Location', 'northwest');
-path = [plotter_obj.path_to_save_fig,'/figure4/','violin_step.svg']
+path = [plotter_obj.path_to_save_fig,'/figure2/','violin_step.svg']
 h = findall(fig,'-property','FontName');
-set(h,'FontName','San Serif');
+set(h,'FontName','Arial');
+            set(fig,'renderer','painters')
+
 print(fig,'-dsvg',path)
+%%
 
 
+% step pertubation ------------
+exp_name_cell = {'pert_darkan'}
+exp_name = exp_name_cell{1}
+pert = 0 % used to plot the pertubation as a gray box
+
+fly_fvec = get_fvec(exp_name_cell,fly,prop_name,time_to_violin);
+mos_fvec = get_fvec({'pert_100ms'},fly,prop_name,time_to_violin);
+f_norm_vec = max([fly_fvec;mos_fvec]);
+
+
+fig = figure()
+
+ax2 =subplot(1,1,1)
+plotter_obj.violin_plot(fly.(exp_name),prop_name,time_to_violin,f_norm_vec,prop_name,fly_color,'fly','scatter_loc',0)
+% plotter_obj.violin_plot(fly.pert_100ms,prop_name,time_to_violin,f_norm_vec,prop_name,mos_color,{'fly no antennae','fly100'},'scatter_loc',0)
+plotter_obj.pert_plot(pert,0,0,ax2)
+ylabel('\gamma [deg]')
+ylim([0,180])
+set([ax2], 'LineWidth', 1,'TickLength',[0.00,0.00]);box on
+ set(gcf,'inverthardcopy','off','color','w','paperpositionmode','auto','units','centimeters'...
+            ,'position',[6 5 11 4]);
+
+legend('Location', 'northwest');
+path = [plotter_obj.path_to_save_fig,'/figure2/','violin_step.svg']
+h = findall(fig,'-property','FontName');
+set(h,'FontName','Arial');
+            set(fig,'renderer','painters')
+
+
+
+%%
+gamma_mos = mos.pert_60ms.get_prop('vel_xy_ang');
+gamma_fly = fly.pert_60ms.get_prop('vel_xy_ang');
+
+time_mos_idx = find(mos.pert_60ms.time_vec== 230);
+time_fly_idx = find(fly.pert_60ms.time_vec== 230);
+
+std(gamma_mos(time_mos_idx,:),'omitnan')
+std(gamma_fly(time_fly_idx,:),'omitnan')
+
+
+%%
 
 
 

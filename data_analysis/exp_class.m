@@ -124,7 +124,7 @@ classdef exp_class
         if parser.Results.th_st == true
             percent = sum(( abs(prop) <th)*100/sum(prop ~= 1000))
         else
-            percent = sum(( abs(prop) >th)*100/sum(prop ~= 1000))
+            percent = sum(( abs(prop) >th) & (prop ~= 1000))*100/sum(prop ~= 1000)
 
         end
         end

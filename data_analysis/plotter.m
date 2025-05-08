@@ -62,7 +62,6 @@ classdef plotter
             set(gca,'TickDir','out','TickLength',[0.01, 0.025]);
             set(gca,'fontsize',10);
             set(gca,'TickDir','out','TickLength',[0.01, 0.025]);
-            legend(legend_val)
             % title(titletext,'Fontsize',10,'FontWeight','Normal')
             set(gca,'units','centimeters'...
             ,'position',position_cm);
@@ -81,9 +80,16 @@ classdef plotter
             % set(gcf, 'PaperPositionMode', 'auto');
             path = [obj.path_to_save_fig,dir_to_save,name_of_figure]
             h = findall(fig,'-property','FontName');
-            set(h,'FontName','San Serif');
-            % set(fig,'renderer','painters')
-            print(fig,'-dsvg',path)
+            set(h,'FontName','Arial');  
+
+            h2 = findall(fig,'-property','FontSize');
+            set(h2,'FontSize',10);  
+            legend(legend_val,'FontSize',8)
+
+            set(fig,'renderer','painters')
+            % print(fig,'-dsvg',path)
+
+            print(fig, path, '-dsvg')  % Adjust DPI (e.g., -r150, -r200)
 
             % exportgraphics(gcf, [obj.path_to_save_fig,dir_to_save,name_of_figure], 'ContentType', 'vector');
 
@@ -101,7 +107,7 @@ classdef plotter
             parse(parser, varargin{:})
 
             %plot(time,prop,'LineWidth',1.5,'color',[obj.gray_mat(200,:),parser.Results.alpha],'HandleVisibility','off')
-            plot(time,prop,'LineWidth',0.5,'color',[obj.col_mat(parser.Results.all_data_color_idx,:),parser.Results.all_data_alpha],'HandleVisibility','off')
+            plot(time(1:100:end),prop(1:100:end,:),'LineWidth',0.5,'color',[obj.col_mat(parser.Results.all_data_color_idx,:),parser.Results.all_data_alpha],'HandleVisibility','off')
         end
 
         function cluster_plot_mean(obj,prop,insect,varargin)
@@ -193,9 +199,9 @@ classdef plotter
             xlabel(parser.Results.xlabel);
             ylabel(label_y);
             if parser.Results.plot_cluster == 1
-                legend({'mean_A','mean_B','model'},'EdgeColor','None','Orientation','horizontal','Box','off')
+                legend({'mean_A','mean_B','model'},'EdgeColor','None','Orientation','horizontal','Box','off','FontSize',8)
             else
-                legend({'mean','model'},'EdgeColor','None','Orientation','horizontal','Box','off')
+                legend({'mean','model'},'EdgeColor','None','Orientation','horizontal','Box','off','FontSize',8)
             end
 
         end
@@ -238,8 +244,8 @@ classdef plotter
             parse(parser, varargin{:})
             [data_a,data_b] = cluster_by_prop(obj,prop_to_cluster,time_to_cluster,insect,prop_to_plot);
 
-            plot(insect.time_vec,data_a,'color',[obj.col_mat(color_all_data(1),:),parser.Results.alpha],'LineWidth',0.5,'HandleVisibility','off');hold on
-            plot(insect.time_vec,data_b,'color',[obj.col_mat(color_all_data(2),:),parser.Results.alpha],'LineWidth',0.5,'HandleVisibility','off');hold on
+            plot(insect.time_vec(1:100:end),data_a(1:100:end,:),'color',[obj.col_mat(color_all_data(1),:),parser.Results.alpha],'LineWidth',0.5,'HandleVisibility','off');hold on
+            plot(insect.time_vec(1:100:end),data_b(1:100:end,:),'color',[obj.col_mat(color_all_data(2),:),parser.Results.alpha],'LineWidth',0.5,'HandleVisibility','off');hold on
 
         end
 
@@ -403,7 +409,8 @@ classdef plotter
             if path_to_save ~= false
                 path = [path_to_save]
                 h = findall(fig,'-property','FontName');
-                set(h,'FontName','San Serif');
+                set(h,'FontName','Arial');
+                set(fig,'renderer','painters')
                 print(fig,'-dsvg',path)
             end
         end
